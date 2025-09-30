@@ -7,10 +7,12 @@
 */
 
 #include <iostream>
+#include "../cards/cards.h"
+
 using namespace std;
 
 int main() {
-    
+    testCards();
     return 0;
 
 }
