@@ -3,7 +3,6 @@
 #include <crtdbg.h>
 
 #define _CRTDBG_MAP_ALLOC
-//& 
 
 using std::cout;
 using std::cin;
@@ -15,9 +14,9 @@ int main() {
 	
 	{ 
 		//States are classes, transitions are triggered by void transitionState(StateID id), and commands are strings.
-		GameEngine GameEngine; 
+		GameEngine engine; 
 	
-		testGameStates(GameEngine);
+		testGameStates(engine);
 		
 	}
 	
@@ -37,9 +36,9 @@ void testGameStates(GameEngine& engine) {
 	while (true) {
 		cout << "your command: ";
 		cin >> userCommand;
-
+		cout << "\n";
 		bool commandHandledSuccessfully = engine.getState()->onCommand(userCommand, engine);
-
+;
 		if (!commandHandledSuccessfully) {
 			cout << "Invalid command for State " << engine.getState()->getStateName() << ".\n";
 			continue;
@@ -47,6 +46,7 @@ void testGameStates(GameEngine& engine) {
 		if (userCommand == "end") {
 			break;
 		}
+		
 	}
 	
 	

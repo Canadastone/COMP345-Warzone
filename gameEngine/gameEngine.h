@@ -31,15 +31,6 @@ enum class StateID {
 	End
 };
 /*
-raw metadata about the states.
-*/
-struct stateInfo {
-	string name;
-	unordered_set<string> stateValidCommands;
-	StateID stateID;
-};
-
-/*
 State abstract class as a base interface for every other state in the game engine.
 Define what all states must be able to do: onEnter, onCommand, ...
 */
@@ -85,7 +76,7 @@ public:
 	//default ctr
 	StateTemplate();
 	//ctr takes in info about hardcoded states.
-	StateTemplate(stateInfo& info);
+	StateTemplate(const string& stateName, const unordered_set<string>& stateValidCommands);
 
 	//copy constructor
 	StateTemplate(const StateTemplate& other);
@@ -101,55 +92,6 @@ public:
 	unordered_set<string>& getValidCommands() const override;
 
 	StateTemplate& operator=(const StateTemplate& other);
-};
-
-/* 
-Declaration of every specialized class using the StateTemplate<specialized class ID>, 
-each with their own constructor.
-*/
-class startState : public StateTemplate<StateID::Start> {
-public:
-	startState(stateInfo& info);
-};
-
-class mapLoadedState : public StateTemplate<StateID::MapLoaded> {
-public:
-	mapLoadedState(stateInfo& info);
-};
-
-class mapValidatedState : public StateTemplate<StateID::MapValidated> {
-public:
-	mapValidatedState(stateInfo& info);
-};
-
-class playersAddedState : public StateTemplate<StateID::PlayersAdded> {
-public:
-	playersAddedState(stateInfo& info);
-};
-
-class assignReinforcementState : public StateTemplate<StateID::AssignReinforcements> {
-public:
-	assignReinforcementState(stateInfo& info);
-};
-
-class issueOrdersState : public StateTemplate<StateID::IssueOrders> {
-public:
-	issueOrdersState(stateInfo& info);
-};
-
-class executeOrdersState : public StateTemplate<StateID::ExecuteOrders> {
-public:
-	executeOrdersState(stateInfo& info);
-};
-
-class winState : public StateTemplate<StateID::Win> {
-public:
-	winState(stateInfo& info);
-};
-
-class endState : public StateTemplate<StateID::End> {
-public:
-	endState(stateInfo& info);
 };
 
 
