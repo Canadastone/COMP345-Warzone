@@ -22,6 +22,11 @@
 
 Map::Map(std::string filePath) {
 	MapLoader loader;
+	bool validFile = loader.validateFile(filePath);
+	if (!validFile) {
+		std::cout << "Invalid file, cannot create map..." << std::endl;
+		return;
+	}
 	std::vector<std::shared_ptr<Territory>> territories = loader.generateTerritories(filePath);
 	this->adjacencyMatrix = loader.generateConnectedTerritories(filePath, territories); //This is a map containing all the active territories for the game
 	initializeContinentMap();
@@ -301,6 +306,39 @@ void Map::Territory::printTerritory() {
 //-----------------------------------------------
 // MapLoader Functions
 //-----------------------------------------------
+
+bool Map::MapLoader::validateFile(std::string filePath) {
+
+	std::ifstream file(filePath);
+
+	std::string text;
+	bool hasMap = false, hasContinents = false, hasTerritories = false;
+
+	while (std::getline(file, text)) {
+
+		//If file contains a Map section
+		if (text == "[Map]") {
+			hasMap = true;
+			continue;
+		}
+
+		//If file contains a Continents section
+		if (text == "[Continents]") {
+			hasContinents = true;
+			continue;
+		}
+
+		//If file contains a Territories section
+		if (text == "[Territories]") {
+			hasTerritories = true;
+			continue;
+		}
+	}
+
+	file.close();
+
+	return hasMap && hasContinents && hasTerritories;
+}
 
 /**
 *

@@ -52,6 +52,8 @@ public:
 
 		std::vector<std::shared_ptr<Map::Territory>> generateTerritories(std::string);
 
+		bool validateFile(std::string);
+
 	};
 
 	Map(std::string);
