@@ -8,6 +8,25 @@
 
 #include "player.h"
 #include <iostream>
+#include "orders/orders.h"
+#include "map/map.h"
+#include "cards/cards.h"
+
 using namespace std;
 
 // TODO: Implement the player logic here
+
+
+class player{
+
+    private:
+        
+
+    public:
+        void toDefend();
+        void toAttack();
+        void issueOrder();
+
+    
+
+};
