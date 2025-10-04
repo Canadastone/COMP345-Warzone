@@ -93,15 +93,12 @@ bool Map::isValidConnectedGraph() {
 		//The top most node of the stack is always the current node that we are looking for paths from
 		std::shared_ptr<Territory> currentNode = searchHistory.top();
 
-		//std::cout << "Current Node: " << currentNode->getName() << std::endl;
-
 		//Boolean that tells us if there are any connected nodes that have not been traversed.
 		bool newPaths = false; 
 		for (std::shared_ptr<Territory> connectedTerritory : currentNode->getConnectedTerritories()) {
 
 			//If statement for if the node has already been traversed
 			if (std::count(traversedNodes.begin(), traversedNodes.end(), connectedTerritory) > 0) {
-				//std::cout << "\t\t\t\t\t" << connectedTerritory->getName() << " has already been traversed, searching for a new node..." << std::endl;
 				continue;
 			}
 			//If it has not been traversed
@@ -109,7 +106,6 @@ bool Map::isValidConnectedGraph() {
 				searchHistory.push(connectedTerritory);
 				traversedNodes.push_back(connectedTerritory);
 				newPaths = true;
-				//std::cout << "\t" << "Selected Node: " << connectedTerritory->getName() << std::endl;
 				break;
 			}
 		}
@@ -127,7 +123,6 @@ bool Map::isValidConnectedGraph() {
 
 		//If the currentnode is out of untraversed paths, pop it from the top of the stack
 		if (!newPaths) { 
-			//std::cout << "\t\tNo new paths... popping stack!" << std::endl;
 			searchHistory.pop();
 		}
 	}
@@ -157,8 +152,6 @@ bool Map::continentIsValidSubgraph(std::vector<std::shared_ptr<Map::Territory>> 
 		//The top most node of the stack is always the current node that we are looking for paths from
 		std::shared_ptr<Territory> currentNode = searchHistory.top();
 
-		//std::cout << "Current Node: " << currentNode->getName() << std::endl;
-
 		//Boolean that tells us if there are any connected nodes that have not been traversed.
 		bool newPaths = false; 
 		for (std::shared_ptr<Territory> connectedTerritory : currentNode->getConnectedTerritories()) {
@@ -168,7 +161,6 @@ bool Map::continentIsValidSubgraph(std::vector<std::shared_ptr<Map::Territory>> 
 			}
 			//If statement for if the node has already been traversed
 			if (std::count(traversedNodes.begin(), traversedNodes.end(), connectedTerritory) > 0) {
-				//std::cout << "\t\t\t\t\t" << connectedTerritory->getName() << " has already been traversed, searching for a new node..." << std::endl;
 				continue;
 			}
 			//If it has not been traversed
@@ -176,8 +168,6 @@ bool Map::continentIsValidSubgraph(std::vector<std::shared_ptr<Map::Territory>> 
 				searchHistory.push(connectedTerritory);
 				traversedNodes.push_back(connectedTerritory);
 				newPaths = true;
-				//std::cout << "\t" << "Selected Node: " << connectedTerritory->getName() << std::endl;
-
 				break;
 			}
 		}
@@ -195,7 +185,6 @@ bool Map::continentIsValidSubgraph(std::vector<std::shared_ptr<Map::Territory>> 
 
 		//If the currentnode is out of untraversed paths, pop it from the top of the stack
 		if (!newPaths) {
-			//std::cout << "\t\tNo new paths... popping stack!" << std::endl;
 			searchHistory.pop();
 		}
 	}
@@ -237,10 +226,8 @@ bool Map::validate() {
 		for (std::shared_ptr<Territory> territory : territoryList) {
 			//If statement that checks to see if this territory has belonged to another continent
 			if (std::count(checkedTerritories.begin(), checkedTerritories.end(), territory) > 0) {
-				std::cout << "\t\t\t\t" << territory->getName() << " already exists in another continent!" << std::endl;
 				return false;
 			}
-			std::cout << territory->getName() << " belongs to " << continentName << std::endl;
 			checkedTerritories.push_back(territory);
 		}
 	}
@@ -340,18 +327,6 @@ bool Map::MapLoader::validateFile(std::string filePath) {
 	return hasMap && hasContinents && hasTerritories;
 }
 
-/**
-*
-* @brief The function generates a list of the territories used by the map.
-*
-* This function is the first step in loading our map. It parses through the entire file and creates instances
-* of each territory (our nodes). This allows us to be able to reference these instances when creating our adjacency matrix,
-* and thus physically connecting these nodes to one another.
-*
-* @param filePath The path to the file to be read
-*
-* @return Returns a vector that contains the references to all the territories (our nodes) that will be used by the map.
-*/
 std::vector<std::shared_ptr<Map::Territory>> Map::MapLoader::generateTerritories(std::string filePath) {
 
 	std::vector<std::shared_ptr<Territory>> territoriesVector;
@@ -399,19 +374,6 @@ std::vector<std::shared_ptr<Map::Territory>> Map::MapLoader::generateTerritories
 	return territoriesVector;
 }
 
-/**
-*
-* @brief The function connects all the linked territories and returns the adjacency matrix for the map.
-*
-* This function must only be called after generateTerritories was called, as it relies on the vector that contains the territories.
-* The function will parse through the file and find all the territories connected to a current territory, and connect them together.
-* Then, it will return a map that represent an adjacency matrix that allows you to easily access each territory by name.
-*
-* @param filePath The path to the file to be read
-* @param generatedTerritories The territory nodes generated by the generateTerritories method
-*
-* @return Returns a map that represents the adjacency matrix for the map.
-*/
 std::map<std::string, std::shared_ptr<Map::Territory>> Map::MapLoader::generateConnectedTerritories(std::string filePath, std::vector<std::shared_ptr<Map::Territory>> generatedTerritories) {
 
 	std::map<std::string, std::shared_ptr<Map::Territory>> map;
