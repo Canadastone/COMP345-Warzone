@@ -113,12 +113,6 @@ bool Map::isValidConnectedGraph() {
 
 		//Success condition (i.e. all nodes have been traversed by some path)
 		if (traversedNodes.size() == numNodes) {
-			std::cout << "\nTraversed Nodes: ";
-			for (auto e : traversedNodes) {
-				std::cout << e->getName() << ", ";
-			}
-			std::cout << std::endl;
-			std::cout << "\nAll nodes have been traversed, meaning the graph is connected!" << std::endl;
 			return true;
 		}
 
@@ -128,7 +122,7 @@ bool Map::isValidConnectedGraph() {
 		}
 	}
 
-	std::cout << "Not all nodes were able to be traversed, meaning the graph is disjoint!" << std::endl;
+	std::cout << "\t\tNot all nodes were able to be traversed, meaning the graph is disjoint!" << std::endl;
 	return false;
 }
 
@@ -175,12 +169,6 @@ bool Map::continentIsValidSubgraph(std::vector<std::shared_ptr<Map::Territory>> 
 
 		//Success condition (i.e. all nodes have been traversed by some path)
 		if (traversedNodes.size() == numNodesInContinent) {
-			std::cout << "Traversed Nodes: ";
-			for (auto e : traversedNodes) {
-				std::cout << e->getName() << ", ";
-			}
-			std::cout << std::endl;
-			std::cout << "All nodes have been traversed, meaning the continent graph is connected!" << std::endl;
 			return true;
 		}
 
@@ -190,19 +178,21 @@ bool Map::continentIsValidSubgraph(std::vector<std::shared_ptr<Map::Territory>> 
 		}
 	}
 
-	std::cout << "Not all nodes were able to be traversed, meaning the continent graph is disjoint!" << std::endl;
+	std::cout << "\t\tNot all nodes were able to be traversed, meaning the continent graph is disjoint!" << std::endl;
 	return false;
 }
 
 bool Map::validate() {
 
-	std::cout << "\nStarting graph validation for the entire map...\n\n" << std::endl;
+	std::cout << "Starting graph validation for the entire map...\n" << std::endl;
 	bool isConnectedGraph = isValidConnectedGraph();
-	std::cout << "----------------------------------------------------------------------------------\n\n" << std::endl;
 
 	if (!isConnectedGraph) {
+		std::cout << "----------------------------------------------------------------------------------" << std::endl;
 		return false;
 	}
+	std::cout << "\t\tMap is a valid connected graph!" << std::endl;
+	std::cout << "----------------------------------------------------------------------------------" << std::endl;
 
 	//Validating that each continent are connected subgraphs
 	for (auto& continentPair : this->continentMap) {
@@ -211,14 +201,17 @@ bool Map::validate() {
 
 		std::cout << "Starting subgraph validation for " << continentName << "...\n" << std::endl;
 		bool result = continentIsValidSubgraph(continentNodes, continentName);
-		std::cout << "----------------------------------------------------------------------------------" << std::endl;
 
 		if (!result) {
+			std::cout << "----------------------------------------------------------------------------------" << std::endl;
 			return result;
 		}
+		std::cout << "\t\t" << continentName << " is a valid subgraph!" << std::endl;
+		std::cout << "----------------------------------------------------------------------------------" << std::endl;
+
 	}
 
-	std::cout << "\n\nStarting validation for every territory to belong to only one continent...\n" << std::endl;
+	std::cout << "Starting validation for every territory to belong to only one continent...\n" << std::endl;
 	std::vector<std::shared_ptr<Territory>> checkedTerritories;
 	for (auto& continentPair : this->continentMap) {
 		std::string continentName = continentPair.first;
@@ -233,7 +226,7 @@ bool Map::validate() {
 		}
 	}
 
-	std::cout << "\nAll territories belong to a single continent!" << std::endl;
+	std::cout << "\t\tAll territories belong to a single continent!" << std::endl;
 	std::cout << "----------------------------------------------------------------------------------" << std::endl;
 
 	return true;
