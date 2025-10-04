@@ -22,11 +22,13 @@ struct CardTypeQtyTemplate {
 class Deck;
 class Hand;
 
-class Card : public enable_shared_from_this<Card> {
+class Card {
     private: 
-        CardType type;
+        CardType* type;
     public: 
         Card(CardType type);
+        Card(const Card& otherCard);
+        ~Card();
         CardType getCardType() const;
         void play();
 };
