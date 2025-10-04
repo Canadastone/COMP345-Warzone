@@ -11,8 +11,10 @@
 #include <string>
 #include <iostream>
 #include <map>
+#include <stack>
 #include <fstream>
 #include <sstream>
+#include <memory>
 
 //-----------------------------------------------
 // Map Functions
@@ -20,24 +22,228 @@
 
 Map::Map(std::string filePath) {
 	MapLoader loader;
-	this->territories = loader.generateTerritories(filePath);
-	this->adjacencyMatrix = loader.generateConnectedTerritories(filePath, this->territories);
+	std::vector<std::shared_ptr<Territory>> territories = loader.generateTerritories(filePath);
+	this->adjacencyMatrix = loader.generateConnectedTerritories(filePath, territories); //This is a map containing all the active territories for the game
+	initializeContinentMap();
 }
 
 void Map::printMap() {
 
-	for (std::pair<std::string, Territory> pair : this->adjacencyMatrix) {
-		pair.second.printTerritory();
+	for (std::pair<std::string, std::shared_ptr<Territory>> pair : this->adjacencyMatrix) {
+		pair.second->printTerritory();
 	}
 }
 
-Map::Territory Map::getTerritory(std::string territoryName) {
+std::shared_ptr<Map::Territory> Map::getTerritory(std::string territoryName) {
 	if (this->adjacencyMatrix.find(territoryName) != this->adjacencyMatrix.end()) {
-		return this->adjacencyMatrix.at(territoryName);
+		std::shared_ptr<Territory> territory = this->adjacencyMatrix.at(territoryName);
+		return territory;
 	}
 	else {
 		std::cout << "Error: \"" << territoryName << "\" is not a valid territory." << std::endl;
 	}
+}
+
+std::shared_ptr<Map::Territory> Map::getStartingTerritory() {
+	auto iter = this->adjacencyMatrix.begin();
+	std::string startingTerritoryName = iter->first;
+	std::shared_ptr<Territory> startingTerritory = this->adjacencyMatrix.at(startingTerritoryName);
+
+	return startingTerritory;
+}
+
+void Map::initializeContinentMap() {
+	for (auto& pair : this->adjacencyMatrix) {
+		std::string continent = pair.second->getContinent();
+		std::shared_ptr<Territory> territoryPtr = pair.second;
+
+		if (this->continentMap.count(continent) > 0) {
+			this->continentMap.at(continent).push_back(territoryPtr);
+		}
+		else { //Continent does not yet exist as a key
+			std::vector<std::shared_ptr<Territory>> continentVector;
+			continentVector.push_back(territoryPtr);
+			this->continentMap.insert(std::make_pair(continent, continentVector));
+		}
+	}
+}
+
+bool Map::isValidConnectedGraph() {
+
+	//Vector that keeps track of which nodes have already been traversed
+	std::vector<std::shared_ptr<Territory>> traversedNodes;
+
+	//Stack that contains the history of currently traversed nodes
+	std::stack<std::shared_ptr<Territory>> searchHistory;
+
+	//Number representing the size traversedNodes should be in order to ensure that the graph has been fully traversed
+	int numNodes = this->adjacencyMatrix.size();
+
+	//Setup the algorithm
+	std::shared_ptr<Territory> startingNode = getStartingTerritory();
+	searchHistory.push(startingNode);
+	traversedNodes.push_back(startingNode);
+
+	while (!searchHistory.empty()) {
+		//The top most node of the stack is always the current node that we are looking for paths from
+		std::shared_ptr<Territory> currentNode = searchHistory.top();
+
+		//std::cout << "Current Node: " << currentNode->getName() << std::endl;
+
+		//Boolean that tells us if there are any connected nodes that have not been traversed.
+		bool newPaths = false; 
+		for (std::shared_ptr<Territory> connectedTerritory : currentNode->getConnectedTerritories()) {
+
+			//If statement for if the node has already been traversed
+			if (std::count(traversedNodes.begin(), traversedNodes.end(), connectedTerritory) > 0) {
+				//std::cout << "\t\t\t\t\t" << connectedTerritory->getName() << " has already been traversed, searching for a new node..." << std::endl;
+				continue;
+			}
+			//If it has not been traversed
+			else {
+				searchHistory.push(connectedTerritory);
+				traversedNodes.push_back(connectedTerritory);
+				newPaths = true;
+				//std::cout << "\t" << "Selected Node: " << connectedTerritory->getName() << std::endl;
+				break;
+			}
+		}
+
+		//Success condition (i.e. all nodes have been traversed by some path)
+		if (traversedNodes.size() == numNodes) {
+			std::cout << "\nTraversed Nodes: ";
+			for (auto e : traversedNodes) {
+				std::cout << e->getName() << ", ";
+			}
+			std::cout << std::endl;
+			std::cout << "\nAll nodes have been traversed, meaning the graph is connected!" << std::endl;
+			return true;
+		}
+
+		//If the currentnode is out of untraversed paths, pop it from the top of the stack
+		if (!newPaths) { 
+			//std::cout << "\t\tNo new paths... popping stack!" << std::endl;
+			searchHistory.pop();
+		}
+	}
+
+	std::cout << "Not all nodes were able to be traversed, meaning the graph is disjoint!" << std::endl;
+	return false;
+}
+
+
+bool Map::continentIsValidSubgraph(std::vector<std::shared_ptr<Map::Territory>> territoryVector, std::string continentName) {
+
+	//Vector that keeps track of which nodes have already been traversed
+	std::vector<std::shared_ptr<Territory>> traversedNodes;
+
+	//Stack that contains the history of currently traversed nodes
+	std::stack<std::shared_ptr<Territory>> searchHistory;
+
+	//Number representing the size traversedNodes should be in order to ensure that the graph has been fully traversed
+	int numNodesInContinent = territoryVector.size();
+
+	//Setup the algorithm
+	std::shared_ptr<Territory> startingNode = territoryVector.at(0);
+	searchHistory.push(startingNode);
+	traversedNodes.push_back(startingNode);
+
+	while (!searchHistory.empty()) {
+		//The top most node of the stack is always the current node that we are looking for paths from
+		std::shared_ptr<Territory> currentNode = searchHistory.top();
+
+		//std::cout << "Current Node: " << currentNode->getName() << std::endl;
+
+		//Boolean that tells us if there are any connected nodes that have not been traversed.
+		bool newPaths = false; 
+		for (std::shared_ptr<Territory> connectedTerritory : currentNode->getConnectedTerritories()) {
+			//If the connected territory is not in the current continent
+			if (connectedTerritory->getContinent() != continentName) { 
+				continue;
+			}
+			//If statement for if the node has already been traversed
+			if (std::count(traversedNodes.begin(), traversedNodes.end(), connectedTerritory) > 0) {
+				//std::cout << "\t\t\t\t\t" << connectedTerritory->getName() << " has already been traversed, searching for a new node..." << std::endl;
+				continue;
+			}
+			//If it has not been traversed
+			else {
+				searchHistory.push(connectedTerritory);
+				traversedNodes.push_back(connectedTerritory);
+				newPaths = true;
+				//std::cout << "\t" << "Selected Node: " << connectedTerritory->getName() << std::endl;
+
+				break;
+			}
+		}
+
+		//Success condition (i.e. all nodes have been traversed by some path)
+		if (traversedNodes.size() == numNodesInContinent) {
+			std::cout << "Traversed Nodes: ";
+			for (auto e : traversedNodes) {
+				std::cout << e->getName() << ", ";
+			}
+			std::cout << std::endl;
+			std::cout << "All nodes have been traversed, meaning the continent graph is connected!" << std::endl;
+			return true;
+		}
+
+		//If the currentnode is out of untraversed paths, pop it from the top of the stack
+		if (!newPaths) {
+			//std::cout << "\t\tNo new paths... popping stack!" << std::endl;
+			searchHistory.pop();
+		}
+	}
+
+	std::cout << "Not all nodes were able to be traversed, meaning the continent graph is disjoint!" << std::endl;
+	return false;
+}
+
+bool Map::validate() {
+
+	std::cout << "\nStarting graph validation for the entire map...\n\n" << std::endl;
+	bool isConnectedGraph = isValidConnectedGraph();
+	std::cout << "----------------------------------------------------------------------------------\n\n" << std::endl;
+
+	if (!isConnectedGraph) {
+		return false;
+	}
+
+	//Validating that each continent are connected subgraphs
+	for (auto& continentPair : this->continentMap) {
+		std::string continentName = continentPair.first;
+		std::vector<std::shared_ptr<Territory>> continentNodes = continentPair.second;
+
+		std::cout << "Starting subgraph validation for " << continentName << "...\n" << std::endl;
+		bool result = continentIsValidSubgraph(continentNodes, continentName);
+		std::cout << "----------------------------------------------------------------------------------" << std::endl;
+
+		if (!result) {
+			return result;
+		}
+	}
+
+	std::cout << "\n\nStarting validation for every territory to belong to only one continent...\n" << std::endl;
+	std::vector<std::shared_ptr<Territory>> checkedTerritories;
+	for (auto& continentPair : this->continentMap) {
+		std::string continentName = continentPair.first;
+		std::vector<std::shared_ptr<Territory>> territoryList = continentPair.second;
+
+		for (std::shared_ptr<Territory> territory : territoryList) {
+			//If statement that checks to see if this territory has belonged to another continent
+			if (std::count(checkedTerritories.begin(), checkedTerritories.end(), territory) > 0) {
+				std::cout << "\t\t\t\t" << territory->getName() << " already exists in another continent!" << std::endl;
+				return false;
+			}
+			std::cout << territory->getName() << " belongs to " << continentName << std::endl;
+			checkedTerritories.push_back(territory);
+		}
+	}
+
+	std::cout << "\nAll territories belong to a single continent!" << std::endl;
+	std::cout << "----------------------------------------------------------------------------------" << std::endl;
+
+	return true;
 }
 
 //-----------------------------------------------
@@ -54,7 +260,7 @@ Map::Territory::Territory(std::string name, std::string continent) {
 	this->numArmies = 0;
 }
 
-void Map::Territory::addConnection(Territory territory) {
+void Map::Territory::addConnection(std::shared_ptr<Territory> territory) {
 	this->connectedTerritories.push_back(territory);
 }
 
@@ -64,6 +270,14 @@ void Map::Territory::setOwnership(std::string owner) {
 
 std::string Map::Territory::getName() {
 	return this->name;
+}
+
+std::string Map::Territory::getContinent() {
+	return this->continent;
+}
+
+std::vector <std::shared_ptr<Map::Territory>> Map::Territory::getConnectedTerritories() {
+	return this->connectedTerritories;
 }
 
 std::string Map::Territory::getOwnership() {
@@ -77,8 +291,8 @@ void Map::Territory::printTerritory() {
 	std::cout << "Owned by: " << this->ownedBy << std::endl;
 	std::cout << "Connected Territories: ";
 
-	for (Territory territory : this->connectedTerritories) {
-		std::cout << territory.getName() << ", ";
+	for (std::shared_ptr<Territory> territory : this->connectedTerritories) {
+		std::cout << territory->getName() << ", ";
 	}
 	std::cout << std::endl;
 	std::cout << "---------------------------------------------------------------" << std::endl;
@@ -100,9 +314,9 @@ void Map::Territory::printTerritory() {
 *
 * @return Returns a vector that contains the references to all the territories (our nodes) that will be used by the map.
 */
-std::vector < Map::Territory > Map::MapLoader::generateTerritories(std::string filePath) {
+std::vector<std::shared_ptr<Map::Territory>> Map::MapLoader::generateTerritories(std::string filePath) {
 
-	std::vector<Territory> territoriesVector;
+	std::vector<std::shared_ptr<Territory>> territoriesVector;
 
 	std::ifstream file(filePath);
 
@@ -136,7 +350,7 @@ std::vector < Map::Territory > Map::MapLoader::generateTerritories(std::string f
 			std::string territoryName = items.at(0);
 			std::string continentName = items.at(3);
 
-			Territory newTerritory(territoryName, continentName);
+			std::shared_ptr<Territory> newTerritory = std::make_shared<Territory>(territoryName, continentName);
 
 			territoriesVector.push_back(newTerritory);
 		}
@@ -160,9 +374,9 @@ std::vector < Map::Territory > Map::MapLoader::generateTerritories(std::string f
 *
 * @return Returns a map that represents the adjacency matrix for the map.
 */
-std::map<std::string, Map::Territory> Map::MapLoader::generateConnectedTerritories(std::string filePath, std::vector<Territory> generatedTerritories) {
+std::map<std::string, std::shared_ptr<Map::Territory>> Map::MapLoader::generateConnectedTerritories(std::string filePath, std::vector<std::shared_ptr<Map::Territory>> generatedTerritories) {
 
-	std::map<std::string, Map::Territory> map;
+	std::map<std::string, std::shared_ptr<Map::Territory>> map;
 
 	std::ifstream file(filePath);
 
@@ -194,11 +408,11 @@ std::map<std::string, Map::Territory> Map::MapLoader::generateConnectedTerritori
 			}
 
 			//Retrieve all connected territories and store them in the connectedTerritories vector
-			std::vector<Territory> connectedTerritories;
+			std::vector<std::shared_ptr<Territory>> connectedTerritories;
 			for (int i = 4; i < items.size(); i++) {
 				std::string territoryName = items.at(i);
-				for (Territory territory : generatedTerritories) {
-					if (territory.getName() == territoryName) {
+				for (std::shared_ptr<Territory> territory : generatedTerritories) {
+					if (territory->getName() == territoryName) {
 						connectedTerritories.push_back(territory);
 					}
 				}
@@ -208,17 +422,17 @@ std::map<std::string, Map::Territory> Map::MapLoader::generateConnectedTerritori
 			std::string territoryName = items.at(0);
 
 			//Retrieve the reference to the current Territory from the already generated list of Territories
-			Territory currentTerritory;
-			for (Territory territory : generatedTerritories) {
-				if (territory.getName() != territoryName) {
+			std::shared_ptr<Territory> currentTerritory;
+			for (std::shared_ptr<Territory> territory : generatedTerritories) {
+				if (territory->getName() != territoryName) {
 					continue;
 				}
 				currentTerritory = territory;
 			}
 
 			//Add the connected territories to the current territory
-			for (Territory connectedTerritory : connectedTerritories) {
-				currentTerritory.addConnection(connectedTerritory);
+			for (std::shared_ptr<Territory> connectedTerritory : connectedTerritories) {
+				currentTerritory->addConnection(connectedTerritory);
 			}
 
 			//Insert the territory into the adjacency matrix

@@ -5,6 +5,7 @@
 #include <map>
 #include <fstream>
 #include <sstream>
+#include <memory>
 
 
 class Map
@@ -20,7 +21,7 @@ public:
 
 		int numArmies;
 
-		std::vector<Territory> connectedTerritories;
+		std::vector<std::shared_ptr<Territory>> connectedTerritories;
 
 	public:
 
@@ -28,9 +29,13 @@ public:
 
 		Territory(std::string, std::string);
 
-		void addConnection(Territory);
+		void addConnection(std::shared_ptr<Territory>);
 
 		std::string getName();
+
+		std::string getContinent();
+
+		std::vector<std::shared_ptr<Territory>> getConnectedTerritories();
 
 		void printTerritory();
 
@@ -43,9 +48,9 @@ public:
 
 	public:
 
-		std::map<std::string, Territory> generateConnectedTerritories(std::string, std::vector<Territory>);
+		std::map<std::string, std::shared_ptr<Territory>> generateConnectedTerritories(std::string, std::vector<std::shared_ptr<Territory>>);
 
-		std::vector<Territory> generateTerritories(std::string);
+		std::vector<std::shared_ptr<Map::Territory>> generateTerritories(std::string);
 
 	};
 
@@ -53,15 +58,24 @@ public:
 
 	void printMap();
 
-	Territory getTerritory(std::string);
+	std::shared_ptr<Territory> getTerritory(std::string);
 
-	void validateMap();
+	std::shared_ptr<Territory> getStartingTerritory();
+
+	bool validate();
 
 private:
 
-	std::map<std::string, Territory> adjacencyMatrix;
+	std::map<std::string, std::shared_ptr<Territory>> adjacencyMatrix;
 
-	std::vector<Territory> territories;
+	std::map<std::string, std::vector<std::shared_ptr<Territory>>> continentMap;
+
+	void initializeContinentMap();
+
+	bool continentIsValidSubgraph(std::vector<std::shared_ptr<Territory>>, std::string);
+
+	bool Map::isValidConnectedGraph();
+
 };
 
 
