@@ -3,7 +3,7 @@
 
 int main() {
 
-	Map test("AsiaNoMap.map");
+	Map test("./map_files/Asia.map");
 
 	return 0;
 }

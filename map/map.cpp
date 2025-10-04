@@ -30,6 +30,7 @@ Map::Map(std::string filePath) {
 	std::vector<std::shared_ptr<Territory>> territories = loader.generateTerritories(filePath);
 	this->adjacencyMatrix = loader.generateConnectedTerritories(filePath, territories); //This is a map containing all the active territories for the game
 	initializeContinentMap();
+	std::cout << "Successfully created map..." << std::endl;
 }
 
 void Map::printMap() {
