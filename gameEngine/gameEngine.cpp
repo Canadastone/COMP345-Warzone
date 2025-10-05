@@ -1,20 +1,5 @@
 #include "GameEngine.h"
 
-using std::string;
-using std::unique_ptr;
-using std::make_unique;
-
-//useful alias's to reduce boilerplate
-using startState = StateTemplate<StateID::Start>;
-using mapLoadedState = StateTemplate<StateID::MapLoaded>;
-using mapValidatedState = StateTemplate<StateID::MapValidated>;
-using playersAddedState = StateTemplate<StateID::PlayersAdded>;
-using assignReinforcementState = StateTemplate<StateID::AssignReinforcements>;
-using issueOrdersState = StateTemplate<StateID::IssueOrders>;
-using executeOrdersState = StateTemplate<StateID::ExecuteOrders>;
-using winState = StateTemplate<StateID::Win>;
-using endState = StateTemplate<StateID::End>;
-
 //abstract State constructors definitions
 State::State() = default;
 State::State(const State& s) {}
@@ -54,8 +39,9 @@ Copy contructor; deep copies other state into this state by checking whether oth
 */
 template<StateID ID>
 StateTemplate<ID>::StateTemplate(const StateTemplate& other) :
-	stateName(other.stateName ? make_unique<string>(*other.stateName) : nullptr),
-	validCommands(other.validCommands ? make_unique<unordered_set<string>>(*other.validCommands) : nullptr) {
+	//if other ptr is not null, create a new ptr, then new string allocates new memory, the constructor does a deep copy of others string.
+	stateName(other.stateName ? unique_ptr<string>(new string(*other.stateName)) : nullptr),
+	validCommands(other.validCommands ? unique_ptr<unordered_set<string>>(new unordered_set<string>(*other.validCommands)) : nullptr) {
 
 
 }
@@ -120,17 +106,16 @@ unordered_set<string>& StateTemplate<ID>::getValidCommands() const {
 
 
 /*
-onEnter and onCommand behave differently depending on which state they are called on.
-Define each function for the specific StateTemplate instantiation (specified by the ID) corresponding to that state.
+onEnter and onCommand have state specific behavior, they are defined here for every specific state.
 
-template<> signifies an explicit specialization of a function template
+clone methods return a deep copy of the specific state
+This ensures polymorphic copying works correctly when cloning from a State pointer.
 */
 
 /*
 Start State
 */
-template<>
-void StateTemplate<StateID::Start>::onEnter(GameEngine& engine) {
+void startState::onEnter(GameEngine& engine) {
 
 	/*
 	Do something later for Start
@@ -138,8 +123,8 @@ void StateTemplate<StateID::Start>::onEnter(GameEngine& engine) {
 
 	std::cout << "entering " << *this << "\n";
 }
-template<>
-bool StateTemplate<StateID::Start>::onCommand(string& cmd, GameEngine& engine) {
+
+bool startState::onCommand(string& cmd, GameEngine& engine) {
 	if (this->getValidCommands().count(cmd) > 0) {
 		if (cmd == "loadMap") {
 			engine.transitionState(StateID::MapLoaded);
@@ -150,11 +135,14 @@ bool StateTemplate<StateID::Start>::onCommand(string& cmd, GameEngine& engine) {
 	return false;
 }
 
+unique_ptr<State> startState::clone() const {
+    return unique_ptr<startState>(new startState(*this));
+}
+
 /*
 Map Loaded State
 */
-template<>
-void StateTemplate<StateID::MapLoaded>::onEnter(GameEngine& engine) {
+void mapLoadedState::onEnter(GameEngine& engine) {
 
 	/*
 	Do something later for mapLoaded
@@ -162,8 +150,7 @@ void StateTemplate<StateID::MapLoaded>::onEnter(GameEngine& engine) {
 
 	std::cout << "entering " << *this << "\n";
 }
-template<>
-bool StateTemplate<StateID::MapLoaded>::onCommand(string& cmd, GameEngine& engine) {
+bool mapLoadedState::onCommand(string& cmd, GameEngine& engine) {
 	if (this->getValidCommands().count(cmd) > 0) {
 		if (cmd == "loadMap") {
 			engine.transitionState(StateID::MapLoaded);
@@ -177,11 +164,14 @@ bool StateTemplate<StateID::MapLoaded>::onCommand(string& cmd, GameEngine& engin
 	return false;
 }
 
+unique_ptr<State> mapLoadedState::clone() const {
+    return unique_ptr<mapLoadedState>(new mapLoadedState(*this));
+}
+
 /*
 Map Validated State
 */
-template<>
-void StateTemplate<StateID::MapValidated>::onEnter(GameEngine& engine) {
+void mapValidatedState::onEnter(GameEngine& engine) {
 
 	/*
 	Do something later for MapValidated
@@ -189,8 +179,7 @@ void StateTemplate<StateID::MapValidated>::onEnter(GameEngine& engine) {
 
 	std::cout << "entering " << *this << "\n";
 }
-template<>
-bool StateTemplate<StateID::MapValidated>::onCommand(string& cmd, GameEngine& engine) {
+bool mapValidatedState::onCommand(string& cmd, GameEngine& engine) {
 	if (this->getValidCommands().count(cmd) > 0) {
 		if (cmd == "addPlayer") {
 			engine.transitionState(StateID::PlayersAdded);
@@ -201,11 +190,14 @@ bool StateTemplate<StateID::MapValidated>::onCommand(string& cmd, GameEngine& en
 	return false;
 }
 
+unique_ptr<State> mapValidatedState::clone() const {
+    return unique_ptr<mapValidatedState>(new mapValidatedState(*this));
+}
+
 /*
 Players Added State
 */
-template<>
-void StateTemplate<StateID::PlayersAdded>::onEnter(GameEngine& engine) {
+void playersAddedState::onEnter(GameEngine& engine) {
 
 	/*
 	Do something later for PlayersAdded
@@ -213,8 +205,8 @@ void StateTemplate<StateID::PlayersAdded>::onEnter(GameEngine& engine) {
 
 	std::cout << "entering " << *this << "\n";
 }
-template<>
-bool StateTemplate<StateID::PlayersAdded>::onCommand(string& cmd, GameEngine& engine) {
+
+bool playersAddedState::onCommand(string& cmd, GameEngine& engine) {
 	if (this->getValidCommands().count(cmd) > 0) {
 		if (cmd == "addPlayer") {
 			engine.transitionState(StateID::PlayersAdded);
@@ -228,11 +220,14 @@ bool StateTemplate<StateID::PlayersAdded>::onCommand(string& cmd, GameEngine& en
 	return false;
 }
 
+unique_ptr<State> playersAddedState::clone() const {
+    return unique_ptr<playersAddedState>(new playersAddedState(*this));
+}
+
 /*
 AssignReinforcments State
 */
-template<>
-void StateTemplate<StateID::AssignReinforcements>::onEnter(GameEngine& engine) {
+void assignReinforcementsState::onEnter(GameEngine& engine) {
 
 	/*
 	Do something later for AssignReinforcements
@@ -240,8 +235,8 @@ void StateTemplate<StateID::AssignReinforcements>::onEnter(GameEngine& engine) {
 
 	std::cout << "entering " << *this << "\n";
 }
-template<>
-bool StateTemplate<StateID::AssignReinforcements>::onCommand(string& cmd, GameEngine& engine) {
+
+bool assignReinforcementsState::onCommand(string& cmd, GameEngine& engine) {
 	if (cmd == "issueOrder") {
 		engine.transitionState(StateID::IssueOrders);
 		return true;
@@ -250,11 +245,14 @@ bool StateTemplate<StateID::AssignReinforcements>::onCommand(string& cmd, GameEn
 	return false;
 }
 
+unique_ptr<State> assignReinforcementsState::clone() const {
+    return unique_ptr<assignReinforcementsState>(new assignReinforcementsState(*this));
+}
+
 /*
 Issue Orders State
 */
-template<>
-void StateTemplate<StateID::IssueOrders>::onEnter(GameEngine& engine) {
+void issueOrdersState::onEnter(GameEngine& engine) {
 
 	/*
 	Do something later for IssueOrders
@@ -262,8 +260,8 @@ void StateTemplate<StateID::IssueOrders>::onEnter(GameEngine& engine) {
 
 	std::cout << "entering " << *this << "\n";
 }
-template<>
-bool StateTemplate<StateID::IssueOrders>::onCommand(string& cmd, GameEngine& engine) {
+
+bool issueOrdersState::onCommand(string& cmd, GameEngine& engine) {
 	if (this->getValidCommands().count(cmd) > 0) {
 		if (cmd == "issueOrder") {
 			engine.transitionState(StateID::IssueOrders);
@@ -277,11 +275,14 @@ bool StateTemplate<StateID::IssueOrders>::onCommand(string& cmd, GameEngine& eng
 	return false;
 }
 
+unique_ptr<State> issueOrdersState::clone() const {
+    return unique_ptr<issueOrdersState>(new issueOrdersState(*this));
+}
+
 /*
 Execute Orders State
 */
-template<>
-void StateTemplate<StateID::ExecuteOrders>::onEnter(GameEngine& engine) {
+void executeOrdersState::onEnter(GameEngine& engine) {
 
 	/*
 	Do something later for ExecuteOrders
@@ -289,8 +290,8 @@ void StateTemplate<StateID::ExecuteOrders>::onEnter(GameEngine& engine) {
 
 	std::cout << "entering " << *this << "\n";
 }
-template<>
-bool StateTemplate<StateID::ExecuteOrders>::onCommand(string& cmd, GameEngine& engine) {
+
+bool executeOrdersState::onCommand(string& cmd, GameEngine& engine) {
 	if (this->getValidCommands().count(cmd) > 0) {
 		if (cmd == "execOrder") {
 			engine.transitionState(StateID::ExecuteOrders);
@@ -307,11 +308,14 @@ bool StateTemplate<StateID::ExecuteOrders>::onCommand(string& cmd, GameEngine& e
 	return false;
 }
 
+unique_ptr<State> executeOrdersState::clone() const {
+    return unique_ptr<executeOrdersState>(new executeOrdersState(*this));
+}
+
 /*
 Win State
 */
-template<>
-void StateTemplate<StateID::Win>::onEnter(GameEngine& engine) {
+void winState::onEnter(GameEngine& engine) {
 
 	/*
 	Do something later for Win
@@ -319,8 +323,8 @@ void StateTemplate<StateID::Win>::onEnter(GameEngine& engine) {
 
 	std::cout << "entering " << *this << "\n";
 }
-template<>
-bool StateTemplate<StateID::Win>::onCommand(string& cmd, GameEngine& engine) {
+
+bool winState::onCommand(string& cmd, GameEngine& engine) {
 	if (this->getValidCommands().count(cmd) > 0) {
 		if (cmd == "play") {
 			engine.transitionState(StateID::Start);
@@ -334,11 +338,14 @@ bool StateTemplate<StateID::Win>::onCommand(string& cmd, GameEngine& engine) {
 	return false;
 }
 
+unique_ptr<State> winState::clone() const {
+    return unique_ptr<winState>(new winState(*this));
+}
+
 /*
 End State
 */
-template<>
-void StateTemplate<StateID::End>::onEnter(GameEngine& engine) {
+void endState::onEnter(GameEngine& engine) {
 
 	/*
 	Do something later for End
@@ -346,11 +353,13 @@ void StateTemplate<StateID::End>::onEnter(GameEngine& engine) {
 
 	std::cout << "Ending the Game.\n";
 }
-template<>
-bool StateTemplate<StateID::End>::onCommand(string& cmd, GameEngine& engine) {
+bool endState::onCommand(string& cmd, GameEngine& engine) {
 	return true;
 }
 
+unique_ptr<State> endState::clone() const {
+    return unique_ptr<endState>(new endState(*this));
+}
 
 /*
  GameEngine class, that manages all the game structure by keeping track of all the states, and the current state.
@@ -371,7 +380,7 @@ GameEngine::GameEngine() :
 
 	states->emplace(StateID::PlayersAdded, make_unique<playersAddedState>("playersAdded", unordered_set<string>{ "addPlayer", "assignCountries" }));
 
-	states->emplace(StateID::AssignReinforcements, make_unique<assignReinforcementState>("assignReinforcements", unordered_set<string>{ "issueOrder" }));
+	states->emplace(StateID::AssignReinforcements, make_unique<assignReinforcementsState>("assignReinforcements", unordered_set<string>{ "issueOrder" }));
 
 	states->emplace(StateID::IssueOrders, make_unique<issueOrdersState>("issueOrders", unordered_set<string>{ "issueOrder", "endIssueOrders" }));
 
@@ -382,6 +391,54 @@ GameEngine::GameEngine() :
 	states->emplace(StateID::End, make_unique<endState>("end", unordered_set<string>{ "NA" }));
 
 }
+
+/*
+Copy constructor definition
+*/
+GameEngine::GameEngine(const GameEngine& other){
+	
+	if(other.states){
+		//creates a new pointer to a map, then deep copies the states from other into the new map by using the clone method polymorphically.
+		states = make_unique<map<StateID, unique_ptr<State>>>();
+		for(const std::pair<const StateID, unique_ptr<State>>& p : *other.states){
+			(*states)[p.first] = p.second->clone();
+		}
+		//Update currState to reference the same state (by ID) as in the original GameEngine
+		currState = other.currState ? states->at(other.currState->getID()).get() : nullptr;
+
+	}
+	else{
+		states = nullptr;
+		currState = nullptr;
+
+	}
+	
+}
+/*
+Assignment operator definition
+*/
+GameEngine& GameEngine::operator=(const GameEngine& other){
+	//compare both addresses to check for self assignment
+	if(this != &other){
+		//since the assignment operator also does a deep copy, just use the copy constructor, and then move ownership to assignee.
+		GameEngine tempEngine(other);
+		states = std::move(tempEngine.states);
+		currState = tempEngine.currState;
+	}
+	return *this;
+
+}
+/*
+Stream operator definition
+*/ 
+std::ostream& operator<<(std::ostream& stream, const GameEngine& engine) {
+
+	stream << "Engine at address: " << &engine << "\nCurrent State: " << *engine.getState() << "\n";
+
+	return stream;
+
+}
+
 
 /*
 Initialize the currState to be the startState, basically the entry point of the game.
