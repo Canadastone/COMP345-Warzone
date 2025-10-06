@@ -46,3 +46,8 @@ void testOrdersLists() {
     printListHelper(testList);
     
 };
+
+int main(){
+    testOrdersLists();
+    return 0;
+}

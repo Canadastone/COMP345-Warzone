@@ -12,21 +12,6 @@
 #include <string>
 using namespace std;
 
-namespace{
-    
-
-    string getTypeAsString(orders::orderType type){
-        switch (type){
-            case orders::DEPLOY: return "Deploy";
-            case orders::ADVANCE: return "Advance";
-            case orders::BOMB: return "Bomb";
-            case orders::BLOCKADE: return "Blockade";
-            case orders::AIRLIFT: return "Airlift";
-            case orders::NEGOTIATE: return "Negotiate";
-        }
-        return "N/A";
-    }
-}
 
 namespace orders{
 
@@ -35,18 +20,42 @@ namespace orders{
         type = t;
     }
 
-    bool Order::validate(){
+
+    orderType Order::getType() const{
+        return type;
+    }
+
+    bool Order::isExecuted() const{
+        return executed;
+    }
+
+    //returns type of order as a string
+    string Order::getTypeAsString() const{
+        switch (type){ 
+            case orderType::DEPLOY: return "Deploy"; 
+            case orderType::ADVANCE: return "Advance"; 
+            case orderType::BOMB: return "Bomb"; 
+            case orderType::BLOCKADE: return "Blockade"; 
+            case orderType::AIRLIFT: return "Airlift"; 
+            case orderType::NEGOTIATE: return "Negotiate"; 
+        } 
+        return "N/A"; 
+    }
+
+    bool Order::validate() const{
         //TODO implememt Validate
         return true;
     }
             
-
+    //overloaded << operator
     std::ostream& operator<<(std::ostream& os, const Order& order){
-        os << getTypeAsString(order.type) << " Order, " << order.effect;
+        os << order.getTypeAsString() << " Order, " << order.effect;
             return os;
     }
 
-    Deploy::Deploy() : Order::Order(DEPLOY){
+    //Children Implementations of the Order Class:
+
+    Deploy::Deploy() : Order::Order(orderType::DEPLOY){
         effect = "order not excecuted yet";
         executed = false;
     }
@@ -58,7 +67,7 @@ namespace orders{
         } 
     }
     
-    Advance::Advance() : Order::Order(ADVANCE){
+    Advance::Advance() : Order::Order(orderType::ADVANCE){
         effect = "order not excecuted yet";
         executed = false;
     }
@@ -70,7 +79,7 @@ namespace orders{
         } 
     } 
 
-    Bomb::Bomb() : Order::Order(BOMB){
+    Bomb::Bomb() : Order::Order(orderType::BOMB){
         effect = "order not excecuted yet";
         executed = false;
     }
@@ -82,7 +91,7 @@ namespace orders{
         } 
     } 
 
-    Blockade::Blockade() : Order::Order(BLOCKADE){
+    Blockade::Blockade() : Order::Order(orderType::BLOCKADE){
         effect = "order not excecuted yet";
         executed = false;
     }
@@ -94,12 +103,12 @@ namespace orders{
         } 
     } 
 
-    Negotiate::Negotiate() : Order::Order(NEGOTIATE){
+    Negotiate::Negotiate() : Order::Order(orderType::NEGOTIATE){
         effect = "order not excecuted yet";
         executed = false;
     }
 
-    Airlift::Airlift() : Order::Order(AIRLIFT){
+    Airlift::Airlift() : Order::Order(orderType::AIRLIFT){
         effect = "order not excecuted yet";
         executed = false;
     }
@@ -121,10 +130,11 @@ namespace orders{
 
     OrderList::OrderList(){}
 
-    int OrderList::size(){
+    int OrderList::size() const{
         return orders.size();
     }
 
+    //overloads the [] operator
     Order* OrderList::operator[](int index){
         return orders.at(index);
     }
@@ -133,17 +143,44 @@ namespace orders{
         orders.push_back(order);
     }
 
+    /**
+     * removes the Order at index
+     * shifts all subsequent orders up the list to fill the empty spot
+     * does not destroy the removed order
+     * instead returns the pointer to the removed element
+     * must be call the destroyer externally.
+     */
     Order* OrderList::remove(int index){
 
-            if (indexOutOfBounds(index)){
-                string err = "Index " + std::to_string(index) + ",out of bounds"; 
-                throw std::runtime_error(err);
-            }
-            Order* removed = orders.at(index);
-            orders.erase(orders.begin() + index);
-            return removed;
+        if (indexOutOfBounds(index)){
+            string err = "Index " + std::to_string(index) + ",out of bounds"; 
+            throw std::runtime_error(err);
         }
+        Order* removed = orders.at(index);
+        orders.erase(orders.begin() + index);
+        return removed;
+     }
 
+     /**
+      * returns the index of the Order Passed to it
+      * does not compare inner fields, compares adresses
+      * will only return an index if the given pointer points to an order that is in the List
+      * if no index found returns -1;
+      */
+     int OrderList::indexOf(Order* order){
+        for(int i = 0; i < size(); i++){
+            if(order == (*this)[i]){
+                return true;
+            }
+        }
+        return -1;
+     }
+
+     /**
+      * moves Order at index "fromIndex" to "toIndex"
+      * shifts all other orders in the list to fill the "fromIndex"
+      * throws an error if the index is out of bounds
+      */
     void OrderList::move(int fromIndex, int toIndex){
 
         if (indexOutOfBounds(fromIndex) || indexOutOfBounds(toIndex)){
