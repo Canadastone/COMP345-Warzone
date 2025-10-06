@@ -21,16 +21,45 @@
 //-----------------------------------------------
 
 Map::Map(std::string filePath) {
-	MapLoader loader;
-	bool validFile = loader.validateFile(filePath);
+	MapLoader loader(filePath);
+	bool validFile = loader.validateFile();
 	if (!validFile) {
 		std::cout << "Invalid file, cannot create map..." << std::endl;
 		return;
 	}
-	std::vector<std::shared_ptr<Territory>> territories = loader.generateTerritories(filePath);
-	this->adjacencyMatrix = loader.generateConnectedTerritories(filePath, territories); //This is a map containing all the active territories for the game
+	std::vector<std::shared_ptr<Territory>> territories = loader.generateTerritories();
+	this->adjacencyMatrix = loader.generateConnectedTerritories(territories); //This is a map containing all the active territories for the game
 	initializeContinentMap();
+	int indexOfLastSlash = filePath.find_last_of("/");
+	this->mapName = filePath.substr(indexOfLastSlash + 1);
 	std::cout << "Successfully created map..." << std::endl;
+
+}
+
+Map::Map(const Map& map) {
+	adjacencyMatrix = map.adjacencyMatrix;
+	continentMap = map.continentMap;
+	mapName = map.mapName;
+	std::cout << "Copy constructor called!" << std::endl;
+}
+
+Map& Map::operator=(const Map& map) {
+
+	if (this == &map)
+		return *this;
+
+	adjacencyMatrix = map.adjacencyMatrix;
+	continentMap = map.continentMap;
+	mapName = map.mapName;
+
+	std::cout << "Copy Assignment Operator Called!" << std::endl;
+	return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, const Map& map){
+
+	os << "Map: " << map.mapName << std::endl;
+	return os;
 }
 
 void Map::printMap() {
@@ -246,12 +275,43 @@ Map::Territory::Territory(std::string name, std::string continent) {
 	this->numArmies = 0;
 }
 
+Map::Territory::Territory(const Territory& territory) {
+
+	this->name = territory.name;
+	this->continent = territory.continent;
+	this->owner = territory.owner;
+	this->numArmies = territory.numArmies;
+	this->connectedTerritories = connectedTerritories;
+	
+	std::cout << "Territory Copy Constructor Called!" << std::endl;
+}
+
+Map::Territory& Map::Territory::operator=(const Territory& territory) {
+
+	if (this == &territory)
+		return *this;
+
+	this->name = territory.name;
+	this->continent = territory.continent;
+	this->owner = territory.owner;
+	this->numArmies = territory.numArmies;
+	this->connectedTerritories = connectedTerritories;
+	
+	std::cout << "Territory Copy Assignment Operator Called!" << std::endl;
+	return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, const Map::Territory& territory) {
+	os << "Territory:" << territory.name << std::endl;
+	return os;
+}
+
 void Map::Territory::addConnection(std::shared_ptr<Territory> territory) {
 	this->connectedTerritories.push_back(territory);
 }
 
-void Map::Territory::setOwnership(std::string owner) {
-	this->ownedBy = owner;
+void Map::Territory::setOwnership(std::shared_ptr<Player> owner) {
+	this->owner = owner;
 }
 
 std::string Map::Territory::getName() {
@@ -266,15 +326,15 @@ std::vector <std::shared_ptr<Map::Territory>> Map::Territory::getConnectedTerrit
 	return this->connectedTerritories;
 }
 
-std::string Map::Territory::getOwnership() {
-	return this->ownedBy;
+std::shared_ptr<Player> Map::Territory::getOwnership() {
+	return this->owner;
 }
 
 void Map::Territory::printTerritory() {
 
 	std::cout << "Territory Name: " << this->name << std::endl;
 	std::cout << "Continent: " << this->continent << std::endl;
-	std::cout << "Owned by: " << this->ownedBy << std::endl;
+	std::cout << "Owned by: " << this->owner << std::endl;
 	std::cout << "Connected Territories: ";
 
 	for (std::shared_ptr<Territory> territory : this->connectedTerritories) {
@@ -288,9 +348,33 @@ void Map::Territory::printTerritory() {
 // MapLoader Functions
 //-----------------------------------------------
 
-bool Map::MapLoader::validateFile(std::string filePath) {
+Map::MapLoader::MapLoader(std::string filePath) {
+	this->filePath = filePath;
+}
 
-	std::ifstream file(filePath);
+Map::MapLoader::MapLoader(const MapLoader& mapLoader) {
+	this->filePath = mapLoader.filePath;
+	std::cout << "Map Loader Copy Constructor Called!" << std::endl;
+
+}
+
+Map::MapLoader& Map::MapLoader::operator=(const MapLoader& mapLoader) {
+
+	if (this == &mapLoader)
+		return *this;
+
+	this->filePath = mapLoader.filePath;
+	std::cout << "Map Loader Copy Assignment Operator Called!" << std::endl;
+	return *this;
+}
+
+std::ostream& operator<<(std::ostream& os, const Map::MapLoader& mapLoader) {
+	os << "Map Loader for :" << mapLoader.filePath << std::endl;
+	return os;
+}
+bool Map::MapLoader::validateFile() {
+
+	std::ifstream file(this->filePath);
 
 	std::string text;
 	bool hasMap = false, hasContinents = false, hasTerritories = false;
@@ -321,11 +405,11 @@ bool Map::MapLoader::validateFile(std::string filePath) {
 	return hasMap && hasContinents && hasTerritories;
 }
 
-std::vector<std::shared_ptr<Map::Territory>> Map::MapLoader::generateTerritories(std::string filePath) {
+std::vector<std::shared_ptr<Map::Territory>> Map::MapLoader::generateTerritories() {
 
 	std::vector<std::shared_ptr<Territory>> territoriesVector;
 
-	std::ifstream file(filePath);
+	std::ifstream file(this->filePath);
 
 	std::string text;
 	bool startReading = false;
@@ -368,11 +452,11 @@ std::vector<std::shared_ptr<Map::Territory>> Map::MapLoader::generateTerritories
 	return territoriesVector;
 }
 
-std::map<std::string, std::shared_ptr<Map::Territory>> Map::MapLoader::generateConnectedTerritories(std::string filePath, std::vector<std::shared_ptr<Map::Territory>> generatedTerritories) {
+std::map<std::string, std::shared_ptr<Map::Territory>> Map::MapLoader::generateConnectedTerritories(std::vector<std::shared_ptr<Map::Territory>> generatedTerritories) {
 
 	std::map<std::string, std::shared_ptr<Map::Territory>> map;
 
-	std::ifstream file(filePath);
+	std::ifstream file(this->filePath);
 
 	std::string text;
 	bool startReading = false;
