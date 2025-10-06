@@ -1,7 +1,13 @@
 #include <list>
-#include "orders/orders.h"
-#include "map/map.h"
-#include "cards/cards.h"
+#include "../orders/orders.h"
+#include "../map/map.h"
+#include "../cards/cards.h"
+
+class Order;
+class Map;
+class Territory;
+class Card;
+class Hand;
 
 class Player{
 
