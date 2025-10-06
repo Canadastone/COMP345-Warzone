@@ -3,10 +3,12 @@
 * Authors: Ariberto Bello Veras, Joshua Bitton, Liam Daigle, 
 * Ash Stone, Cyrus Stonebanks, Kirill Vishnyakov
 * Date: 2025-10-07
-* Description: This file contains the implementation of the player order logic for the
+* Description: This file contains the implementation of the move order logic for the Warzone game.
 */
 
 #include "orders.h"
+#include <list>
+#include <string>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -31,13 +33,13 @@ namespace orders{
 
     //returns type of order as a string
     string Order::getTypeAsString() const{
-        switch (type){ 
-            case orderType::DEPLOY: return "Deploy"; 
-            case orderType::ADVANCE: return "Advance"; 
-            case orderType::BOMB: return "Bomb"; 
-            case orderType::BLOCKADE: return "Blockade"; 
-            case orderType::AIRLIFT: return "Airlift"; 
-            case orderType::NEGOTIATE: return "Negotiate"; 
+        switch (static_cast<int>(type)){ 
+            case static_cast<int>(orderType::DEPLOY): return "Deploy"; 
+            case static_cast<int>(orderType::ADVANCE): return "Advance"; 
+            case static_cast<int>(orderType::BOMB): return "Bomb"; 
+            case static_cast<int>(orderType::BLOCKADE): return "Blockade"; 
+            case static_cast<int>(orderType::AIRLIFT): return "Airlift"; 
+            case static_cast<int>(orderType::NEGOTIATE): return "Negotiate"; 
         } 
         return "N/A"; 
     }

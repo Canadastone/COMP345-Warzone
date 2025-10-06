@@ -22,13 +22,20 @@ string cardTypeToString(CardType type) {
     }
 }
 // constructor for card
-Card::Card(CardType type) : type(type) {}
-
+Card::Card(CardType type) {
+    this -> type = new CardType(type);
+}
+Card::Card(const Card& otherCard) {
+    this -> type = new CardType(*otherCard.type);
+}
+Card::~Card() {
+    delete type;
+}
 CardType Card::getCardType() const {
-    return type;
+    return *type;
 }
 void Card::play() {
-    cout << "Playing " << cardTypeToString(type) << " card" << endl;
+    cout << "Playing " << cardTypeToString(*type) << " card" << endl;
     // after play, return to the deck
 }
 
