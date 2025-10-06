@@ -6,7 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <memory>
-#include "../player/player.h"
+//#include "../player/player.h"
 
 
 class Map
@@ -238,7 +238,7 @@ private:
 	*
 	* @return boolean value indicating if the map is a valid connected graph (true) or not (false)
 	*/
-	bool Map::isValidConnectedGraph();
+	bool isValidConnectedGraph();
 
 };
 
