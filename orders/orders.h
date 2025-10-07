@@ -1,3 +1,4 @@
+#pragma once
 
 /*
 * Assignment 1 - COMP 345
