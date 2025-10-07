@@ -37,13 +37,17 @@ namespace orders{
             //constructor to be used by children
             //No default constructor as an Order must have a type
             //creates an order according to the given type
-            Order(orderType t);
-            virtual ~Order() = default;
+            Order(const orderType t);
+            Order(const Order& order);
+            
             
         public:
             //string will store effect of the orders execution
             std::string effect;
-            
+
+            //desructor is public allows for anyone to destroy a preexisting Order
+            virtual ~Order() = default;
+
             //getters
             orderType getType() const;
             bool isExecuted() const;
@@ -55,6 +59,7 @@ namespace orders{
             //excecutes order
             virtual void execute() = 0;
 
+            Order& operator=(const Order& order);
             friend std::ostream& operator<<(std::ostream& os, const Order& order);         
     }; 
 
@@ -63,6 +68,7 @@ namespace orders{
         public:
 
         Deploy();
+        Deploy(const Deploy& deploy);
         void execute() override;
     };
     //class Advance, Child of abstract Order
@@ -70,6 +76,8 @@ namespace orders{
         public:
 
         Advance();
+        Advance(const Advance& advance);
+
         void execute() override;
     };
     //class Bomb, Child of abstract Orde
@@ -77,6 +85,8 @@ namespace orders{
         public:
 
         Bomb();
+        Bomb(const Bomb& bomb);
+
         void execute() override; 
     };
     //class Blockade, Child of abstract Orde
@@ -84,6 +94,8 @@ namespace orders{
         public:
 
         Blockade();
+        Blockade(const Blockade& blockade);
+
         void execute() override;
     };
     //class AirLift, Child of abstract Orde
@@ -91,6 +103,8 @@ namespace orders{
         public:
 
         Airlift();
+        Airlift(const Airlift& airlift);
+
         void execute() override;
     };
     //class Negotiate, Child of abstract Order
@@ -98,6 +112,8 @@ namespace orders{
         public:
 
         Negotiate();
+        Negotiate(const Negotiate& negotiate);
+
         void execute() override;
     };
 
@@ -110,22 +126,27 @@ namespace orders{
         std::vector<Order*> orders;
         
         //bound checker private helper
-        bool indexOutOfBounds(int index){
+        bool indexOutOfBounds(int index) const{ 
             return (index >= orders.size() || index < 0);
         }
 
         public:
 
         OrderList();
+        OrderList(const OrderList& other);
         ~OrderList();
 
+
         int size() const;
-        Order* operator[](int index);
+        Order* operator[](int index) const;
         void add(Order* order);
 
         Order* remove(int index);
-        int indexOf(Order* order);
+        int indexOf(Order* order) const;
         void move(int fromIndex, int toIndex);
+
+        OrderList& operator=(const OrderList& other);
+        friend std::ostream& operator<<(std::ostream& os, const OrderList& orderlist); 
     };
 }
 void testOrdersLists();

@@ -7,21 +7,22 @@
 */
 
 #include "orders.h"
-#include <list>
 #include <string>
 #include <iostream>
 #include <vector>
-#include <string>
 using namespace std;
 
 
 namespace orders{
 
     
-    Order::Order(orderType t){
+    Order::Order(const orderType t){
         type = t;
     }
 
+    Order::Order(const Order& order){
+        type = order.type;
+    }
 
     orderType Order::getType() const{
         return type;
@@ -49,6 +50,13 @@ namespace orders{
         return true;
     }
             
+    Order& Order::operator=(const Order& order){
+        type = order.type;
+        executed = order.executed;
+        effect = order.effect;
+        return *this;
+    }
+
     //overloaded << operator
     std::ostream& operator<<(std::ostream& os, const Order& order){
         os << order.getTypeAsString() << " Order, " << order.effect;
@@ -60,6 +68,10 @@ namespace orders{
     Deploy::Deploy() : Order::Order(orderType::DEPLOY){
         effect = "order not excecuted yet";
         executed = false;
+    }
+    Deploy::Deploy(const Deploy& deploy) : Order::Order(orderType::DEPLOY){
+        effect = deploy.effect;
+        executed = deploy.executed;
     }
 
     void Deploy::execute(){
@@ -73,6 +85,11 @@ namespace orders{
         effect = "order not excecuted yet";
         executed = false;
     }
+    Advance::Advance(const Advance& advance) : Order::Order(orderType::ADVANCE){
+        effect = advance.effect;
+        executed = advance.executed;
+    }
+
 
     void Advance::execute(){
        if(validate()){
@@ -85,6 +102,10 @@ namespace orders{
         effect = "order not excecuted yet";
         executed = false;
     }
+    Bomb::Bomb(const Bomb& bomb) : Order::Order(orderType::BOMB){
+        effect = bomb.effect;
+        executed = bomb.executed;
+    }
 
     void Bomb::execute(){
        if(validate()){
@@ -96,6 +117,10 @@ namespace orders{
     Blockade::Blockade() : Order::Order(orderType::BLOCKADE){
         effect = "order not excecuted yet";
         executed = false;
+    }
+    Blockade::Blockade(const Blockade& blockade) : Order::Order(orderType::BLOCKADE){
+        effect = blockade.effect;
+        executed = blockade.executed;
     }
 
     void Blockade::execute(){
@@ -110,10 +135,19 @@ namespace orders{
         executed = false;
     }
 
+    Negotiate::Negotiate(const Negotiate& negotiate) : Order::Order(orderType::NEGOTIATE){
+        effect = negotiate.effect;
+        executed = negotiate.executed;
+    }
+
     Airlift::Airlift() : Order::Order(orderType::AIRLIFT){
         effect = "order not excecuted yet";
         executed = false;
     }
+    Airlift::Airlift(const Airlift& airlift) : Order::Order(orderType::AIRLIFT){
+        effect = airlift.effect;
+        executed = airlift.executed;
+    } 
 
     void Airlift::execute(){
        if(validate()){
@@ -132,12 +166,25 @@ namespace orders{
 
     OrderList::OrderList(){}
 
+    OrderList::OrderList(const OrderList& other){
+        for(int i = 0; i < size(); i++){
+            add(other[i]);
+        }
+    }
+
+    OrderList::~OrderList() {
+        for (auto order : orders)
+            delete order;
+        orders.clear();
+    }
+
+
     int OrderList::size() const{
         return orders.size();
     }
 
     //overloads the [] operator
-    Order* OrderList::operator[](int index){
+    Order* OrderList::operator[](int index) const{
         return orders.at(index);
     }
 
@@ -169,10 +216,10 @@ namespace orders{
       * will only return an index if the given pointer points to an order that is in the List
       * if no index found returns -1;
       */
-     int OrderList::indexOf(Order* order){
+     int OrderList::indexOf(Order* order) const{
         for(int i = 0; i < size(); i++){
             if(order == (*this)[i]){
-                return true;
+                return i;
             }
         }
         return -1;
@@ -207,5 +254,22 @@ namespace orders{
             } 
             innerArray[toIndex] = temp;
         }
+    }
+    
+    OrderList& OrderList::operator=(const OrderList& other){
+        for(int i = 0; i < size(); i++){
+            add(other[i]);
+        }
+        return *this;
+    }
+
+    //overloaded << operator
+    std::ostream& operator<<(std::ostream& os, const OrderList& orderList){
+
+        for(int i = 0; i < orderList.size(); i++){
+            os << "[" << i << "] " << *(orderList[i]) << std::endl;
+        }
+
+        return os;
     }
 }

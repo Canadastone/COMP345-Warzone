@@ -3,15 +3,6 @@
 
 using namespace orders;
 
-
-void printListHelper(OrderList* list){
-    for(int i = 0; i < list->size(); i++){
-        std::cout << "[" << i << "] "   
-        << *((*list)[i]) << std::endl;
-    }
-    std::cout << std::endl; 
-}
-
 void testOrdersLists() {
 
     OrderList* testList = new OrderList();
@@ -30,20 +21,20 @@ void testOrdersLists() {
     testList->add(testAirlift);
     testList->add(testNegotiate);
     
-    std::cout << "Initial OrderList:" << std::endl;
-    printListHelper(testList);
+    std::cout << "Initial OrderList:" << std::endl << *testList << std::endl;
+    
 
     std::cout << std::endl << "moving order at index 1 to end of list: " << std::endl;
     testList->move(1, testList->size()-1);
-    printListHelper(testList);
+    std::cout << *testList << std::endl;
 
     std::cout << std::endl << "moving order at index 4 to index 2: " << std::endl;
     testList->move(4, 2);
-    printListHelper(testList);
+     std::cout << *testList << std::endl;
     
     std::cout << std::endl << "removing order at index 3: " << std::endl;
     testList->remove(3);
-    printListHelper(testList);
+     std::cout << *testList << std::endl;
     
 };
 
