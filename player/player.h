@@ -5,31 +5,36 @@
 #include "../cards/cards.h"
 using namespace std;
 
+class Order;
+class Hand;
+class Map;
+class Map::Territory;
+
 class Player{
 
     private:
-        list<Map::Territory> *playerTerritories;
-        list<Order> *playerOrders;
-        Hand *playerHand;
+        list<std::shared_ptr<Map::Territory>> playerTerritories;
+        list<std::shared_ptr<Order>> playerOrders;
+        std::shared_ptr<Hand> playerHand;
     
     public:
         Player();
         Player(const Player& other);
-        ~Player();
-        void addTerritory(Map::Territory t);
-        void removeTerritory(Map::Territory t);
-        void addOrder(Order o);
-        void removeOrder(Order o);
-        void addCard(Card c);
-        void removeCard(Card c);
-        list<Map::Territory> toDefend();
-        list<Map::Territory> toAttack();
+        void addTerritory(std::shared_ptr<Map::Territory> t);
+        void removeTerritory(std::shared_ptr<Map::Territory> t);
+        void addOrder(std::shared_ptr<Order> o);
+        void removeOrder(std::shared_ptr<Order> o);
+        void addCard(std::shared_ptr<Card> c);
+        void removeCard(std::shared_ptr<Card> c);
+        list<std::shared_ptr<Map::Territory>> toDefend();
+        list<std::shared_ptr<Map::Territory>> toAttack();
         void issueOrder();
-        list<Map::Territory>* getTerritories();
-        list<Order>* getOrders();
-        Hand* getHand();
+        list<std::shared_ptr<Map::Territory>> getTerritories();
+        list<std::shared_ptr<Order>> getOrders();
+        std::shared_ptr<Hand> getHand();
         Player& operator=(const Player& p);
         friend ostream& operator<<(ostream& os, const Player& p);
 
 
 };
+void testPlayers();

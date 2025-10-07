@@ -8,11 +8,19 @@
 
 #include <iostream>
 #include "../cards/cards.h"
+#include "../gameEngine/gameEngine.h"
+#include "../map/map.h"
+#include "../orders/orders.h"
+#include "../player/player.h"
 
 using namespace std;
 
 int main() {
     testCards();
-    return 0;
+    testGameStates();	
+    testLoadMaps();
+    testOrdersLists();
+	testPlayers();
+   return 0;
 
 }

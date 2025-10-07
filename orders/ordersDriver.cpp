@@ -47,7 +47,3 @@ void testOrdersLists() {
     
 };
 
-int main(){
-    testOrdersLists();
-    return 0;
-}
