@@ -3,13 +3,6 @@ using namespace std;
 #include <iostream>
 #include <memory>
 
-void testPlayers();
-
-int main(){
-    cout << "Testing Player class" << endl;
-    testPlayers();
-};
-
 void testPlayers(){
     
     Player p1;

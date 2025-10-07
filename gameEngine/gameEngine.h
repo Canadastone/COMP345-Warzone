@@ -244,4 +244,4 @@ public:
 	void transitionState(StateID id);
 
 };
-
+void testGameStates();

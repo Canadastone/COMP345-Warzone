@@ -37,3 +37,4 @@ class Player{
 
 
 };
+void testPlayers();

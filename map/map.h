@@ -335,5 +335,4 @@ private:
 	bool isValidConnectedGraph();
 
 };
-
-
+void testLoadMaps();
