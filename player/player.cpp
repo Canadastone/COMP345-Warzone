@@ -62,7 +62,7 @@ void Player::issueOrder() {
 
     cout << "Player issueOrder method called" << endl;
     
-    shared_ptr<Order> o = make_shared<Order>();
+    shared_ptr<Order> o;
 
     playerOrders.push_back(o);
 

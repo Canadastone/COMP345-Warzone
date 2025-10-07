@@ -5,10 +5,10 @@ using namespace std;
 
 void testPlayers();
 
-//int main(){
-//    cout << "Testing Player class" << endl;
-//    testPlayers();
-//};
+int main(){
+    cout << "Testing Player class" << endl;
+    testPlayers();
+};
 
 void testPlayers(){
     
