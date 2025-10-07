@@ -11,18 +11,41 @@ int main(){
 
 void testPlayers(){
     
-    Player p1, p2;
+    Player p1;
 
-    Card c1, c2;
-    Territory t1, t2;
+    // Add territories
+    Map::Territory t1("Territory1", "Continent1");
+    Map::Territory t2("Territory2", "Continent1");
+    p1.addTerritory(t1);
+    p1.addTerritory(t2);
+
+    // Add cards
+    Card c1(CardType::BOMB);
+    Card c2(CardType::REINFORCEMENT);
+    p1.addCard(c1);
+    p1.addCard(c2);
+
+    // Add orders
     Order o1, o2;
+    p1.addOrder(o1);
+    p1.addOrder(o2);
 
-    p1.addCard(Card());
-    p1.addOrder(Order());
-    p1.addTerritory(Territory());
+    // Demonstrate toAttack and toDefend
+    cout << "Player 1 toAttack and toDefend:" << endl;
+    p1.toAttack();
+    p1.toDefend();
 
-    p2.addCard(Card());
-    p2.addOrder(Order());
-    p2.addTerritory(Territory());
+    // Demonstrate issueOrder
+    cout << "Calling issueOrder:" << endl;
+    p1.issueOrder();
+
+    // Print number of orders
+    cout << "Player 1 has " << p1.getOrders()->size() << " orders" << endl;
+
+    // Print cards in hand
+    cout << "Player 1 has " << p1.getHand()->size() << " cards in hand" << endl;
+
+    // Print territories
+    cout << "Player 1 has " << p1.getTerritories()->size() << " territories" << endl;
 
 };
