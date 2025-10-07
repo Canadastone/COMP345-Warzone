@@ -11,8 +11,8 @@
 
 using namespace std;
 
-//int main() {
-//    testCards();
-//    return 0;
-//
-//}
+int main() {
+   testCards();
+   return 0;
+
+}

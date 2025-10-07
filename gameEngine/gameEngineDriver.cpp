@@ -5,17 +5,17 @@ using std::cout;
 using std::cin;
 void testGameStates(GameEngine&);
 
-//int main() {
-//
-//	//States are classes, transitions are triggered by void transitionState(StateID id), and commands are strings.
-//	GameEngine engine; 
-//
-//	testGameStates(engine);
-//		
-//	
-//	return 0;
-//	
-//}
+int main() {
+
+	//States are classes, transitions are triggered by void transitionState(StateID id), and commands are strings.
+	GameEngine engine; 
+
+	testGameStates(engine);
+		
+	
+	return 0;
+	
+}
 
 /*
 creates a console-driven interface that allows
