@@ -23,7 +23,16 @@ Order::~Order() {
 }
 
 std::ostream& operator<<(std::ostream& os, Order& order) {
-    os << "Order Type: " << order.getType();
+    std::string orderType; //DEPLOY, ADVANCE, BOMB, BLOCKADE, AIRLIFT, NEGOTIATE
+    switch (order.getType()) {
+    case OrderType::DEPLOY: orderType = "DEPLOY"; break;
+    case OrderType::ADVANCE: orderType = "ADVANCE"; break;
+    case OrderType::BOMB: orderType = "BOMB"; break;
+    case OrderType::BLOCKADE: orderType = "BLOCKADE"; break;
+    case OrderType::AIRLIFT: orderType = "AIRLIFT"; break;
+    case OrderType::NEGOTIATE: orderType = "NEGOTIATE"; break;
+    }
+    os << "Order Type: " << orderType << std::endl;
     return os;
 }
 
@@ -50,7 +59,7 @@ bool deploy::validate() {
 }
 
 deploy::deploy() {
-    setType(DEPLOY);
+    setType(OrderType::DEPLOY);
 }
 
 deploy::~deploy() {
@@ -72,7 +81,7 @@ bool advance::validate() {
 }
 
 advance::advance() {
-    setType(ADVANCE);
+    setType(OrderType::ADVANCE);
 }
 
 advance::~advance() {
@@ -94,7 +103,7 @@ bool bomb::validate() {
 }
 
 bomb::bomb() {
-    setType(BOMB);
+    setType(OrderType::BOMB);
 }
 
 bomb::~bomb() {
@@ -116,7 +125,7 @@ bool blockade::validate() {
 }
 
 blockade::blockade() {
-    setType(BLOCKADE);
+    setType(OrderType::BLOCKADE);
 }
 
 blockade::~blockade() {
@@ -138,7 +147,7 @@ bool airlift::validate() {
 }
 
 airlift::airlift() {
-    setType(AIRLIFT);
+    setType(OrderType::AIRLIFT);
 }
 
 airlift::~airlift() {
@@ -160,7 +169,7 @@ bool negotiate::validate() {
 }
 
 negotiate::negotiate() {
-    setType(NEGOTIATE);
+    setType(OrderType::NEGOTIATE);
 }
 
 negotiate::~negotiate() {

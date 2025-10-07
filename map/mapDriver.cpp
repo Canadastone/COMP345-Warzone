@@ -3,12 +3,12 @@
 #include <memory>
 
 void testLoadMaps();
-int main() {
-
-	testLoadMaps();
-
-	return 0;
-}
+//int main() {
+//
+//	testLoadMaps();
+//
+//	return 0;
+//}
 
 void testLoadMaps() {
 	std::string map_directory = "./map_files/";
