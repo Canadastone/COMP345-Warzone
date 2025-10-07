@@ -1,93 +1,153 @@
 #pragma once
 
+/*
+* Assignment 1 - COMP 345
+* Authors: Ariberto Bello Veras, Joshua Bitton, Liam Daigle, 
+* Ash Stone, Cyrus Stonebanks, Kirill Vishnyakov
+* Date: 2025-10-07
+* Description: This file contains the declarations for the orders.cpp file
+*/
+#ifndef ORDERS_H
+#define ORDERS_H
+
+#include <iostream>
+#include <vector>
 #include <string>
-#include <list>
-
-enum class OrderType { DEPLOY, ADVANCE, BOMB, BLOCKADE, AIRLIFT, NEGOTIATE };
-
-class Order{
-
-    private:
-        OrderType type;
-
-    public:
-        void execute();
-        bool validate();
-        Order();
-        ~Order();
-        void setType(OrderType t);
-        OrderType getType();
-};
-
-class OrderList{
-
-    private:
-        std::list<Order> actionList; 
-
-    public:
-        void remove();
-        void move();
-
-};
 
 
-class deploy: public Order{
+//namespace containing all order related definitions
+namespace orders{
+    
+    /*
+    enum for all valid order types
+    */
+    enum class orderType{ DEPLOY, ADVANCE, BOMB, BLOCKADE, AIRLIFT, NEGOTIATE};
 
-    public:
-        deploy();
-        ~deploy();
-        void execute();
-        bool validate();
+    /*
+    Base Absract Class, shall only be instantiated through its children
+    defines what specific orders will implement
+    */
+    class Order{
+       
+        protected:
 
-};
+            orderType type; 
+            bool executed;
 
-class advance: public Order{
+            //constructor to be used by children
+            //No default constructor as an Order must have a type
+            //creates an order according to the given type
+            Order(const orderType t);
+            Order(const Order& order);
+            
+            
+        public:
+            //string will store effect of the orders execution
+            std::string effect;
 
-    public:
-        advance();
-        ~advance();
-        void execute();
-        bool validate();
+            //desructor is public allows for anyone to destroy a preexisting Order
+            virtual ~Order() = default;
 
-};
+            //getters
+            orderType getType() const;
+            bool isExecuted() const;
+            std::string getTypeAsString() const;
 
-class bomb: public Order{
+            //checks the validity of the order
+            virtual bool validate() const;
 
-    public:
-        bomb();
-        ~bomb();
-        void execute();
-        bool validate();
+            //excecutes order
+            virtual void execute() = 0;
 
-};
+            Order& operator=(const Order& order);
+            friend std::ostream& operator<<(std::ostream& os, const Order& order);         
+    }; 
 
-class blockade: public Order{
+    //class Deploy, Child of abstract Order
+    class Deploy : public Order{
+        public:
 
-    public:
-        blockade();
-        ~blockade();
-        void execute();
-        bool validate();
+        Deploy();
+        Deploy(const Deploy& deploy);
+        void execute() override;
+    };
+    //class Advance, Child of abstract Order
+    class Advance : public Order{
+        public:
 
-};
+        Advance();
+        Advance(const Advance& advance);
 
-class airlift: public Order{
+        void execute() override;
+    };
+    //class Bomb, Child of abstract Orde
+    class Bomb : public Order{
+        public:
 
-    public:
-        airlift();
-        ~airlift();
-        void execute();
-        bool validate();
+        Bomb();
+        Bomb(const Bomb& bomb);
 
-};
+        void execute() override; 
+    };
+    //class Blockade, Child of abstract Orde
+    class Blockade : public Order{
+        public:
 
-class negotiate: public Order{
+        Blockade();
+        Blockade(const Blockade& blockade);
 
-    public:
-        negotiate();
-        ~negotiate();
-        void execute();
-        bool validate();
+        void execute() override;
+    };
+    //class AirLift, Child of abstract Orde
+    class Airlift : public Order{
+        public:
 
-};
+        Airlift();
+        Airlift(const Airlift& airlift);
 
+        void execute() override;
+    };
+    //class Negotiate, Child of abstract Order
+    class Negotiate : public Order{
+        public:
+
+        Negotiate();
+        Negotiate(const Negotiate& negotiate);
+
+        void execute() override;
+    };
+
+    //Class Order List, will store and handle the orders in the game
+    //uses vector of pointers to contain the orders
+    class OrderList{
+        private:
+            
+        //internal vector holding pointers to all the orders 
+        std::vector<Order*> orders;
+        
+        //bound checker private helper
+        bool indexOutOfBounds(int index) const{ 
+            return (index >= orders.size() || index < 0);
+        }
+
+        public:
+
+        OrderList();
+        OrderList(const OrderList& other);
+        ~OrderList();
+
+
+        int size() const;
+        Order* operator[](int index) const;
+        void add(Order* order);
+
+        Order* remove(int index);
+        int indexOf(Order* order) const;
+        void move(int fromIndex, int toIndex);
+
+        OrderList& operator=(const OrderList& other);
+        friend std::ostream& operator<<(std::ostream& os, const OrderList& orderlist); 
+    };
+}
+void testOrdersLists();
+#endif

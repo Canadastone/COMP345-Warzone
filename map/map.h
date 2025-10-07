@@ -6,9 +6,8 @@
 #include <fstream>
 #include <sstream>
 #include <memory>
-#include "../player/player.h"
-class Player;
 
+class Player;
 
 class Map
 {
@@ -336,5 +335,4 @@ private:
 	bool isValidConnectedGraph();
 
 };
-
-
+void testLoadMaps();

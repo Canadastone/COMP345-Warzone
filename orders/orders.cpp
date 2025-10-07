@@ -7,162 +7,269 @@
 */
 
 #include "orders.h"
-#include <list>
 #include <string>
 #include <iostream>
+#include <vector>
 using namespace std;
 
-// TODO: Implement the player order logic here
 
-Order::Order() {
-    // Default constructor logic if needed
-}
+namespace orders{
 
-Order::~Order() {
-    // Destructor logic if needed
-}
-
-std::ostream& operator<<(std::ostream& os, Order& order) {
-    os << "Order Type: " << order.getType();
-    return os;
-}
-
-void Order::setType(OrderType t) {
-    type = t;
-}
-
-OrderType Order::getType() {
-    return type;
-}
-
-void deploy::execute() {
-    cout << "Executing deploy order" << endl;
-    if (this->validate()) {
-        cout << "Deploy order is valid" << endl;
-    } else {
-        cout << "Deploy order is invalid" << endl;
+    
+    Order::Order(const orderType t){
+        type = t;
     }
-}
 
-bool deploy::validate() {
-    cout << "Validating deploy order" << endl;
-    return true;  // Placeholder return value
-}
-
-deploy::deploy() {
-    setType(DEPLOY);
-}
-
-deploy::~deploy() {
-    // Destructor logic if needed
-}
-
-void advance::execute() {
-    cout << "Executing advance order" << endl;
-    if (this->validate()) {
-        cout << "Advance order is valid" << endl;
-    } else {
-        cout << "Advance order is invalid" << endl;
+    Order::Order(const Order& order){
+        type = order.type;
     }
-}
 
-bool advance::validate() {
-    cout << "Validating advance order" << endl;
-    return true;  // Placeholder return value
-}
-
-advance::advance() {
-    setType(ADVANCE);
-}
-
-advance::~advance() {
-    // Destructor logic if needed
-}
-
-void bomb::execute() {
-    cout << "Executing bomb order" << endl;
-    if (this->validate()) {
-        cout << "Bomb order is valid" << endl;
-    } else {
-        cout << "Bomb order is invalid" << endl;
+    orderType Order::getType() const{
+        return type;
     }
-}
 
-bool bomb::validate() {
-    cout << "Validating bomb order" << endl;
-    return true;  // Placeholder return value
-}
-
-bomb::bomb() {
-    setType(BOMB);
-}
-
-bomb::~bomb() {
-    // Destructor logic if needed
-}
-
-void blockade::execute() {
-    cout << "Executing blockade order" << endl;
-    if (this->validate()) {
-        cout << "Blockade order is valid" << endl;
-    } else {
-        cout << "Blockade order is invalid" << endl;
+    bool Order::isExecuted() const{
+        return executed;
     }
-}
 
-bool blockade::validate() {
-    cout << "Validating blockade order" << endl;
-    return true;  // Placeholder return value
-}
-
-blockade::blockade() {
-    setType(BLOCKADE);
-}
-
-blockade::~blockade() {
-    // Destructor logic if needed
-}
-
-void airlift::execute() {
-    cout << "Executing airlift order" << endl;
-    if (this->validate()) {
-        cout << "Airlift order is valid" << endl;
-    } else {
-        cout << "Airlift order is invalid" << endl;
+    //returns type of order as a string
+    string Order::getTypeAsString() const{
+        switch (static_cast<int>(type)){ 
+            case static_cast<int>(orderType::DEPLOY): return "Deploy"; 
+            case static_cast<int>(orderType::ADVANCE): return "Advance"; 
+            case static_cast<int>(orderType::BOMB): return "Bomb"; 
+            case static_cast<int>(orderType::BLOCKADE): return "Blockade"; 
+            case static_cast<int>(orderType::AIRLIFT): return "Airlift"; 
+            case static_cast<int>(orderType::NEGOTIATE): return "Negotiate"; 
+        } 
+        return "N/A"; 
     }
-}
 
-bool airlift::validate() {
-    cout << "Validating airlift order" << endl;
-    return true;  // Placeholder return value
-}
-
-airlift::airlift() {
-    setType(AIRLIFT);
-}
-
-airlift::~airlift() {
-    // Destructor logic if needed
-}
-
-void negotiate::execute() {
-    cout << "Executing negotiate order" << endl;
-    if (this->validate()) {
-        cout << "Negotiate order is valid" << endl;
-    } else {
-        cout << "Negotiate order is invalid" << endl;
+    bool Order::validate() const{
+        //TODO implememt Validate
+        return true;
     }
-}
+            
+    Order& Order::operator=(const Order& order){
+        type = order.type;
+        executed = order.executed;
+        effect = order.effect;
+        return *this;
+    }
 
-bool negotiate::validate() {
-    cout << "Validating negotiate order" << endl;
-    return true;  // Placeholder return value
-}
+    //overloaded << operator
+    std::ostream& operator<<(std::ostream& os, const Order& order){
+        os << order.getTypeAsString() << " Order, " << order.effect;
+            return os;
+    }
 
-negotiate::negotiate() {
-    setType(NEGOTIATE);
-}
+    //Children Implementations of the Order Class:
 
-negotiate::~negotiate() {
-    // Destructor logic if needed
+    Deploy::Deploy() : Order::Order(orderType::DEPLOY){
+        effect = "order not excecuted yet";
+        executed = false;
+    }
+    Deploy::Deploy(const Deploy& deploy) : Order::Order(orderType::DEPLOY){
+        effect = deploy.effect;
+        executed = deploy.executed;
+    }
+
+    void Deploy::execute(){
+       if(validate()){
+            executed = true;
+            //TODO implememt the rest of execute;
+        } 
+    }
+    
+    Advance::Advance() : Order::Order(orderType::ADVANCE){
+        effect = "order not excecuted yet";
+        executed = false;
+    }
+    Advance::Advance(const Advance& advance) : Order::Order(orderType::ADVANCE){
+        effect = advance.effect;
+        executed = advance.executed;
+    }
+
+
+    void Advance::execute(){
+       if(validate()){
+            executed = true;
+            //TODO implememt the rest of execute;
+        } 
+    } 
+
+    Bomb::Bomb() : Order::Order(orderType::BOMB){
+        effect = "order not excecuted yet";
+        executed = false;
+    }
+    Bomb::Bomb(const Bomb& bomb) : Order::Order(orderType::BOMB){
+        effect = bomb.effect;
+        executed = bomb.executed;
+    }
+
+    void Bomb::execute(){
+       if(validate()){
+            executed = true;
+            //TODO implememt the rest of execute;
+        } 
+    } 
+
+    Blockade::Blockade() : Order::Order(orderType::BLOCKADE){
+        effect = "order not excecuted yet";
+        executed = false;
+    }
+    Blockade::Blockade(const Blockade& blockade) : Order::Order(orderType::BLOCKADE){
+        effect = blockade.effect;
+        executed = blockade.executed;
+    }
+
+    void Blockade::execute(){
+       if(validate()){
+            executed = true;
+            //TODO implememt the rest of execute;
+        } 
+    } 
+
+    Negotiate::Negotiate() : Order::Order(orderType::NEGOTIATE){
+        effect = "order not excecuted yet";
+        executed = false;
+    }
+
+    Negotiate::Negotiate(const Negotiate& negotiate) : Order::Order(orderType::NEGOTIATE){
+        effect = negotiate.effect;
+        executed = negotiate.executed;
+    }
+
+    Airlift::Airlift() : Order::Order(orderType::AIRLIFT){
+        effect = "order not excecuted yet";
+        executed = false;
+    }
+    Airlift::Airlift(const Airlift& airlift) : Order::Order(orderType::AIRLIFT){
+        effect = airlift.effect;
+        executed = airlift.executed;
+    } 
+
+    void Airlift::execute(){
+       if(validate()){
+            executed = true;
+            //TODO implememt the rest of execute;
+        } 
+    }
+    
+    void Negotiate::execute(){
+       if(validate()){
+            executed = true;
+            //TODO implememt the rest of execute;
+        } 
+    } 
+
+
+    OrderList::OrderList(){}
+
+    OrderList::OrderList(const OrderList& other){
+        for(int i = 0; i < size(); i++){
+            add(other[i]);
+        }
+    }
+
+    OrderList::~OrderList() {
+        for (auto order : orders)
+            delete order;
+        orders.clear();
+    }
+
+
+    int OrderList::size() const{
+        return orders.size();
+    }
+
+    //overloads the [] operator
+    Order* OrderList::operator[](int index) const{
+        return orders.at(index);
+    }
+
+    void OrderList::add(Order* order){
+        orders.push_back(order);
+    }
+
+    /**
+     * removes the Order at index
+     * shifts all subsequent orders up the list to fill the empty spot
+     * does not destroy the removed order
+     * instead returns the pointer to the removed element
+     * must be call the destroyer externally.
+     */
+    Order* OrderList::remove(int index){
+
+        if (indexOutOfBounds(index)){
+            string err = "Index " + std::to_string(index) + ",out of bounds"; 
+            throw std::runtime_error(err);
+        }
+        Order* removed = orders.at(index);
+        orders.erase(orders.begin() + index);
+        return removed;
+     }
+
+     /**
+      * returns the index of the Order Passed to it
+      * does not compare inner fields, compares adresses
+      * will only return an index if the given pointer points to an order that is in the List
+      * if no index found returns -1;
+      */
+     int OrderList::indexOf(Order* order) const{
+        for(int i = 0; i < size(); i++){
+            if(order == (*this)[i]){
+                return i;
+            }
+        }
+        return -1;
+     }
+
+     /**
+      * moves Order at index "fromIndex" to "toIndex"
+      * shifts all other orders in the list to fill the "fromIndex"
+      * throws an error if the index is out of bounds
+      */
+    void OrderList::move(int fromIndex, int toIndex){
+
+        if (indexOutOfBounds(fromIndex) || indexOutOfBounds(toIndex)){
+            string err = "Index out of bounds"; 
+            throw std::runtime_error(err);
+        }
+
+        Order** innerArray = orders.data();
+
+        if(toIndex > fromIndex){
+            Order* temp = innerArray[fromIndex];
+            for(int i = fromIndex; i < toIndex; i++){
+                innerArray[i] = innerArray[i+1];
+            } 
+            innerArray[toIndex] = temp;
+        }
+
+        if(fromIndex > toIndex){
+            Order* temp = innerArray[fromIndex];
+            for(int i = fromIndex; i > toIndex; i--){
+                innerArray[i] = innerArray[i-1];
+            } 
+            innerArray[toIndex] = temp;
+        }
+    }
+    
+    OrderList& OrderList::operator=(const OrderList& other){
+        for(int i = 0; i < size(); i++){
+            add(other[i]);
+        }
+        return *this;
+    }
+
+    //overloaded << operator
+    std::ostream& operator<<(std::ostream& os, const OrderList& orderList){
+
+        for(int i = 0; i < orderList.size(); i++){
+            os << "[" << i << "] " << *(orderList[i]) << std::endl;
+        }
+
+        return os;
+    }
 }

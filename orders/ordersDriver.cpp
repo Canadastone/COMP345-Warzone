@@ -1,39 +1,40 @@
 #include "orders.h"
-#include "orders.cpp"
-#include <list>
-#include <string>
 #include <iostream>
 
-using std::list;
-using std::cout;
-using std::endl;
-
-void testOrdersLists();
-
-int main() {
-    cout << "Testing Orders and OrderList classes" << endl;
-    testOrdersLists();
-}
+using namespace orders;
 
 void testOrdersLists() {
 
-    Order *o1, *o2, *o3, *o4, *o5, *o6; 
-    o1 = new deploy();
-    //o2 = new advance();
-    o3 = new bomb();
-    o4 = new blockade();
-    o5 = new airlift();
-    o6 = new negotiate();
+    OrderList* testList = new OrderList();
 
-    cout << "hello" << endl;
-    cout << o1 << endl;
-    list<Order*> ordersList = {o1, o2, o3, o4, o5, o6};
+    Deploy* testDeploy = new Deploy();
+    Advance* testAdvance = new Advance();
+    Bomb* testBomb = new Bomb();
+    Blockade* testBlockade = new Blockade();
+    Airlift* testAirlift = new Airlift();
+    Negotiate* testNegotiate = new Negotiate();
+    
+    testList->add(testDeploy);
+    testList->add(testAdvance);
+    testList->add(testBomb);
+    testList->add(testBlockade);
+    testList->add(testAirlift);
+    testList->add(testNegotiate);
+    
+    std::cout << "Initial OrderList:" << std::endl << *testList << std::endl;
+    
 
-    delete o1;
-    delete o2;
-    delete o3;
-    delete o4;
-    delete o5;
-    delete o6;
+    std::cout << std::endl << "moving order at index 1 to end of list: " << std::endl;
+    testList->move(1, testList->size()-1);
+    std::cout << *testList << std::endl;
 
+    std::cout << std::endl << "moving order at index 4 to index 2: " << std::endl;
+    testList->move(4, 2);
+     std::cout << *testList << std::endl;
+    
+    std::cout << std::endl << "removing order at index 3: " << std::endl;
+    testList->remove(3);
+     std::cout << *testList << std::endl;
+    
 };
+
