@@ -31,6 +31,8 @@ class Card {
         ~Card();
         CardType getCardType() const;
         void play();
+		Card& operator=(const Card& c);
+		friend ostream& operator<<(ostream& os, const Card& c);
 };
 
 class Deck {

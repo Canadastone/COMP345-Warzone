@@ -93,3 +93,17 @@ multiset<shared_ptr<Card>> Hand::getHand() {
 int Hand::size() const {
     return hand.size();
 }
+
+Card& Card::operator=(const Card& c) {
+	cout << "Calling Card copy assignment operator" << endl;
+    if (this != &c) {
+        delete type; // Free existing resource
+        type = new CardType(*c.type); // Deep copy
+    }
+    return *this;
+}
+
+ostream& operator<<(ostream& os, const Card& c) {
+    os << "Card Type: " << cardTypeToString(c.getCardType());
+    return os;
+}
