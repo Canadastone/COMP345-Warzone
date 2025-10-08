@@ -34,7 +34,12 @@ void testOrdersLists() {
     
     std::cout << std::endl << "removing order at index 3: " << std::endl;
     testList->remove(3);
-     std::cout << *testList << std::endl;
+    std::cout << *testList << std::endl;
     
-};
+    std::cout << "validating all remaining orders" << std::endl;
+    for(int i = 0; i < testList->size(); i++){
+        (*testList)[i]->validate();
+    }
 
+    delete(testList);
+};
