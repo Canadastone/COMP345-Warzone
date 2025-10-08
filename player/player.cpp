@@ -13,113 +13,128 @@
 
 using namespace std;
 
-// TODO: Implement the player logic here
-
-
 Player::Player() {
 
-    cout << "Player created" << endl;
-    playerHand = make_shared<Hand>();
+    cout << "Player created" << endl;                               
+    playerHand = make_shared<Hand>();                                   // gives the player a hand of cards by default
 }
 
 Player::Player(const Player& other) {
     cout << "Player copy constructor called" << endl;
-    playerHand = other.playerHand;
-    playerTerritories = other.playerTerritories;
-    playerOrders = other.playerOrders;
+	playerHand = other.playerHand;                                      // copies the player's hand of cards
+	playerTerritories = other.playerTerritories;                        // copies the player's list of territories
+	playerOrders = other.playerOrders;                                  // copies the player's list of orders
 }
 
 list<std::shared_ptr<Map::Territory>> Player::toDefend() {
 
-    cout << "Player toDefend method called" << endl;
-
-    list<std::shared_ptr<Map::Territory>> defendList;
+	list<std::shared_ptr<Map::Territory>> defendList;                   // list of territories to defend
 
     std::shared_ptr<Map::Territory> t1 = make_shared<Map::Territory>("Test Territory One", "Test Continent One");
-    std::shared_ptr<Map::Territory> t2 = make_shared<Map::Territory>("Test Territory Two", "Test Continent One");
+    std::shared_ptr<Map::Territory> t2 = make_shared<Map::Territory>("Test Territory Two", "Test Continent Two");
+	std::shared_ptr<Map::Territory> t3 = make_shared<Map::Territory>("Test Territory Three", "Test Continent Three");
 
-    defendList.push_back(t1);
+	defendList.push_back(t1);                                           // adds arbitrary territories to the defend list
     defendList.push_back(t2);
+	defendList.push_back(t3);
 
-    return defendList;
+	return defendList;                                                  // returns list of territories to defend
 
 
 }
 list<std::shared_ptr<Map::Territory>> Player::toAttack() {
 
-    cout << "Player toAttack method called" << endl;
-
-    list<std::shared_ptr<Map::Territory>> attackList;
+	list<std::shared_ptr<Map::Territory>> attackList;                   // list of territories to attack
 
     std::shared_ptr<Map::Territory> t1 = make_shared<Map::Territory>("Test Territory One", "Test Continent One");
     std::shared_ptr<Map::Territory> t2 = make_shared<Map::Territory>("Test Territory Two", "Test Continent One");
 
-    attackList.push_back(t1);
+	attackList.push_back(t1);                                           // adds arbitrary territories to the attack list
     attackList.push_back(t2);
 
-    return attackList;
+	return attackList;                                                  // returns list of territories to attack
 
 }
 void Player::issueOrder(shared_ptr<orders::Order> o) {
 
-    cout << "Player issueOrder method called" << endl;
+    cout << "Issuing an order to player" << endl;
 
-    playerOrders.push_back(o);
-
-    cout << "Order issued" << endl;
+	playerOrders.push_back(o);                                      // adds the given order to the player's list of orders
 
 }
 
 void Player::addTerritory(shared_ptr<Map::Territory> t) {
+
     cout << "Adding territory to player" << endl;
-    playerTerritories.push_back(t);
+
+	playerTerritories.push_back(t); 								// adds the given territory to the player's list of territories
+
 }
 
 void Player::removeTerritory(shared_ptr<Map::Territory> t) {
+
     cout << "Removing territory from player" << endl;
-    playerTerritories.remove(t);
+
+	playerTerritories.remove(t); 			        			   // removes the given territory from the player's list of territories
+
 }
 
 void Player::addCard(shared_ptr<Card> c) {
+
     cout << "Adding card to player" << endl;
-    playerHand->addCard(c);
+
+	playerHand->addCard(c);                                        // adds the given card to the player's hand
 
 }
 
 void Player::removeCard(shared_ptr<Card> c) {
+
     cout << "Removing card from player" << endl;
+
     Deck tempDeck;
-    playerHand->useCard(c, tempDeck);
+	playerHand->useCard(c, tempDeck);                               // removes the given card from the player's hand
+
 }
 
 shared_ptr<Hand> Player::getHand() {
-    return playerHand;
+
+	return playerHand;                                              // returns the player's hand of cards
+
 }
 
 std::list<shared_ptr<Map::Territory>> Player::getTerritories() {
-    return playerTerritories;
+
+	return playerTerritories;                                       // returns the list of territories owned by the player
+
 }
 
 std::list<shared_ptr<orders::Order>> Player::getOrders() {
-    return playerOrders;
+
+	return playerOrders;                                            // returns the list of orders issued by the player
+
 }
 
 Player& Player::operator=(const Player& other) {
 
     cout << "Player copy assignment operator called" << endl;
-    if (this != &other) {
-        playerHand = other.playerHand;
+
+	if (this != &other) {                                           // checks if not self-assignment
+		playerHand = other.playerHand;                              // fills in info for the player
         playerTerritories = other.playerTerritories;
         playerOrders = other.playerOrders;
     }
-    return *this;
+
+	return *this;                                                   // returns a copy of the player
+
 }
 
 std::ostream& operator<<(std::ostream& os, const Player& p) {
+
     os << "Player Territories:" << endl;
-    for (const auto& territory : p.playerTerritories) {
+
+	for (const auto& territory : p.playerTerritories) {             // iterates through the player's territories
         if (territory) {
-            os << "  " << territory << endl;
+            os << "  " << *territory << endl;
         }
         else {
             os << "  None" << endl;
@@ -127,9 +142,10 @@ std::ostream& operator<<(std::ostream& os, const Player& p) {
     }
 
     os << "Player Orders:" << endl;
-    for (const auto& order : p.playerOrders) {
+
+	for (const auto& order : p.playerOrders) {                      // iterates through the player's orders
         if (order) {
-            os << order << endl;
+            os << *order << endl;
         }
         else {
             os << " None" << endl;
@@ -137,11 +153,14 @@ std::ostream& operator<<(std::ostream& os, const Player& p) {
     }
 
     os << "Player Hand:" << endl;
-    if (p.playerHand) {
-        auto handCards = p.playerHand->getHand();
-        for (const auto& card : handCards) {
+
+	if (p.playerHand) {                                             // checks if the player has a hand of cards
+
+		auto handCards = p.playerHand->getHand();                   // gets the cards in the player's hand
+
+		for (const auto& card : handCards) {                        // iterates through the cards in the player's hand
             if (card) {
-                os << card << endl;
+                os << *card << endl;
             }
             else {
                 os << "  [null card]\n";
@@ -152,5 +171,5 @@ std::ostream& operator<<(std::ostream& os, const Player& p) {
         os << "  No Cards" << endl;
     }
 
-    return os;
+	return os;                                                      // returns the output stream describing the player
 }
