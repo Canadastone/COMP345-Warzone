@@ -316,9 +316,13 @@ namespace orders{
 
     //overloaded << operator
     std::ostream& operator<<(std::ostream& os, const OrderList& orderList){
+        
+        if( orderList.size() == 0){
+            os << "Empty List of Orders";
+        }
 
         for(int i = 0; i < orderList.size(); i++){
-            os << "[" << i << "] " << *(orderList[i]) << std::endl;
+            os << "[" << i << "] " << *(orderList[i]);
         }
 
         return os;

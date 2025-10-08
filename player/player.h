@@ -9,7 +9,7 @@ class Player {
 
 private:
 	list<std::shared_ptr<Map::Territory>> playerTerritories;        // territories owned by the player
-	list<std::shared_ptr<orders::Order>> playerOrders;              // orders issued by the player
+	orders::OrderList playerOrders;              					// orders issued by the player
 	std::shared_ptr<Hand> playerHand;                               // the player's hand of cards
 
 public:
@@ -23,7 +23,7 @@ public:
 	list<std::shared_ptr<Map::Territory>> toAttack();				// returns a list of territories the player can attack
 	void issueOrder(shared_ptr<orders::Order> o);					// adds an order to the player's list of orders
 	list<std::shared_ptr<Map::Territory>> getTerritories();			// returns the list of territories owned by the player
-	list<std::shared_ptr<orders::Order>> getOrders();				// returns the list of orders issued by the player
+	orders::OrderList getOrders();									// returns the list of orders issued by the player
 	std::shared_ptr<Hand> getHand();								// returns the player's hand of cards
 	Player& operator=(const Player& p);								// copy assignment operator
 	friend ostream& operator<<(ostream& os, const Player& p);		// stream insertion operator
