@@ -45,12 +45,20 @@ namespace orders{
         return "N/A"; 
     }
 
+    //valid if order type is valid type and has not been executed
     bool Order::validate() const{
-        //TODO implememt Validate
-        return true;
+        if(getTypeAsString() != "N/A" && executed == false){
+            cout << *this << ". Order is valid." << endl;
+            return true;
+        }
+        return false;
     }
             
     Order& Order::operator=(const Order& order){
+
+        if(this == &order){
+            return *this;
+        }
         type = order.type;
         executed = order.executed;
         effect = order.effect;
@@ -74,6 +82,12 @@ namespace orders{
         executed = deploy.executed;
     }
 
+    bool Deploy::validate() const{
+        if(Order::validate()){
+            return true;
+        }
+    }
+
     void Deploy::execute(){
        if(validate()){
             executed = true;
@@ -90,6 +104,11 @@ namespace orders{
         executed = advance.executed;
     }
 
+    bool Advance::validate() const{
+        if(Order::validate()){
+            return true;
+        }
+    }
 
     void Advance::execute(){
        if(validate()){
@@ -105,6 +124,12 @@ namespace orders{
     Bomb::Bomb(const Bomb& bomb) : Order::Order(orderType::BOMB){
         effect = bomb.effect;
         executed = bomb.executed;
+    }
+
+    bool Bomb::validate() const{
+        if(Order::validate()){
+            return true;
+        }
     }
 
     void Bomb::execute(){
@@ -123,6 +148,12 @@ namespace orders{
         executed = blockade.executed;
     }
 
+    bool Blockade::validate() const{
+        if(Order::validate()){
+            return true;
+        }
+    }
+
     void Blockade::execute(){
        if(validate()){
             executed = true;
@@ -133,6 +164,12 @@ namespace orders{
     Negotiate::Negotiate() : Order::Order(orderType::NEGOTIATE){
         effect = "order not excecuted yet";
         executed = false;
+    }
+
+    bool Negotiate::validate() const{
+        if(Order::validate()){
+            return true;
+        }
     }
 
     Negotiate::Negotiate(const Negotiate& negotiate) : Order::Order(orderType::NEGOTIATE){
@@ -148,6 +185,12 @@ namespace orders{
         effect = airlift.effect;
         executed = airlift.executed;
     } 
+
+    bool Airlift::validate() const{
+        if(Order::validate()){
+            return true;
+        }
+    }
 
     void Airlift::execute(){
        if(validate()){
@@ -178,6 +221,9 @@ namespace orders{
         orders.clear();
     }
 
+    bool OrderList::indexOutOfBounds(int index) const{
+        return (index >= orders.size() || index < 0);
+    }
 
     int OrderList::size() const{
         return orders.size();
@@ -257,6 +303,11 @@ namespace orders{
     }
     
     OrderList& OrderList::operator=(const OrderList& other){
+        
+        if(this == &other){
+            return *this;
+        }
+        
         for(int i = 0; i < size(); i++){
             add(other[i]);
         }
@@ -265,9 +316,13 @@ namespace orders{
 
     //overloaded << operator
     std::ostream& operator<<(std::ostream& os, const OrderList& orderList){
+        
+        if( orderList.size() == 0){
+            os << "Empty List of Orders";
+        }
 
         for(int i = 0; i < orderList.size(); i++){
-            os << "[" << i << "] " << *(orderList[i]) << std::endl;
+            os << "[" << i << "] " << *(orderList[i]);
         }
 
         return os;

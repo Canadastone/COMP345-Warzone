@@ -69,6 +69,8 @@ namespace orders{
 
         Deploy();
         Deploy(const Deploy& deploy);
+        
+        bool validate() const override;
         void execute() override;
     };
     //class Advance, Child of abstract Order
@@ -77,7 +79,7 @@ namespace orders{
 
         Advance();
         Advance(const Advance& advance);
-
+        bool validate() const override;
         void execute() override;
     };
     //class Bomb, Child of abstract Orde
@@ -86,7 +88,7 @@ namespace orders{
 
         Bomb();
         Bomb(const Bomb& bomb);
-
+        bool validate() const override;
         void execute() override; 
     };
     //class Blockade, Child of abstract Orde
@@ -95,7 +97,7 @@ namespace orders{
 
         Blockade();
         Blockade(const Blockade& blockade);
-
+        bool validate() const override;
         void execute() override;
     };
     //class AirLift, Child of abstract Orde
@@ -104,7 +106,7 @@ namespace orders{
 
         Airlift();
         Airlift(const Airlift& airlift);
-
+        bool validate() const override;
         void execute() override;
     };
     //class Negotiate, Child of abstract Order
@@ -113,7 +115,7 @@ namespace orders{
 
         Negotiate();
         Negotiate(const Negotiate& negotiate);
-
+        bool validate() const override;
         void execute() override;
     };
 
@@ -126,9 +128,7 @@ namespace orders{
         std::vector<Order*> orders;
         
         //bound checker private helper
-        bool indexOutOfBounds(int index) const{ 
-            return (index >= orders.size() || index < 0);
-        }
+        bool indexOutOfBounds(int index) const;
 
         public:
 
