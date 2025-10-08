@@ -35,42 +35,57 @@ void testPlayers() {
 
     // Demonstrate toAttack and toDefend
     cout << "Player 1 toAttack and toDefend:" << endl;
-    p1.toAttack();
-    p1.toDefend();
 
-    // Print number of orders
-    cout << "Player 1 has " << p1.getOrders().size() << " orders" << endl;
+	// Print attacking territories
+    cout << "Attacking Territories:" << endl << endl;
+    for (auto& territory : p1.toAttack()) {
+        if (territory) {
+            cout << "  " << *territory << endl;
+        }
+    }
 
-    // Print cards in hand
-    cout << "Player 1 has " << p1.getHand()->size() << " cards in hand" << endl;
+	// Print defending territories
+    cout << "Defending Territories:" << endl << endl;
+    for (auto& territory : p1.toDefend()) {
+        if (territory) {
 
-    // Print territories
-    cout << "Player 1 has " << p1.getTerritories().size() << " territories" << endl;
+            cout << "  " << *territory << endl;
+        }
+    }
+        // Print number of orders
+        cout << "Player 1 has " << p1.getOrders().size() << " orders" << endl;
 
-    Player p2; // Test copy assignment
+        // Print cards in hand
+        cout << "Player 1 has " << p1.getHand()->size() << " cards in hand" << endl;
 
-    p2 = p1;
+        // Print territories
+        cout << "Player 1 has " << p1.getTerritories().size() << " territories" << endl;
 
-    Player p3(p1); // Test copy constructor
+        Player p2; // Test copy assignment
 
-    // Print number of orders
-    cout << "Player 2 has " << p2.getOrders().size() << " orders" << endl;
+        p2 = p1;
 
-    // Print cards in hand
-    cout << "Player 2 has " << p2.getHand()->size() << " cards in hand" << endl;
+        Player p3(p1); // Test copy constructor
 
-    // Print territories
-    cout << "Player 2 has " << p2.getTerritories().size() << " territories" << endl;
+        // Print number of orders
+        cout << "Player 2 has " << p2.getOrders().size() << " orders" << endl;
 
-    // Print number of orders
-    cout << "Player 3 has " << p3.getOrders().size() << " orders" << endl;
+        // Print cards in hand
+        cout << "Player 2 has " << p2.getHand()->size() << " cards in hand" << endl;
 
-    // Print cards in hand
-    cout << "Player 3 has " << p3.getHand()->size() << " cards in hand" << endl;
+        // Print territories
+        cout << "Player 2 has " << p2.getTerritories().size() << " territories" << endl;
 
-    // Print territories
-    cout << "Player 3 has " << p3.getTerritories().size() << " territories" << endl;
+        // Print number of orders
+        cout << "Player 3 has " << p3.getOrders().size() << " orders" << endl;
 
-    cout << p1 << endl;
+        // Print cards in hand
+        cout << "Player 3 has " << p3.getHand()->size() << " cards in hand" << endl;
 
-};
+        // Print territories
+        cout << "Player 3 has " << p3.getTerritories().size() << " territories" << endl;
+
+		// Demonstrate stream insertion operator
+        cout << p1 << endl;
+
+    };
