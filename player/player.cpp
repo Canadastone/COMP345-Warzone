@@ -16,9 +16,8 @@ using namespace std;
 Player::Player() {
 
     cout << "Player created" << endl;                               
-    playerHand = make_shared<Hand>();                                    // gives the player a hand of cards by default
-    playerOrders = orders::OrderList();
-}   
+    playerHand = make_shared<Hand>();                                   // gives the player a hand of cards by default
+}
 
 Player::Player(const Player& other) {
     cout << "Player copy constructor called" << endl;
@@ -60,7 +59,7 @@ void Player::issueOrder(shared_ptr<orders::Order> o) {
 
     cout << "Issuing an order to player" << endl;
 
-	playerOrders.add(o.get());                                      // adds the given order to the player's list of orders
+	playerOrders.push_back(o);                                      // adds the given order to the player's list of orders
 
 }
 
@@ -109,7 +108,7 @@ std::list<shared_ptr<Map::Territory>> Player::getTerritories() {
 
 }
 
-orders::OrderList Player::getOrders() {
+std::list<shared_ptr<orders::Order>> Player::getOrders() {
 
 	return playerOrders;                                            // returns the list of orders issued by the player
 
@@ -144,7 +143,14 @@ std::ostream& operator<<(std::ostream& os, const Player& p) {
 
     os << "Player Orders:" << endl;
 
-	os << p.playerOrders << endl;
+	for (const auto& order : p.playerOrders) {                      // iterates through the player's orders
+        if (order) {
+            os << *order << endl;
+        }
+        else {
+            os << " None" << endl;
+        }
+    }
 
     os << "Player Hand:" << endl;
 
