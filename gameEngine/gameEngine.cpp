@@ -1,5 +1,6 @@
 #include "GameEngine.h"
 
+
 //abstract State constructors definitions
 State::State() = default;
 State::State(const State& s) {}
@@ -112,27 +113,34 @@ clone methods return a deep copy of the specific state
 This ensures polymorphic copying works correctly when cloning from a State pointer.
 */
 
+
+// ===========================================STARTUP=========================================
+
 /*
 Start State
 */
 void startState::onEnter(GameEngine& engine) {
 
-	/*
-	Do something later for Start
-	*/
+	std::cout << "\nentering " << *this << "\n\n";
 
-	std::cout << "entering " << *this << "\n";
+	
 }
 
 bool startState::onCommand(string& cmd, GameEngine& engine) {
-	if (this->getValidCommands().count(cmd) > 0) {
-		if (cmd == "loadMap") {
-			engine.transitionState(StateID::MapLoaded);
-		}
-		return true;
+
+	if (this->getValidCommands().count(cmd) == 0) {
+		return false;
 	}
 
-	return false;
+	if (cmd == "loadMap") {
+		if(!engine.loadMap()){
+			engine.transitionState(StateID::Start);
+		}
+		
+		engine.transitionState(StateID::MapLoaded);
+	}
+	
+	return true;
 }
 
 unique_ptr<State> startState::clone() const {
@@ -144,24 +152,33 @@ Map Loaded State
 */
 void mapLoadedState::onEnter(GameEngine& engine) {
 
-	/*
-	Do something later for mapLoaded
-	*/
+	std::cout << "\nentering " << *this << "\n";
+	
 
-	std::cout << "entering " << *this << "\n";
 }
 bool mapLoadedState::onCommand(string& cmd, GameEngine& engine) {
-	if (this->getValidCommands().count(cmd) > 0) {
-		if (cmd == "loadMap") {
-			engine.transitionState(StateID::MapLoaded);
-		}
-		else if (cmd == "validateMap") {
-			engine.transitionState(StateID::MapValidated);
-		}
-		return true;
+	if (this->getValidCommands().count(cmd) == 0) {
+		return false;
 	}
 
-	return false;
+	
+	if (cmd == "loadMap") {
+		engine.transitionState(StateID::MapLoaded);
+	}
+	else if (cmd == "validateMap") {
+
+		if (engine.currMap->validate()) {
+			std::cout << "\nTHE MAP IS VALID\n\n";
+			engine.transitionState(StateID::MapValidated);
+		}
+		else {
+			std::cout << "\nMAP IS INVALID\n";
+			return false;
+		}
+
+			
+	}
+	return true;
 }
 
 unique_ptr<State> mapLoadedState::clone() const {
@@ -173,21 +190,21 @@ Map Validated State
 */
 void mapValidatedState::onEnter(GameEngine& engine) {
 
-	/*
-	Do something later for MapValidated
-	*/
 
-	std::cout << "entering " << *this << "\n";
+	std::cout << "\nentering " << *this << "\n";
 }
 bool mapValidatedState::onCommand(string& cmd, GameEngine& engine) {
-	if (this->getValidCommands().count(cmd) > 0) {
-		if (cmd == "addPlayer") {
-			engine.transitionState(StateID::PlayersAdded);
-		}
-		return true;
+	if (this->getValidCommands().count(cmd) == 0) {
+		return false;
 	}
 
-	return false;
+	
+	if (cmd == "addPlayer") {
+		engine.addPlayerToGame();
+		engine.transitionState(StateID::PlayersAdded);
+	}
+
+	return true;
 }
 
 unique_ptr<State> mapValidatedState::clone() const {
@@ -203,26 +220,81 @@ void playersAddedState::onEnter(GameEngine& engine) {
 	Do something later for PlayersAdded
 	*/
 
-	std::cout << "entering " << *this << "\n";
+	std::cout << "\nentering " << *this << "\n";
+	std::cout << "current number of players: " << engine.numPlayersInGame << "\n";
 }
 
 bool playersAddedState::onCommand(string& cmd, GameEngine& engine) {
-	if (this->getValidCommands().count(cmd) > 0) {
-		if (cmd == "addPlayer") {
-			engine.transitionState(StateID::PlayersAdded);
-		}
-		else if (cmd == "assignCountries") {
-			engine.transitionState(StateID::AssignReinforcements);
-		}
-		return true;
+
+	if (this->getValidCommands().count(cmd) == 0) {
+		return false;
 	}
 
-	return false;
+	if (cmd == "addPlayer") {
+		if (engine.numPlayersInGame + 1 > 6) {
+			std::cout << "Too many players, proceeding to AssignReinforcments Phase...\n";
+			engine.transitionState(StateID::AssignReinforcements);
+
+		}
+		else {
+			engine.addPlayerToGame();
+			engine.transitionState(StateID::PlayersAdded);
+		}
+	}
+
+
+	else if (cmd == "gameStart") {
+		if (engine.numPlayersInGame < 2) {
+			std::cout << "Minimum of 2 players to proceed, currently: " << engine.numPlayersInGame << " players.\n";
+			engine.transitionState(StateID::PlayersAdded);
+		}
+		else{
+			engine.printPlayersInGame();
+			
+			std::cout << "GAMESTART PHASE SETUP ...\n\n";
+
+			//a) distribute all territories fairly somehow
+			std::cout << "assign territories evenly to all players...\n\n";
+
+			//b) determine order
+			engine.shuffleOrderOfPlay();
+
+			//c) give 50 army units to each player
+			std::cout << "Assigning 50 units to each player.\n\n";
+			for (const int id : engine.orderOfPlay) {
+				engine.assignUnitsToPlayer(50, id);
+			}
+
+			//d) each player draws 2 cards using draw()
+			//for now just create a deck on the stack
+			engine.createDeck();
+
+			for (const int id : engine.orderOfPlay) {
+				std::cout << "Player with ID: " << id << " draws twice...\n";
+				engine.playerDrawsCard(id);
+				engine.playerDrawsCard(id);
+				std::cout << "\n";
+
+			}
+
+			//e) switch game to play phase.
+			engine.currPhase = Phase::play;
+
+			engine.transitionState(StateID::AssignReinforcements);
+		}
+	}
+
+
+	return true;
 }
 
 unique_ptr<State> playersAddedState::clone() const {
     return unique_ptr<playersAddedState>(new playersAddedState(*this));
 }
+
+
+//====================================================PLAY====================================================
+
 
 /*
 AssignReinforcments State
@@ -233,7 +305,9 @@ void assignReinforcementsState::onEnter(GameEngine& engine) {
 	Do something later for AssignReinforcements
 	*/
 
-	std::cout << "entering " << *this << "\n";
+	std::cout << "\nentering " << *this << "\n";
+	
+
 }
 
 bool assignReinforcementsState::onCommand(string& cmd, GameEngine& engine) {
@@ -258,7 +332,7 @@ void issueOrdersState::onEnter(GameEngine& engine) {
 	Do something later for IssueOrders
 	*/
 
-	std::cout << "entering " << *this << "\n";
+	std::cout << "\nentering " << *this << "\n";
 }
 
 bool issueOrdersState::onCommand(string& cmd, GameEngine& engine) {
@@ -288,7 +362,7 @@ void executeOrdersState::onEnter(GameEngine& engine) {
 	Do something later for ExecuteOrders
 	*/
 
-	std::cout << "entering " << *this << "\n";
+	std::cout << "\nentering " << *this << "\n";
 }
 
 bool executeOrdersState::onCommand(string& cmd, GameEngine& engine) {
@@ -321,7 +395,7 @@ void winState::onEnter(GameEngine& engine) {
 	Do something later for Win
 	*/
 
-	std::cout << "entering " << *this << "\n";
+	std::cout << "\nentering " << *this << "\n";
 }
 
 bool winState::onCommand(string& cmd, GameEngine& engine) {
@@ -364,11 +438,23 @@ unique_ptr<State> endState::clone() const {
 /*
  GameEngine class, that manages all the game structure by keeping track of all the states, and the current state.
 */
+
+/*
+
+	std::shared_ptr<Map> currMap;
+	unique_ptr<map<int, unique_ptr<Player>>> players;
+*/
 GameEngine::GameEngine() : 
 	//allocate memory for the states smart_ptr
 	states{make_unique<map<StateID, unique_ptr<State>>>()},
 	//currState is initially null
-	currState{ nullptr } {
+	currState{ nullptr },
+	//currMap is initially null
+	currMap{nullptr},
+	//allocate memory for the players
+	playersMap{ make_unique<map<int, unique_ptr<Player>>>() },
+	numPlayersInGame (0),
+	currPhase(Phase::startup){
 
 
 	//allocate memory to every state and place them in the states map (key: stateID, val: unique_ptr to State object)
@@ -378,7 +464,7 @@ GameEngine::GameEngine() :
 
 	states->emplace(StateID::MapValidated, make_unique<mapValidatedState>("mapValidated", unordered_set<string>{ "addPlayer" }));
 
-	states->emplace(StateID::PlayersAdded, make_unique<playersAddedState>("playersAdded", unordered_set<string>{ "addPlayer", "assignCountries" }));
+	states->emplace(StateID::PlayersAdded, make_unique<playersAddedState>("playersAdded", unordered_set<string>{ "addPlayer", "gameStart" }));
 
 	states->emplace(StateID::AssignReinforcements, make_unique<assignReinforcementsState>("assignReinforcements", unordered_set<string>{ "issueOrder" }));
 
@@ -403,6 +489,8 @@ GameEngine::GameEngine(const GameEngine& other){
 		for(const std::pair<const StateID, unique_ptr<State>>& p : *other.states){
 			(*states)[p.first] = p.second->clone();
 		}
+		//same thing for playersMap
+
 		//Update currState to reference the same state (by ID) as in the original GameEngine
 		currState = other.currState ? states->at(other.currState->getID()).get() : nullptr;
 
@@ -410,10 +498,60 @@ GameEngine::GameEngine(const GameEngine& other){
 	else{
 		states = nullptr;
 		currState = nullptr;
-
+		playersMap = nullptr;
+		currMap = nullptr;
 	}
 	
 }
+
+void GameEngine::startupPhase() {
+	currState = states->at(StateID::Start).get();
+	currState->onEnter(*this);
+	
+}
+
+/*
+void GameEngine::mainGameLoop() {
+	//In the order of playters from 4b in part 2, proceed in round-robin:
+	for (Player in playersOrderList) {
+
+		reinforcmentPhase(Player)
+	
+	}
+
+	for (Player in playersOrderList) {
+
+		std::cout << Player.reinforcmentPool << "\n";
+
+	}
+	std::cout << "\n";
+
+}
+*/
+
+/*
+void GameEngine::reinforcmentPhase(Player) {
+
+	ownedTerritories = Player.ownedTerritories;
+	armyUnitsGiven = ownedTerritories / 3;
+
+	if Player owns all territories in a Continent:
+		armyUnitsGiven += continentsBonus;
+
+	if armyUnitsGiven < 3:
+		armyUnitsGiven = 3;
+		Player.reinforcmentPool = armyUnitsGiven;
+
+}*/
+
+void GameEngine::issueOrdersPhase() {
+
+}
+
+void GameEngine::executeOrdersPhase() {
+
+}
+
 /*
 Assignment operator definition
 */
@@ -466,5 +604,60 @@ void GameEngine::transitionState(StateID id) {
 	}
 }
 
+void GameEngine::printPlayersInGame() {
+
+	std::cout << "LISTING ALL PLAYERS IN THE GAME: \n\n";
+	for (const int id : this->orderOfPlay) {
+		std::cout << "Player " << id << " is " << *this->playersMap.get()->at(id) << "\n";
+
+	}
+
+}
+
+bool GameEngine::loadMap() {
+	std::shared_ptr<Map> asia = std::make_shared<Map>("map/map_files/Asia.map");
+	if(!asia.get()->validFile){
+		return false;
+
+	}
+
+	this->currMap = asia;
+	std::cout << "Map is loaded into the game\n\n";
+	return true;
+
+}
+void GameEngine::addPlayerToGame() {
+	this->playersMap->emplace(++this->numPlayersInGame, make_unique<Player>());
+	this->orderOfPlay.push_back(this->numPlayersInGame);
+
+}
+
+void GameEngine::shuffleOrderOfPlay() {
+
+	std::cout << "\nShuffling the order of play...\n";
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::shuffle(this->orderOfPlay.begin(), this->orderOfPlay.end(), gen);
+
+	std::cout << "new order of play: ";
+	for (const int id : this->orderOfPlay) {
+		std::cout << id << " ";
+	}
+	std::cout << "\n\n";
+
+}
+
+void GameEngine::assignUnitsToPlayer(int units, int playerIdInMap) {
+	this->playersMap.get()->at(playerIdInMap).get()->assignReinforcments(units);
+
+}
+
+void GameEngine::createDeck() {
+	this->deckOfCards = make_unique<Deck>();
+}
+
+void GameEngine::playerDrawsCard(int playerIdInMap) {
+	this->deckOfCards.get()->draw(*this->playersMap.get()->at(playerIdInMap).get()->getHand());
+}
 
 

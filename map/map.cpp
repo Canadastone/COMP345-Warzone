@@ -22,7 +22,7 @@
 
 Map::Map(std::string filePath) {
 	MapLoader loader(filePath);
-	bool validFile = loader.validateFile();
+	validFile = loader.validateFile();
 	if (!validFile) {
 		std::cout << "Invalid file, cannot create map..." << std::endl;
 		return;

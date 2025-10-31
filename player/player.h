@@ -12,6 +12,9 @@ private:
 	list<std::shared_ptr<orders::Order>> playerOrders;              // orders issued by the player
 	std::shared_ptr<Hand> playerHand;                               // the player's hand of cards
 
+	//temporary reinforcmentPool (number of armies a player has in their pool)
+	int reinforcmentPool;
+
 public:
 	Player();                                                       // default constructor
 	Player(const Player& other);                                    // copy constructor
@@ -27,6 +30,7 @@ public:
 	std::shared_ptr<Hand> getHand();								// returns the player's hand of cards
 	Player& operator=(const Player& p);								// copy assignment operator
 	friend ostream& operator<<(ostream& os, const Player& p);		// stream insertion operator
+	void assignReinforcments(int numToAdd);							// assigns reinforcments to the reinforcmentPool
 
 
 };

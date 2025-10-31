@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <memory>
+#include <algorithm> 
 
 class Player;
 
@@ -13,7 +14,7 @@ class Map
 {
 
 public:
-
+	bool validFile;
 	class Territory {
 
 	private:

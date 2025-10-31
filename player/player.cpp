@@ -17,6 +17,7 @@ Player::Player() {
 
     cout << "Player created" << endl;                               
     playerHand = make_shared<Hand>();                                   // gives the player a hand of cards by default
+    reinforcmentPool = 0;
 }
 
 Player::Player(const Player& other) {
@@ -24,8 +25,11 @@ Player::Player(const Player& other) {
 	playerHand = other.playerHand;                                      // copies the player's hand of cards
 	playerTerritories = other.playerTerritories;                        // copies the player's list of territories
 	playerOrders = other.playerOrders;                                  // copies the player's list of orders
+    reinforcmentPool = other.reinforcmentPool;
 }
-
+void Player::assignReinforcments(int numToAdd) {
+    reinforcmentPool += numToAdd;
+}
 list<std::shared_ptr<Map::Territory>> Player::toDefend() {
 
 	list<std::shared_ptr<Map::Territory>> defendList;                   // list of territories to defend
