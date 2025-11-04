@@ -3,14 +3,14 @@
 #include <memory>
 
 void testLoadMaps() {
-	std::string map_directory = "./map_files/";
+	std::string map_directory = "map/map_files/";
 
 	//Valid File Structure
-	std::shared_ptr<Map> asia = std::make_shared<Map>("Asia.map");
-	std::shared_ptr<Map> asiaDisjoint = std::make_shared<Map>("AsiaDisjoint.map");
-	std::shared_ptr<Map> asiaDisjointContinent = std::make_shared<Map>("AsiaDisjointContinent.map");
-	std::shared_ptr<Map> atlantis = std::make_shared<Map>("Atlantis.map");
-	std::shared_ptr<Map> africa = std::make_shared<Map>("Africa.map");
+	std::shared_ptr<Map> asia = std::make_shared<Map>(map_directory + "Asia.map");
+	std::shared_ptr<Map> asiaDisjoint = std::make_shared<Map>(map_directory + "AsiaDisjoint.map");
+	std::shared_ptr<Map> asiaDisjointContinent = std::make_shared<Map>(map_directory + "AsiaDisjointContinent.map");
+	std::shared_ptr<Map> atlantis = std::make_shared<Map>(map_directory + "Atlantis.map");
+	std::shared_ptr<Map> africa = std::make_shared<Map>(map_directory + "Africa.map");
 
 	//Create map with files that have a valid file structure
 	std::map<std::string, std::shared_ptr<Map>> validFileMap = {
@@ -22,9 +22,9 @@ void testLoadMaps() {
 	};
 
 	//Non Valid File Structure
-	std::shared_ptr<Map> asiaNoContinents = std::make_shared<Map>("AsiaNoContinents.map");
-	std::shared_ptr<Map> asiaNoMap = std::make_shared<Map>("AsiaNoMap.map");
-	std::shared_ptr<Map> asiaNoTerritories = std::make_shared<Map>("AsiaNoTerritories.map");
+	std::shared_ptr<Map> asiaNoContinents = std::make_shared<Map>(map_directory + "AsiaNoContinents.map");
+	std::shared_ptr<Map> asiaNoMap = std::make_shared<Map>(map_directory + "AsiaNoMap.map");
+	std::shared_ptr<Map> asiaNoTerritories = std::make_shared<Map>(map_directory + "AsiaNoTerritories.map");
 
 	//Validate that the valid structured files are connected graphs with connected continent subgraphs
 	for (auto& pair : validFileMap) {

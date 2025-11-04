@@ -4,6 +4,10 @@
 #include <map>
 #include <memory>
 #include <unordered_set>
+#include <algorithm> 
+#include <random>
+
+#include "../player/player.h"
 
 using std::string;
 using std::unique_ptr;
@@ -29,6 +33,7 @@ enum class StateID {
 	Win,
 	End
 };
+
 /*
 State abstract class as a base interface for every other state in the game engine.
 Define what all states must be able to do: onEnter, onCommand, ...
@@ -204,6 +209,13 @@ public:
 
 
 
+enum class Phase {
+	startup,
+	play
+
+};
+
+
 /*
 Responsible for initalizing all the states, and for managing the game.
 */
@@ -220,8 +232,22 @@ private:
 	represents the mapping of ID -> StateObj.
 	*/
 	unique_ptr<map<StateID, unique_ptr<State>>> states;
+
+	
 	
 public:
+	
+	unique_ptr<map<int, unique_ptr<Player>>> playersMap;
+	std::shared_ptr<Map> currMap;
+
+	int numPlayersInGame;
+
+	Phase currPhase;
+
+	vector<int> orderOfPlay;
+
+	unique_ptr<Deck> deckOfCards;
+
 	//GameEngine ctr.
 	GameEngine();
 
@@ -233,6 +259,27 @@ public:
 
 	//GameEngine streamInsertion operator
 	friend std::ostream& operator<<(std::ostream& os, const GameEngine& s);
+
+	//inits the startup phase as per part 2.
+	void startupPhase();
+
+	//helpers for startupPhase
+	void printPlayersInGame();
+	bool loadMap();
+	void addPlayerToGame();
+	void shuffleOrderOfPlay();
+	void assignUnitsToPlayer(int units, int playerIdInMap);
+	void createDeck();
+	void playerDrawsCard(int playerIdInMap);
+
+
+
+
+
+	void mainGameLoop();
+	void reinforcmentPhase();
+	void issueOrdersPhase();
+	void executeOrdersPhase();
 
 	//initializes the first state.
 	void init();

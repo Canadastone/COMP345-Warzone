@@ -34,13 +34,13 @@ namespace orders{
 
     //returns type of order as a string
     string Order::getTypeAsString() const{
-        switch (static_cast<int>(type)){ 
-            case static_cast<int>(orderType::DEPLOY): return "Deploy"; 
-            case static_cast<int>(orderType::ADVANCE): return "Advance"; 
-            case static_cast<int>(orderType::BOMB): return "Bomb"; 
-            case static_cast<int>(orderType::BLOCKADE): return "Blockade"; 
-            case static_cast<int>(orderType::AIRLIFT): return "Airlift"; 
-            case static_cast<int>(orderType::NEGOTIATE): return "Negotiate"; 
+        switch (type){ 
+            case orderType::DEPLOY: return "Deploy"; 
+            case orderType::ADVANCE: return "Advance"; 
+            case orderType::BOMB: return "Bomb"; 
+            case orderType::BLOCKADE: return "Blockade"; 
+            case orderType::AIRLIFT: return "Airlift"; 
+            case orderType::NEGOTIATE: return "Negotiate"; 
         } 
         return "N/A"; 
     }
@@ -73,11 +73,11 @@ namespace orders{
 
     //Children Implementations of the Order Class:
 
-    Deploy::Deploy() : Order::Order(orderType::DEPLOY){
+    Deploy::Deploy() : Order(orderType::DEPLOY){
         effect = "order not excecuted yet";
         executed = false;
     }
-    Deploy::Deploy(const Deploy& deploy) : Order::Order(orderType::DEPLOY){
+    Deploy::Deploy(const Deploy& deploy) : Order(orderType::DEPLOY){
         effect = deploy.effect;
         executed = deploy.executed;
     }
@@ -95,11 +95,11 @@ namespace orders{
         } 
     }
     
-    Advance::Advance() : Order::Order(orderType::ADVANCE){
+    Advance::Advance() : Order(orderType::ADVANCE){
         effect = "order not excecuted yet";
         executed = false;
     }
-    Advance::Advance(const Advance& advance) : Order::Order(orderType::ADVANCE){
+    Advance::Advance(const Advance& advance) : Order(orderType::ADVANCE){
         effect = advance.effect;
         executed = advance.executed;
     }
@@ -117,11 +117,11 @@ namespace orders{
         } 
     } 
 
-    Bomb::Bomb() : Order::Order(orderType::BOMB){
+    Bomb::Bomb() : Order(orderType::BOMB){
         effect = "order not excecuted yet";
         executed = false;
     }
-    Bomb::Bomb(const Bomb& bomb) : Order::Order(orderType::BOMB){
+    Bomb::Bomb(const Bomb& bomb) : Order(orderType::BOMB){
         effect = bomb.effect;
         executed = bomb.executed;
     }
@@ -139,11 +139,11 @@ namespace orders{
         } 
     } 
 
-    Blockade::Blockade() : Order::Order(orderType::BLOCKADE){
+    Blockade::Blockade() : Order(orderType::BLOCKADE){
         effect = "order not excecuted yet";
         executed = false;
     }
-    Blockade::Blockade(const Blockade& blockade) : Order::Order(orderType::BLOCKADE){
+    Blockade::Blockade(const Blockade& blockade) : Order(orderType::BLOCKADE){
         effect = blockade.effect;
         executed = blockade.executed;
     }
@@ -161,7 +161,7 @@ namespace orders{
         } 
     } 
 
-    Negotiate::Negotiate() : Order::Order(orderType::NEGOTIATE){
+    Negotiate::Negotiate() : Order(orderType::NEGOTIATE){
         effect = "order not excecuted yet";
         executed = false;
     }
@@ -172,16 +172,16 @@ namespace orders{
         }
     }
 
-    Negotiate::Negotiate(const Negotiate& negotiate) : Order::Order(orderType::NEGOTIATE){
+    Negotiate::Negotiate(const Negotiate& negotiate) : Order(orderType::NEGOTIATE){
         effect = negotiate.effect;
         executed = negotiate.executed;
     }
 
-    Airlift::Airlift() : Order::Order(orderType::AIRLIFT){
+    Airlift::Airlift() : Order(orderType::AIRLIFT){
         effect = "order not excecuted yet";
         executed = false;
     }
-    Airlift::Airlift(const Airlift& airlift) : Order::Order(orderType::AIRLIFT){
+    Airlift::Airlift(const Airlift& airlift) : Order(orderType::AIRLIFT){
         effect = airlift.effect;
         executed = airlift.executed;
     } 
