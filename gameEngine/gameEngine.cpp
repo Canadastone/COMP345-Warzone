@@ -503,9 +503,32 @@ GameEngine::GameEngine(const GameEngine& other){
 	
 }
 
-void GameEngine::startupPhase() {
+void GameEngine::startupPhase(CommandProcessor& commandProcessor) {
 	currState = states->at(StateID::Start).get();
 	currState->onEnter(*this);
+
+	while (true) {
+		if(this->currPhase == Phase::play){
+			break;
+		}
+
+		commandProcessor.readCommand();          
+		Command* cmd = commandProcessor.getCommand();
+		bool isValidCommand = commandProcessor.validate(cmd, this->getState()->getID());
+
+		if (!isValidCommand) {
+			cout << "Invalid command for State " << this->getState()->getStateName() << ".\n";
+			continue;
+		}
+		if (cmd->getCommandName() == "exit") {
+			std::cout << "Exiting command processor...\n";
+			delete cmd;
+			break;
+		}
+		string effect = this->getState()->onCommand(cmd, *this);
+		cmd->saveEffect(effect);
+		delete cmd;
+	}
 	
 }
 

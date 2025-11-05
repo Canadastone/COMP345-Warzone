@@ -247,7 +247,7 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const GameEngine& s);
 
 	//inits the startup phase as per part 2.
-	void startupPhase();
+	void startupPhase(CommandProcessor& commandProcessor);
 
 	//helpers for startupPhase
 	void printPlayersInGame();
