@@ -8,11 +8,22 @@
 
 #include <iostream>
 #include "../cards/cards.h"
+#include "../gameEngine/gameEngine.h"
+#include "../map/map.h"
+#include "../orders/orders.h"
+#include "../player/player.h"
 #include "../processor/CommandProcessor.h"
+
 using namespace std;
 
 int main() {
+    testCards();
+    testGameStates();	
+    testLoadMaps();
+    testOrdersLists();
+	testPlayers();
     runProcessor();
-    return 0;
+
+   return 0;
 
 }
