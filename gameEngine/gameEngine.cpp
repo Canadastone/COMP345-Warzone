@@ -1,6 +1,5 @@
 #include "GameEngine.h"
 
-
 //abstract State constructors definitions
 State::State() = default;
 State::State(const State& s) {}
@@ -126,21 +125,22 @@ void startState::onEnter(GameEngine& engine) {
 	
 }
 
-bool startState::onCommand(string& cmd, GameEngine& engine) {
+string startState::onCommand(Command* cmd, GameEngine& engine) {
+	string effect;
 
-	if (this->getValidCommands().count(cmd) == 0) {
-		return false;
-	}
-
-	if (cmd == "loadMap") {
+	if (cmd->getCommandName() == "loadmap") {
 		if(!engine.loadMap()){
+			effect = "can't load map transitioning back to start state.\n";
 			engine.transitionState(StateID::Start);
 		}
-		
-		engine.transitionState(StateID::MapLoaded);
+		else{
+			effect = "loaded map, proceeding to map loaded state.\n";
+			engine.transitionState(StateID::MapLoaded);
+		}
 	}
 	
-	return true;
+	
+	return effect;
 }
 
 unique_ptr<State> startState::clone() const {
@@ -156,29 +156,27 @@ void mapLoadedState::onEnter(GameEngine& engine) {
 	
 
 }
-bool mapLoadedState::onCommand(string& cmd, GameEngine& engine) {
-	if (this->getValidCommands().count(cmd) == 0) {
-		return false;
-	}
-
+string mapLoadedState::onCommand(Command* cmd, GameEngine& engine) {
+	string effect;
 	
-	if (cmd == "loadMap") {
+	if (cmd->getCommandName() == "loadmap") {
+		effect = "transitionning to load map state\n";
 		engine.transitionState(StateID::MapLoaded);
 	}
-	else if (cmd == "validateMap") {
+	else if (cmd->getCommandName() == "validatemap") {
 
 		if (engine.currMap->validate()) {
-			std::cout << "\nTHE MAP IS VALID\n\n";
+			effect = "map is valid, transitioning to map validated state\n";
 			engine.transitionState(StateID::MapValidated);
 		}
 		else {
-			std::cout << "\nMAP IS INVALID\n";
-			return false;
+			effect = "map is invalid, for now just doing nothing\n";
+			return effect;
 		}
 
 			
 	}
-	return true;
+	return effect;
 }
 
 unique_ptr<State> mapLoadedState::clone() const {
@@ -193,18 +191,16 @@ void mapValidatedState::onEnter(GameEngine& engine) {
 
 	std::cout << "\nentering " << *this << "\n";
 }
-bool mapValidatedState::onCommand(string& cmd, GameEngine& engine) {
-	if (this->getValidCommands().count(cmd) == 0) {
-		return false;
-	}
-
+string mapValidatedState::onCommand(Command* cmd, GameEngine& engine) {
+	string effect;
 	
-	if (cmd == "addPlayer") {
+	if (cmd->getCommandName() == "addplayer") {
+		effect = "adding player to the game, and transitioning to players added state\n";
 		engine.addPlayerToGame();
 		engine.transitionState(StateID::PlayersAdded);
 	}
 
-	return true;
+	return effect;
 }
 
 unique_ptr<State> mapValidatedState::clone() const {
@@ -224,28 +220,27 @@ void playersAddedState::onEnter(GameEngine& engine) {
 	std::cout << "current number of players: " << engine.numPlayersInGame << "\n";
 }
 
-bool playersAddedState::onCommand(string& cmd, GameEngine& engine) {
+string playersAddedState::onCommand(Command* cmd, GameEngine& engine) {
+	string effect;
 
-	if (this->getValidCommands().count(cmd) == 0) {
-		return false;
-	}
-
-	if (cmd == "addPlayer") {
+	if (cmd->getCommandName() == "addplayer") {
 		if (engine.numPlayersInGame + 1 > 6) {
 			std::cout << "Too many players, proceeding to AssignReinforcments Phase...\n";
 			engine.transitionState(StateID::AssignReinforcements);
 
 		}
 		else {
+			effect = "adding player to the game, staying in players added state.\n";
 			engine.addPlayerToGame();
 			engine.transitionState(StateID::PlayersAdded);
 		}
 	}
 
 
-	else if (cmd == "gameStart") {
+	else if (cmd->getCommandName() == "gamestart") {
 		if (engine.numPlayersInGame < 2) {
 			std::cout << "Minimum of 2 players to proceed, currently: " << engine.numPlayersInGame << " players.\n";
+			effect = "Minimum of 2 players required, currently: " + std::to_string(engine.numPlayersInGame) + " players. Going back to players added state.\n";
 			engine.transitionState(StateID::PlayersAdded);
 		}
 		else{
@@ -279,13 +274,14 @@ bool playersAddedState::onCommand(string& cmd, GameEngine& engine) {
 
 			//e) switch game to play phase.
 			engine.currPhase = Phase::play;
-
+			
+			effect = "game startup phase initiated, game phase changed to play, and transitionning to assign reinforcments phase.\n";
 			engine.transitionState(StateID::AssignReinforcements);
 		}
 	}
 
 
-	return true;
+	return effect;
 }
 
 unique_ptr<State> playersAddedState::clone() const {
@@ -310,13 +306,15 @@ void assignReinforcementsState::onEnter(GameEngine& engine) {
 
 }
 
-bool assignReinforcementsState::onCommand(string& cmd, GameEngine& engine) {
-	if (cmd == "issueOrder") {
+string assignReinforcementsState::onCommand(Command* cmd, GameEngine& engine) {
+	string effect;
+	
+	if (cmd->getCommandName() == "issueorder") {
 		engine.transitionState(StateID::IssueOrders);
-		return true;
+		
 	}
 
-	return false;
+	return effect;
 }
 
 unique_ptr<State> assignReinforcementsState::clone() const {
@@ -335,18 +333,17 @@ void issueOrdersState::onEnter(GameEngine& engine) {
 	std::cout << "\nentering " << *this << "\n";
 }
 
-bool issueOrdersState::onCommand(string& cmd, GameEngine& engine) {
-	if (this->getValidCommands().count(cmd) > 0) {
-		if (cmd == "issueOrder") {
-			engine.transitionState(StateID::IssueOrders);
-		}
-		else if (cmd == "endIssueOrders") {
-			engine.transitionState(StateID::ExecuteOrders);
-		}
-		return true;
-	}
+string issueOrdersState::onCommand(Command* cmd, GameEngine& engine) {
+	string effect;
 
-	return false;
+	if (cmd->getCommandName() == "issueOrder") {
+		engine.transitionState(StateID::IssueOrders);
+	}
+	else if (cmd->getCommandName() == "issueordersend") {
+		engine.transitionState(StateID::ExecuteOrders);
+	}
+	
+	return effect;
 }
 
 unique_ptr<State> issueOrdersState::clone() const {
@@ -365,21 +362,22 @@ void executeOrdersState::onEnter(GameEngine& engine) {
 	std::cout << "\nentering " << *this << "\n";
 }
 
-bool executeOrdersState::onCommand(string& cmd, GameEngine& engine) {
-	if (this->getValidCommands().count(cmd) > 0) {
-		if (cmd == "execOrder") {
-			engine.transitionState(StateID::ExecuteOrders);
-		}
-		else if (cmd == "endExecOrders") {
-			engine.transitionState(StateID::AssignReinforcements);
-		}
-		else if (cmd == "win") {
-			engine.transitionState(StateID::Win);
-		}
-		return true;
-	}
+string executeOrdersState::onCommand(Command* cmd, GameEngine& engine) {
+	string effect;
 
-	return false;
+	if (cmd->getCommandName() == "execorder") {
+		engine.transitionState(StateID::ExecuteOrders);
+	}
+	else if (cmd->getCommandName() == "endexecorders") {
+		engine.transitionState(StateID::AssignReinforcements);
+	}
+	else if (cmd->getCommandName() == "win") {
+		engine.transitionState(StateID::Win);
+	}
+		
+	
+
+	return effect;
 }
 
 unique_ptr<State> executeOrdersState::clone() const {
@@ -398,18 +396,18 @@ void winState::onEnter(GameEngine& engine) {
 	std::cout << "\nentering " << *this << "\n";
 }
 
-bool winState::onCommand(string& cmd, GameEngine& engine) {
-	if (this->getValidCommands().count(cmd) > 0) {
-		if (cmd == "play") {
-			engine.transitionState(StateID::Start);
-		}
-		else if (cmd == "end") {
-			engine.transitionState(StateID::End);
-		}
-		return true;
-	}
+string winState::onCommand(Command* cmd, GameEngine& engine) {
+	string effect;
 
-	return false;
+	if (cmd->getCommandName() == "replay") {
+		engine.transitionState(StateID::Start);
+	}
+	else if (cmd->getCommandName() == "quit") {
+		engine.transitionState(StateID::End);
+	}
+		
+	
+	return effect;
 }
 
 unique_ptr<State> winState::clone() const {
@@ -427,8 +425,9 @@ void endState::onEnter(GameEngine& engine) {
 
 	std::cout << "Ending the Game.\n";
 }
-bool endState::onCommand(string& cmd, GameEngine& engine) {
-	return true;
+string endState::onCommand(Command* cmd, GameEngine& engine) {
+	string effect;
+	return effect;
 }
 
 unique_ptr<State> endState::clone() const {
@@ -458,21 +457,21 @@ GameEngine::GameEngine() :
 
 
 	//allocate memory to every state and place them in the states map (key: stateID, val: unique_ptr to State object)
-	states->emplace(StateID::Start, make_unique<startState>("start", unordered_set<string>{ "loadMap" }));
+	states->emplace(StateID::Start, make_unique<startState>("start", unordered_set<string>{ "loadmap" })); // StateTemplate(const string& stateName, const unordered_set<string>& stateValidCommands);
 
-	states->emplace(StateID::MapLoaded, make_unique<mapLoadedState>("mapLoaded", unordered_set<string>{ "loadMap", "validateMap" }));
+	states->emplace(StateID::MapLoaded, make_unique<mapLoadedState>("mapLoaded", unordered_set<string>{ "loadmap", "validatemap" }));
 
-	states->emplace(StateID::MapValidated, make_unique<mapValidatedState>("mapValidated", unordered_set<string>{ "addPlayer" }));
+	states->emplace(StateID::MapValidated, make_unique<mapValidatedState>("mapValidated", unordered_set<string>{ "addplayer" }));
 
-	states->emplace(StateID::PlayersAdded, make_unique<playersAddedState>("playersAdded", unordered_set<string>{ "addPlayer", "gameStart" }));
+	states->emplace(StateID::PlayersAdded, make_unique<playersAddedState>("playersAdded", unordered_set<string>{ "addplayer", "gamestart" }));
 
-	states->emplace(StateID::AssignReinforcements, make_unique<assignReinforcementsState>("assignReinforcements", unordered_set<string>{ "issueOrder" }));
+	states->emplace(StateID::AssignReinforcements, make_unique<assignReinforcementsState>("assignReinforcements", unordered_set<string>{ "issueorder" }));
 
-	states->emplace(StateID::IssueOrders, make_unique<issueOrdersState>("issueOrders", unordered_set<string>{ "issueOrder", "endIssueOrders" }));
+	states->emplace(StateID::IssueOrders, make_unique<issueOrdersState>("issueOrders", unordered_set<string>{ "issueorder", "issueordersend" }));
 
-	states->emplace(StateID::ExecuteOrders, make_unique<executeOrdersState>("executeOrders", unordered_set<string>{ "execOrder", "endExecOrder", "win" }));
+	states->emplace(StateID::ExecuteOrders, make_unique<executeOrdersState>("executeOrders", unordered_set<string>{ "execorder", "endexecorders", "win" }));
 
-	states->emplace(StateID::Win, make_unique<winState>("win", unordered_set<string>{ "play", "end" }));
+	states->emplace(StateID::Win, make_unique<winState>("win", unordered_set<string>{ "replay", "quit" }));
 
 	states->emplace(StateID::End, make_unique<endState>("end", unordered_set<string>{ "NA" }));
 

@@ -1,4 +1,5 @@
 g++ ^
+-fmax-errors=5 ^
 orders/orders.cpp ^
 player/player.cpp ^
 map/map.cpp ^

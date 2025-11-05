@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <algorithm> 
 #include <random>
+#include "../processor/CommandProcessor.h"
 
 #include "../player/player.h"
 
@@ -18,21 +19,6 @@ using std::unordered_set;
 Forward declarations
 */
 class GameEngine;
-
-/*
-Enum representing states, used as a parameter to the template classes below.
-*/
-enum class StateID {
-	Start,
-	MapLoaded,
-	MapValidated,
-	PlayersAdded,
-	AssignReinforcements,
-	IssueOrders,
-	ExecuteOrders,
-	Win,
-	End
-};
 
 /*
 State abstract class as a base interface for every other state in the game engine.
@@ -52,7 +38,7 @@ public:
 	/*
 	fires when a command is triggered, and manages it.
 	*/
-	virtual bool onCommand(string& cmd, GameEngine&) = 0;
+	virtual string onCommand(Command* cmd, GameEngine&) = 0;
 
 	//getters
 	virtual string& getStateName() const = 0;
@@ -117,7 +103,7 @@ public:
     using StateTemplate<StateID::Start>::StateTemplate;
 
     void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
     unique_ptr<State> clone() const override;
 };
 
@@ -128,7 +114,7 @@ class mapLoadedState : public StateTemplate<StateID::MapLoaded> {
 public:
     using StateTemplate<StateID::MapLoaded>::StateTemplate;
     void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 
@@ -139,7 +125,7 @@ class mapValidatedState : public StateTemplate<StateID::MapValidated> {
 public:
     using StateTemplate<StateID::MapValidated>::StateTemplate;
     void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 
@@ -150,7 +136,7 @@ class playersAddedState : public StateTemplate<StateID::PlayersAdded> {
 public:
     using StateTemplate<StateID::PlayersAdded>::StateTemplate;
     void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 
@@ -161,7 +147,7 @@ class assignReinforcementsState : public StateTemplate<StateID::AssignReinforcem
 public:
     using StateTemplate<StateID::AssignReinforcements>::StateTemplate;
     void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 /*
@@ -171,7 +157,7 @@ class issueOrdersState : public StateTemplate<StateID::IssueOrders> {
 public:
     using StateTemplate<StateID::IssueOrders>::StateTemplate;
     void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 
@@ -182,7 +168,7 @@ class executeOrdersState : public StateTemplate<StateID::ExecuteOrders> {
 public:
     using StateTemplate<StateID::ExecuteOrders>::StateTemplate;
     void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 /*
@@ -192,7 +178,7 @@ class winState : public StateTemplate<StateID::Win> {
 public:
     using StateTemplate<StateID::Win>::StateTemplate;
     void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 
@@ -203,7 +189,7 @@ class endState : public StateTemplate<StateID::End> {
 public:
     using StateTemplate<StateID::End>::StateTemplate;
     void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 

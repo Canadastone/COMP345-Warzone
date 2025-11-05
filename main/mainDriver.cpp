@@ -14,15 +14,14 @@
 #include "../player/player.h"
 #include "../processor/CommandProcessor.h"
 
-using namespace std;
-
+void testStartupPhase();
 int main() {
     //testCards();
-    //testGameStates();	
+    testStartupPhase();	
     //testLoadMaps();
     //testOrdersLists();
 	//testPlayers();
-    runProcessor();
+    //runProcessor();
 
    return 0;
 

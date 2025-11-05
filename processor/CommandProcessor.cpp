@@ -1,6 +1,6 @@
 #include "CommandProcessor.h"
 
-CommandProcessor::CommandProcessor(GameEngine* e) : engine(e) {}
+CommandProcessor::CommandProcessor() {}
 
 CommandProcessor::~CommandProcessor() {
     for(Command* cmd : commands) {
@@ -10,7 +10,7 @@ CommandProcessor::~CommandProcessor() {
 
 void CommandProcessor::readCommand() {
     string line;
-    cout << "Enter command: " << std::endl;
+    cout << "Enter command: " ;
     std::getline(cin, line);
     if(line.empty()) {
         cout << "No command entered.\n";
@@ -39,23 +39,21 @@ Command* CommandProcessor::getCommand() {
     return command;
 }
 
-bool CommandProcessor::validate(Command* command) {
+bool CommandProcessor::validate(Command* command, StateID currentState) {
     const string& commandName = command->getCommandName();
     auto iterator = commandRules.find(commandName);
     if(iterator == commandRules.end()) {
-        cout << "Invalid command: " << commandName << std::endl;
         // Not too sure about "a corresponding error message should be saved"
         command->saveEffect("Invalid command...");
         return false;
     }
     const CommandRule& rule = iterator->second;
-    State* currentState = engine->getState();
     // if (!currentState) {
     //     std::cout << "Error: currentState is null.\n";
     //     return false;
     // }
     for(auto validState : rule.validInStates) {
-        if(currentState->getID() == validState) {
+        if(currentState == validState) {
             return true;
         }
     }

@@ -20,7 +20,7 @@ class FileCommandProcessorAdapter : public CommandProcessor {
     private:
         FileReader* fileReader;
     public:
-        FileCommandProcessorAdapter(FileReader* fileReader, GameEngine* engine);
+        FileCommandProcessorAdapter(FileReader* fileReader);
         void readCommand() override;
         Command* getCommand() override;
 };
