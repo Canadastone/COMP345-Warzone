@@ -12,6 +12,7 @@
 #include "../map/map.h"
 #include "../orders/orders.h"
 #include "../player/player.h"
+#include "../processor/CommandProcessor.h"
 
 using namespace std;
 
@@ -21,6 +22,8 @@ int main() {
     testLoadMaps();
     testOrdersLists();
 	testPlayers();
+    runProcessor();
+
    return 0;
 
 }
