@@ -8,11 +8,11 @@
 
 #include <iostream>
 #include "../cards/cards.h"
-
+#include "../processor/CommandProcessor.h"
 using namespace std;
 
 int main() {
-    testCards();
+    runProcessor();
     return 0;
 
 }

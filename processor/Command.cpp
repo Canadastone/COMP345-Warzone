@@ -1,21 +1,24 @@
 #include "Command.h"
+#include "CommandProcessor.h"
 
-Command::Command(string command) {
+Command::Command(string command, string argument) {
     this->command = command;
+    this->argument = argument;
 }
 Command::Command(const Command& command) {
     this->command = command.command;
     this->effect = command.effect;
+    this->argument = command.argument;
 }
 // Not neccessary but just in case command stores pointers in future
 Command& Command::operator=(const Command& otherCommand) {
     if(this != &otherCommand) {
         this->command = otherCommand.command;
         this->effect = otherCommand.effect;
+        this->argument = otherCommand.argument;
     }
     return *this;
 }
-
 void Command::saveEffect(const string& effect) {
     this->effect = effect;
 }
@@ -23,6 +26,19 @@ void Command::saveEffect(const string& effect) {
 string Command::getCommandName() const {
     return this->command;
 }
+string Command::getArgument() const {
+    return this->argument;
+}
 string Command::getEffect() const {
     return this->effect;
+}
+StateID Command::getTransitionState(StateID currentState) {
+    auto it = commandRules.find(command);
+    if(it != commandRules.end()) {
+        return it->second.transitionsTo;
+    }
+    else {
+        cout << "Invalid command: " << command << std::endl;
+        return currentState;
+    }
 }

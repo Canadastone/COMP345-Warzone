@@ -1,17 +1,33 @@
 #include "CommandProcessor.h"
 
+CommandProcessor::CommandProcessor(GameEngine* e) : engine(e) {}
+
 CommandProcessor::~CommandProcessor() {
     for(Command* cmd : commands) {
         delete cmd;
     }
 }
 
-string CommandProcessor::readCommand() {
-    string commandName;
+void CommandProcessor::readCommand() {
+    string line;
     cout << "Enter command: " << std::endl;
-    cin >> commandName;
-    Command* command = new Command(commandName);
-    commands.push_back(command);
+    std::getline(cin, line);
+    if(line.empty()) {
+        cout << "No command entered.\n";
+        return;
+    }
+    size_t spaceIndex = line.find(" ");
+    string commandName;
+    string argument;
+    if(spaceIndex != string::npos) {
+        commandName = line.substr(0, spaceIndex);
+        argument = line.substr(spaceIndex + 1);
+    }
+    else {
+        commandName = line;
+    }
+    Command* command = new Command(commandName, argument);
+    saveCommand(command);
 }
 Command* CommandProcessor::getCommand() {
     if(commands.empty()) {
@@ -23,6 +39,31 @@ Command* CommandProcessor::getCommand() {
     return command;
 }
 
-bool CommandProcessor::validate(State* state, Command* command) {
+bool CommandProcessor::validate(Command* command) {
+    const string& commandName = command->getCommandName();
+    auto iterator = commandRules.find(commandName);
+    if(iterator == commandRules.end()) {
+        cout << "Invalid command: " << commandName << std::endl;
+        // Not too sure about "a corresponding error message should be saved"
+        command->saveEffect("Invalid command...");
+        return false;
+    }
+    const CommandRule& rule = iterator->second;
+    State* currentState = engine->getState();
+    // if (!currentState) {
+    //     std::cout << "Error: currentState is null.\n";
+    //     return false;
+    // }
+    for(auto validState : rule.validInStates) {
+        if(currentState->getID() == validState) {
+            return true;
+        }
+    }
+    // cout << "Command " << commandName << " not valid in current state." << std::endl;
+    // command->saveEffect("Command not valid in current state.");
+    return false;
+}
 
+void CommandProcessor::saveCommand(Command* command) {
+    commands.push_back(command);
 }
