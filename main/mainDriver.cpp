@@ -17,11 +17,11 @@
 using namespace std;
 
 int main() {
-    testCards();
-    testGameStates();	
-    testLoadMaps();
-    testOrdersLists();
-	testPlayers();
+    //testCards();
+    //testGameStates();	
+    //testLoadMaps();
+    //testOrdersLists();
+	//testPlayers();
     runProcessor();
 
    return 0;

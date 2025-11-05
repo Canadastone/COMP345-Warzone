@@ -1,0 +1,17 @@
+g++ ^
+orders/orders.cpp ^
+player/player.cpp ^
+map/map.cpp ^
+cards/cards.cpp ^
+gameEngine/gameEngine.cpp ^
+processor/Command.cpp ^
+processor/CommandProcessor.cpp ^
+processor/FileCommandProcessorAdapter.cpp ^
+map/mapDriver.cpp ^
+gameEngine/gameEngineDriver.cpp ^
+processor/CommandProcessorDriver.cpp ^
+orders/ordersDriver.cpp ^
+player/playerDriver.cpp ^
+cards/cardsDriver.cpp ^
+main/mainDriver.cpp ^
+-o mainDriver
