@@ -22,7 +22,7 @@ class GameEngine;
 
 /*
 State abstract class as a base interface for every other state in the game engine.
-Define what all states must be able to do: onEnter, onCommand, ...
+Define what all states must be able to do: onCommand, ...
 */
 class State {
 
@@ -31,10 +31,6 @@ public:
 	State();
 	State(const State& s);
 
-	/*
-	called when first entering a state.
-	*/
-	virtual void onEnter(GameEngine&) = 0;
 	/*
 	fires when a command is triggered, and manages it.
 	*/
@@ -88,7 +84,6 @@ public:
 Each derived class is defined here
 Every derived state: 
 	- uses the StateTemplate constructors
-	- has a different onEnter, and onCommand implementation
 	- needs a clone method unique to them.
 
 Now, this design makes it easy to define custom behavior for each state
@@ -102,7 +97,6 @@ class startState : public StateTemplate<StateID::Start> {
 public:
     using StateTemplate<StateID::Start>::StateTemplate;
 
-    void onEnter(GameEngine& engine) override;
     string onCommand(Command* cmd, GameEngine& engine) override;
     unique_ptr<State> clone() const override;
 };
@@ -113,7 +107,6 @@ Map loaded state
 class mapLoadedState : public StateTemplate<StateID::MapLoaded> {
 public:
     using StateTemplate<StateID::MapLoaded>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
     string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
@@ -124,7 +117,6 @@ Map validated state
 class mapValidatedState : public StateTemplate<StateID::MapValidated> {
 public:
     using StateTemplate<StateID::MapValidated>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
     string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
@@ -135,7 +127,6 @@ Players Added State
 class playersAddedState : public StateTemplate<StateID::PlayersAdded> {
 public:
     using StateTemplate<StateID::PlayersAdded>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
     string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
@@ -146,7 +137,6 @@ Assign Reinforcments State
 class assignReinforcementsState : public StateTemplate<StateID::AssignReinforcements> {
 public:
     using StateTemplate<StateID::AssignReinforcements>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
     string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
@@ -156,7 +146,6 @@ Issue orders state
 class issueOrdersState : public StateTemplate<StateID::IssueOrders> {
 public:
     using StateTemplate<StateID::IssueOrders>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
     string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
@@ -167,7 +156,6 @@ Execute orders state
 class executeOrdersState : public StateTemplate<StateID::ExecuteOrders> {
 public:
     using StateTemplate<StateID::ExecuteOrders>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
     string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
@@ -177,7 +165,6 @@ Win state
 class winState : public StateTemplate<StateID::Win> {
 public:
     using StateTemplate<StateID::Win>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
     string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
@@ -188,7 +175,6 @@ End state
 class endState : public StateTemplate<StateID::End> {
 public:
     using StateTemplate<StateID::End>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
     string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };

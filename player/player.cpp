@@ -59,11 +59,11 @@ list<std::shared_ptr<Map::Territory>> Player::toAttack() {
 	return attackList;                                                  // returns list of territories to attack
 
 }
-void Player::issueOrder(shared_ptr<orders::Order> o) {
+void Player::issueOrder(orders::Order* o) {
 
     cout << "Issuing an order to player" << endl;
 
-	playerOrders.push_back(o);                                      // adds the given order to the player's list of orders
+	playerOrders.add(o);                            // adds the given order to the player's list of orders
 
 }
 
@@ -112,7 +112,7 @@ std::list<shared_ptr<Map::Territory>> Player::getTerritories() {
 
 }
 
-std::list<shared_ptr<orders::Order>> Player::getOrders() {
+orders::OrderList& Player::getOrders() {
 
 	return playerOrders;                                            // returns the list of orders issued by the player
 
@@ -146,8 +146,8 @@ std::ostream& operator<<(std::ostream& os, const Player& p) {
     }
 
     os << "Player Orders:" << endl;
-
-	for (const auto& order : p.playerOrders) {                      // iterates through the player's orders
+    for(int i = 0; i < p.playerOrders.size(); i++){  // iterates through the player's orders   
+        auto order = p.playerOrders[i];
         if (order) {
             os << *order << endl;
         }

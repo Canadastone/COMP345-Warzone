@@ -323,7 +323,7 @@ namespace orders{
 
         for(int i = 0; i < orderList.size(); i++){
             os << "[" << i << "] " << *(orderList[i]);
-        }
+        }   
 
         return os;
     }
