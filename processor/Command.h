@@ -1,9 +1,26 @@
 #ifndef COMMAND
 #define COMMAND
-#include "../gameEngine/gameEngine.h"
 #include <string>
 
+
 using std::string;
+
+
+/*
+Enum representing states, used as a parameter to the template classes below.
+*/
+enum class StateID {
+	Start,
+	MapLoaded,
+	MapValidated,
+	PlayersAdded,
+	AssignReinforcements,
+	IssueOrders,
+	ExecuteOrders,
+	Win,
+	End
+};
+
 class Command {
     private:
         string command;

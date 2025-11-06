@@ -47,7 +47,7 @@ Command* FileReader::getCommand() {
     return command;
 }
 
-FileCommandProcessorAdapter::FileCommandProcessorAdapter(FileReader* fileReader, GameEngine* engine) : CommandProcessor(engine) {
+FileCommandProcessorAdapter::FileCommandProcessorAdapter(FileReader* fileReader) {
     this-> fileReader = fileReader;
 }
 void FileCommandProcessorAdapter::readCommand() {

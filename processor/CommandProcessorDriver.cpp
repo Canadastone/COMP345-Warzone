@@ -10,7 +10,7 @@ void runProcessor() {
     cout << "Manual commands via console (-console) or commands from file (-file <filename>): " << std::endl;
     std::getline(cin, choice);
     if(choice == "-console") {
-        CommandProcessor commandProcessor(engine);
+        CommandProcessor commandProcessor;
         while(true) {
             commandProcessor.readCommand();          
             Command* cmd = commandProcessor.getCommand();
@@ -24,7 +24,7 @@ void runProcessor() {
                 break;
             }
 
-            bool validCommand = commandProcessor.validate(cmd);
+            bool validCommand = commandProcessor.validate(cmd, engine->getState()->getID());
             if(validCommand == 1) {
                 StateID transitionTo = cmd->getTransitionState(currentState);
                 engine->transitionState(transitionTo);
@@ -41,13 +41,14 @@ void runProcessor() {
         else {
             string fileName = choice.substr(spaceIndex + 1);
             FileReader* fr = new FileReader("C:\\Users\\josht\\Documents\\COMP345\\COMP345-Warzone\\processor\\" + fileName);
-            FileCommandProcessorAdapter fcp(fr, engine);
+            FileCommandProcessorAdapter fcp(fr);
             while(true) {
                 fcp.readCommand();
                 Command* cmd = fcp.getCommand();
                 if(!cmd) break;
-                cout << "Command is valid? " << fcp.validate(cmd) << std::endl;
-                if(fcp.validate(cmd) == 1) {
+                bool isValid =  fcp.validate(cmd, engine->getState()->getID());
+                cout << "Command is valid? " << isValid << std::endl;
+                if(isValid) {
                     StateID transitionTo = cmd->getTransitionState(currentState);
                     engine->transitionState(transitionTo);
                 }

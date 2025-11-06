@@ -20,6 +20,7 @@ Command& Command::operator=(const Command& otherCommand) {
     return *this;
 }
 void Command::saveEffect(const string& effect) {
+    std::cout << "Saved effect: " << effect << "\n";
     this->effect = effect;
 }
 

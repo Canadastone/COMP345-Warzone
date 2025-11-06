@@ -2,7 +2,6 @@
 #define COMMAND_PROCESSOR
 
 #include "Command.h"
-#include "../gameEngine/gameEngine.h"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -10,7 +9,6 @@
 
 using std::cout;
 using std::cin;
-
 
 struct CommandRule {
     std::vector<StateID> validInStates;
@@ -20,8 +18,13 @@ struct CommandRule {
 const std::map<std::string, CommandRule> commandRules = {
     { "loadmap", { { StateID::Start, StateID::MapLoaded }, StateID::MapLoaded } },
     { "validatemap", { { StateID::MapLoaded }, StateID::MapValidated } },
-    { "addplayer", { { StateID::MapValidated }, StateID::PlayersAdded } },
+    { "addplayer", { { StateID::MapValidated, StateID::PlayersAdded }, StateID::PlayersAdded } },
     { "gamestart", { { StateID::PlayersAdded }, StateID::AssignReinforcements } },
+    { "issueorder", { { StateID::AssignReinforcements, StateID::IssueOrders }, StateID::IssueOrders } },
+    { "issueordersend", { { StateID::IssueOrders }, StateID::ExecuteOrders } },
+    { "execorder", { { StateID::ExecuteOrders }, StateID::ExecuteOrders } },
+    { "endexecorders", { { StateID::ExecuteOrders }, StateID::AssignReinforcements } },
+    { "win", { { StateID::ExecuteOrders }, StateID::Win } },
     { "replay", { { StateID::Win }, StateID::Start } },
     { "quit", { { StateID::Win }, StateID::End } }
 };
@@ -29,14 +32,13 @@ const std::map<std::string, CommandRule> commandRules = {
 
 class CommandProcessor {
     private:
-        GameEngine* engine;
         std::vector<Command*> commands;
     public:
-        CommandProcessor(GameEngine* engine);
+        CommandProcessor();
         ~CommandProcessor();
         virtual void readCommand();
         virtual Command* getCommand();
-        bool validate(Command* command);
+        bool validate(Command* command, StateID state);
         void saveCommand(Command* command);
 };
 void runProcessor();
