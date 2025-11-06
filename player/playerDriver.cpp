@@ -23,15 +23,12 @@ void testPlayers() {
 
     p1.addCard(c1);
     p1.addCard(c2);
-    shared_ptr<orders::Order> o1(new orders::Bomb());
-    shared_ptr<orders::Order> o2(new orders::Airlift());
-    shared_ptr<orders::Order> o3(new orders::Negotiate());
 
     // Demonstrate issueOrder
     cout << "Calling issueOrder:" << endl;
-    p1.issueOrder(o1);
-    p1.issueOrder(o2);
-    p1.issueOrder(o3);
+    p1.issueOrder(new orders::Bomb());
+    p1.issueOrder(new orders::Airlift());
+    p1.issueOrder(new orders::Negotiate());
 
     // Demonstrate toAttack and toDefend
     cout << "Player 1 toAttack and toDefend:" << endl;

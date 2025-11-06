@@ -8,7 +8,7 @@ State::~State() = default;
 //superclass's operator<< definition. State& s is resolved at runtime, and the correct derived class member functions are called.
 std::ostream& operator<<(std::ostream& stream, const State& s) {
 
-	stream << "State: " << s.getStateName() << " | validCommands: ";
+	stream << s.getStateName() << " | valid commands/events: ";
 	for (const string& command : s.getValidCommands()) {
 		stream << command << " ";
 	}
@@ -106,7 +106,7 @@ unordered_set<string>& StateTemplate<ID>::getValidCommands() const {
 
 
 /*
-onEnter and onCommand have state specific behavior, they are defined here for every specific state.
+onCommand has state specific behavior, it is defined here for every specific state.
 
 clone methods return a deep copy of the specific state
 This ensures polymorphic copying works correctly when cloning from a State pointer.
@@ -118,23 +118,16 @@ This ensures polymorphic copying works correctly when cloning from a State point
 /*
 Start State
 */
-void startState::onEnter(GameEngine& engine) {
-
-	std::cout << "\nentering " << *this << "\n\n";
-
-	
-}
-
 string startState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
 
 	if (cmd->getCommandName() == "loadmap") {
 		if(!engine.loadMap()){
-			effect = "can't load map transitioning back to start state.\n";
+			effect = "map couldn't be loaded, transitioned back to start state.\n";
 			engine.transitionState(StateID::Start);
 		}
 		else{
-			effect = "loaded map, proceeding to map loaded state.\n";
+			effect = "loaded map, proceeded to map loaded state.\n";
 			engine.transitionState(StateID::MapLoaded);
 		}
 	}
@@ -150,28 +143,22 @@ unique_ptr<State> startState::clone() const {
 /*
 Map Loaded State
 */
-void mapLoadedState::onEnter(GameEngine& engine) {
 
-	std::cout << "\nentering " << *this << "\n";
-	
-
-}
 string mapLoadedState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
 	
 	if (cmd->getCommandName() == "loadmap") {
-		effect = "transitionning to load map state\n";
+		effect = "transitioned to load map state\n";
 		engine.transitionState(StateID::MapLoaded);
 	}
 	else if (cmd->getCommandName() == "validatemap") {
 
 		if (engine.currMap->validate()) {
-			effect = "map is valid, transitioning to map validated state\n";
+			effect = "map is valid, transitioned to map validated state\n";
 			engine.transitionState(StateID::MapValidated);
 		}
 		else {
 			effect = "map is invalid, for now just doing nothing\n";
-			return effect;
 		}
 
 			
@@ -186,16 +173,12 @@ unique_ptr<State> mapLoadedState::clone() const {
 /*
 Map Validated State
 */
-void mapValidatedState::onEnter(GameEngine& engine) {
 
-
-	std::cout << "\nentering " << *this << "\n";
-}
 string mapValidatedState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
 	
 	if (cmd->getCommandName() == "addplayer") {
-		effect = "adding player to the game, and transitioning to players added state\n";
+		effect = "added player to the game, and transitioned to players added state\n";
 		engine.addPlayerToGame();
 		engine.transitionState(StateID::PlayersAdded);
 	}
@@ -210,27 +193,16 @@ unique_ptr<State> mapValidatedState::clone() const {
 /*
 Players Added State
 */
-void playersAddedState::onEnter(GameEngine& engine) {
-
-	/*
-	Do something later for PlayersAdded
-	*/
-
-	std::cout << "\nentering " << *this << "\n";
-	std::cout << "current number of players: " << engine.numPlayersInGame << "\n";
-}
 
 string playersAddedState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
 
 	if (cmd->getCommandName() == "addplayer") {
 		if (engine.numPlayersInGame + 1 > 6) {
-			std::cout << "Too many players, proceeding to AssignReinforcments Phase...\n";
-			engine.transitionState(StateID::AssignReinforcements);
-
+			effect = "can't add more than 6 players to the game.\n";
 		}
 		else {
-			effect = "adding player to the game, staying in players added state.\n";
+			effect = "added player to the game, stayed in players added state.\n";
 			engine.addPlayerToGame();
 			engine.transitionState(StateID::PlayersAdded);
 		}
@@ -240,7 +212,7 @@ string playersAddedState::onCommand(Command* cmd, GameEngine& engine) {
 	else if (cmd->getCommandName() == "gamestart") {
 		if (engine.numPlayersInGame < 2) {
 			std::cout << "Minimum of 2 players to proceed, currently: " << engine.numPlayersInGame << " players.\n";
-			effect = "Minimum of 2 players required, currently: " + std::to_string(engine.numPlayersInGame) + " players. Going back to players added state.\n";
+			effect = "Minimum of 2 players required, currently: " + std::to_string(engine.numPlayersInGame) + " players. Went back to players added state.\n";
 			engine.transitionState(StateID::PlayersAdded);
 		}
 		else{
@@ -275,8 +247,7 @@ string playersAddedState::onCommand(Command* cmd, GameEngine& engine) {
 			//e) switch game to play phase.
 			engine.currPhase = Phase::play;
 			
-			effect = "game startup phase initiated, game phase changed to play, and transitionning to assign reinforcments phase.\n";
-			engine.transitionState(StateID::AssignReinforcements);
+			effect = "Finished startup phase, beginning main game loop.\n";
 		}
 	}
 
@@ -293,27 +264,24 @@ unique_ptr<State> playersAddedState::clone() const {
 
 
 /*
-AssignReinforcments State
+AssignReinforcements State
 */
-void assignReinforcementsState::onEnter(GameEngine& engine) {
-
-	/*
-	Do something later for AssignReinforcements
-	*/
-
-	std::cout << "\nentering " << *this << "\n";
-	
-
-}
 
 string assignReinforcementsState::onCommand(Command* cmd, GameEngine& engine) {
-	string effect;
-	
-	if (cmd->getCommandName() == "issueorder") {
-		engine.transitionState(StateID::IssueOrders);
+	string effect{};
+	for (const int id : engine.orderOfPlay) {
+		// not 13 units but (# of territories owned divided by 3, rounded down
+		// if player controls continent, add extra
+		// minimum units to add is 3.
+		int unitsToAssign = 13;
+		//
+
+		std::cout << "assigned " << unitsToAssign << " units to player " << id << "\n";
+		engine.assignUnitsToPlayer(unitsToAssign, id);
 		
 	}
-
+	
+	std::cout << "finished assigning reinforcements.\n";
 	return effect;
 }
 
@@ -324,23 +292,36 @@ unique_ptr<State> assignReinforcementsState::clone() const {
 /*
 Issue Orders State
 */
-void issueOrdersState::onEnter(GameEngine& engine) {
-
-	/*
-	Do something later for IssueOrders
-	*/
-
-	std::cout << "\nentering " << *this << "\n";
-}
 
 string issueOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
+	int orderCount;
+	while (true) {
+		orderCount = 0;
 
-	if (cmd->getCommandName() == "issueOrder") {
-		engine.transitionState(StateID::IssueOrders);
-	}
-	else if (cmd->getCommandName() == "issueordersend") {
-		engine.transitionState(StateID::ExecuteOrders);
+		for (const int id : engine.orderOfPlay) {
+			std::cout << "Enter order for Player " << id << " (DEPLOY, ADVANCE, BOMB, BLOCKADE, AIRLIFT, NEGOTIATE), or blank for no order: ";
+
+			std::string orderType;
+			std::getline(std::cin, orderType);
+
+			if (orderType.empty()) continue;
+
+			orders::Order* order = nullptr;
+			if (orderType == "BOMB") order = new orders::Bomb();
+			else if (orderType == "DEPLOY") order = new orders::Deploy();
+			else if (orderType == "ADVANCE") order = new orders::Advance();
+			else if (orderType == "BLOCKADE") order = new orders::Blockade();
+			else if (orderType == "AIRLIFT") order = new orders::Airlift();
+			else if (orderType == "NEGOTIATE") order = new orders::Negotiate();
+
+			if (order) {
+				engine.playersMap->at(id)->issueOrder(order);
+				orderCount++;
+			}
+		}
+
+		if (orderCount == 0) break;
 	}
 	
 	return effect;
@@ -353,28 +334,25 @@ unique_ptr<State> issueOrdersState::clone() const {
 /*
 Execute Orders State
 */
-void executeOrdersState::onEnter(GameEngine& engine) {
-
-	/*
-	Do something later for ExecuteOrders
-	*/
-
-	std::cout << "\nentering " << *this << "\n";
-}
 
 string executeOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
+	bool anyOrdersExecuted = false;
+	do{
+		anyOrdersExecuted = false;
+		for (const int id : engine.orderOfPlay) {
+			auto& orders = engine.playersMap->at(id)->getOrders();
+			if(orders.size() == 0) continue;
 
-	if (cmd->getCommandName() == "execorder") {
-		engine.transitionState(StateID::ExecuteOrders);
-	}
-	else if (cmd->getCommandName() == "endexecorders") {
-		engine.transitionState(StateID::AssignReinforcements);
-	}
-	else if (cmd->getCommandName() == "win") {
-		engine.transitionState(StateID::Win);
-	}
-		
+			
+			auto topOrder = orders[orders.size() - 1];
+			std::cout << "executing player " << id << "'s " << topOrder->getTypeAsString() << " order.\n";
+			topOrder->execute();
+			orders.remove(orders.size() - 1);
+			anyOrdersExecuted = true;
+		}
+	} while(anyOrdersExecuted);
+	std::cout << "Successfully finished executing orders.\n";
 	
 
 	return effect;
@@ -387,14 +365,6 @@ unique_ptr<State> executeOrdersState::clone() const {
 /*
 Win State
 */
-void winState::onEnter(GameEngine& engine) {
-
-	/*
-	Do something later for Win
-	*/
-
-	std::cout << "\nentering " << *this << "\n";
-}
 
 string winState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
@@ -417,14 +387,6 @@ unique_ptr<State> winState::clone() const {
 /*
 End State
 */
-void endState::onEnter(GameEngine& engine) {
-
-	/*
-	Do something later for End
-	*/
-
-	std::cout << "Ending the Game.\n";
-}
 string endState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
 	return effect;
@@ -505,7 +467,7 @@ GameEngine::GameEngine(const GameEngine& other){
 
 void GameEngine::startupPhase(CommandProcessor& commandProcessor) {
 	currState = states->at(StateID::Start).get();
-	currState->onEnter(*this);
+	std::cout << "Beginning startup, entering state:  " << *this->getState() << "\n";
 
 	while (true) {
 		if(this->currPhase == Phase::play){
@@ -532,46 +494,37 @@ void GameEngine::startupPhase(CommandProcessor& commandProcessor) {
 	
 }
 
-/*
+
 void GameEngine::mainGameLoop() {
-	//In the order of playters from 4b in part 2, proceed in round-robin:
-	for (Player in playersOrderList) {
+	while(true){
+		reinforcmentPhase();
+		issueOrdersPhase();
+		executeOrdersPhase();
+		
+		/*
+		if checkWin() -> check if a player owns all territories: that player calls win()
+		if anyHomelessPlayers() -> check if there is a player with no territories: those players are removed from the game.
+		*/
 
-		reinforcmentPhase(Player)
-	
+		std::cout << "\n Next turn ...\n\n";
 	}
-
-	for (Player in playersOrderList) {
-
-		std::cout << Player.reinforcmentPool << "\n";
-
-	}
-	std::cout << "\n";
-
 }
-*/
 
-/*
-void GameEngine::reinforcmentPhase(Player) {
 
-	ownedTerritories = Player.ownedTerritories;
-	armyUnitsGiven = ownedTerritories / 3;
 
-	if Player owns all territories in a Continent:
-		armyUnitsGiven += continentsBonus;
-
-	if armyUnitsGiven < 3:
-		armyUnitsGiven = 3;
-		Player.reinforcmentPool = armyUnitsGiven;
-
-}*/
+void GameEngine::reinforcmentPhase() {
+	this->transitionState(StateID::AssignReinforcements);
+	this->getState()->onCommand(nullptr, *this);
+}
 
 void GameEngine::issueOrdersPhase() {
-
+	this->transitionState(StateID::IssueOrders);
+	this->getState()->onCommand(nullptr, *this);
 }
 
 void GameEngine::executeOrdersPhase() {
-
+	this->transitionState(StateID::ExecuteOrders);
+	this->getState()->onCommand(nullptr, *this);
 }
 
 /*
@@ -609,7 +562,7 @@ void GameEngine::init() {
 	But the memory of what it is pointing to is managed by the smartPtr: unique_ptr<map<StateID, unique_ptr<State>>> states;
 	*/
 	currState = states->at(StateID::Start).get();
-	currState->onEnter(*this);
+	std::cout << "\nBeginning startup state: " << this->getState() << "\n";
 }
 /*
 Return the currentState
@@ -622,7 +575,8 @@ Apply State transition.
 void GameEngine::transitionState(StateID id) {
 	if (states->count(id) > 0) {
 		currState = states->at(id).get();
-		currState->onEnter(*this);
+		//==================NOTIFY LOGS ================================
+		std::cout << "\nTransitionned to state: " << *this->getState() << "\n";
 	}
 }
 
