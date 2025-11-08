@@ -21,10 +21,6 @@ public:
 
 		std::string name, continent;
 
-		std::shared_ptr<Player> owner;
-
-		int numArmies;
-
 		std::vector<std::shared_ptr<Territory>> connectedTerritories;
 
 	public:
@@ -116,25 +112,7 @@ public:
 		*
 		*/
 		void printTerritory();
-		/**
-		*
-		* @brief Setter function that sets the owner of the territory
-		*
-		* Basic setter function that sets the given Player as the owner of the calling Territory
-		*
-		* @param owner pointer to a Player instance who will own this territory
-		*
-		*/
-		void setOwnership(std::shared_ptr<Player>);
-		/**
-		*
-		* @brief Getter function for the ownedBy attribute
-		*
-		* Basic getter function that return who owns the Territory calling the method
-		*
-		* @return the Player that owns the Territory calling the method
-		*/
-		std::shared_ptr<Player> getOwnership();
+
 	};
 
 	class MapLoader {
@@ -285,6 +263,9 @@ public:
 	*/
 	bool validate();
 
+	std::map<std::string, std::shared_ptr<Map::Territory>> getAdjacencyMatrix(){
+		return this->adjacencyMatrix;
+	}
 private:
 
 	std::map<std::string, std::shared_ptr<Territory>> adjacencyMatrix;

@@ -1,3 +1,4 @@
+#include <filesystem>
 #include "GameEngine.h"
 
 //abstract State constructors definitions
@@ -107,11 +108,7 @@ unordered_set<string>& StateTemplate<ID>::getValidCommands() const {
 
 /*
 onCommand has state specific behavior, it is defined here for every specific state.
-
-clone methods return a deep copy of the specific state
-This ensures polymorphic copying works correctly when cloning from a State pointer.
 */
-
 
 // ===========================================STARTUP=========================================
 
@@ -122,23 +119,18 @@ string startState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
 
 	if (cmd->getCommandName() == "loadmap") {
-		if(!engine.loadMap()){
-			effect = "map couldn't be loaded, transitioned back to start state.\n";
-			engine.transitionState(StateID::Start);
-		}
-		else{
-			effect = "loaded map, proceeded to map loaded state.\n";
-			engine.transitionState(StateID::MapLoaded);
-		}
+
+		engine.loadMap();
+		effect = "loaded map, proceeded to map loaded state.\n";
+		engine.transitionState(StateID::MapLoaded);
+		
 	}
 	
 	
 	return effect;
 }
 
-unique_ptr<State> startState::clone() const {
-    return unique_ptr<startState>(new startState(*this));
-}
+
 
 /*
 Map Loaded State
@@ -148,12 +140,13 @@ string mapLoadedState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
 	
 	if (cmd->getCommandName() == "loadmap") {
+		engine.loadMap();
 		effect = "transitioned to load map state\n";
 		engine.transitionState(StateID::MapLoaded);
 	}
 	else if (cmd->getCommandName() == "validatemap") {
 
-		if (engine.currMap->validate()) {
+		if (engine.getCurrMap()->validate()) {
 			effect = "map is valid, transitioned to map validated state\n";
 			engine.transitionState(StateID::MapValidated);
 		}
@@ -166,9 +159,6 @@ string mapLoadedState::onCommand(Command* cmd, GameEngine& engine) {
 	return effect;
 }
 
-unique_ptr<State> mapLoadedState::clone() const {
-    return unique_ptr<mapLoadedState>(new mapLoadedState(*this));
-}
 
 /*
 Map Validated State
@@ -180,15 +170,13 @@ string mapValidatedState::onCommand(Command* cmd, GameEngine& engine) {
 	if (cmd->getCommandName() == "addplayer") {
 		effect = "added player to the game, and transitioned to players added state\n";
 		engine.addPlayerToGame();
+		std::cout << "number of players: " << engine.getNumPlayersInGame() << "\n";
 		engine.transitionState(StateID::PlayersAdded);
 	}
 
 	return effect;
 }
 
-unique_ptr<State> mapValidatedState::clone() const {
-    return unique_ptr<mapValidatedState>(new mapValidatedState(*this));
-}
 
 /*
 Players Added State
@@ -198,21 +186,22 @@ string playersAddedState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
 
 	if (cmd->getCommandName() == "addplayer") {
-		if (engine.numPlayersInGame + 1 > 6) {
+		if (engine.getNumPlayersInGame() + 1 > 6) {
 			effect = "can't add more than 6 players to the game.\n";
 		}
 		else {
 			effect = "added player to the game, stayed in players added state.\n";
 			engine.addPlayerToGame();
+			std::cout << "number of players: " << engine.getNumPlayersInGame() << "\n";
 			engine.transitionState(StateID::PlayersAdded);
 		}
 	}
 
 
 	else if (cmd->getCommandName() == "gamestart") {
-		if (engine.numPlayersInGame < 2) {
-			std::cout << "Minimum of 2 players to proceed, currently: " << engine.numPlayersInGame << " players.\n";
-			effect = "Minimum of 2 players required, currently: " + std::to_string(engine.numPlayersInGame) + " players. Went back to players added state.\n";
+		if (engine.getNumPlayersInGame() < 2) {
+			std::cout << "Minimum of 2 players to proceed, currently: " << engine.getNumPlayersInGame() << " players.\n";
+			effect = "Minimum of 2 players required, currently: " + std::to_string(engine.getNumPlayersInGame()) + " players. Went back to players added state.\n";
 			engine.transitionState(StateID::PlayersAdded);
 		}
 		else{
@@ -221,14 +210,14 @@ string playersAddedState::onCommand(Command* cmd, GameEngine& engine) {
 			std::cout << "GAMESTART PHASE SETUP ...\n\n";
 
 			//a) distribute all territories fairly somehow
-			std::cout << "assign territories evenly to all players...\n\n";
+			engine.assignTerritoriesFairly();
 
 			//b) determine order
 			engine.shuffleOrderOfPlay();
 
 			//c) give 50 army units to each player
 			std::cout << "Assigning 50 units to each player.\n\n";
-			for (const int id : engine.orderOfPlay) {
+			for (const int id : *engine.getOrderOfPlay()) {
 				engine.assignUnitsToPlayer(50, id);
 			}
 
@@ -236,7 +225,7 @@ string playersAddedState::onCommand(Command* cmd, GameEngine& engine) {
 			//for now just create a deck on the stack
 			engine.createDeck();
 
-			for (const int id : engine.orderOfPlay) {
+			for (const int id : *engine.getOrderOfPlay()) {
 				std::cout << "Player with ID: " << id << " draws twice...\n";
 				engine.playerDrawsCard(id);
 				engine.playerDrawsCard(id);
@@ -245,7 +234,7 @@ string playersAddedState::onCommand(Command* cmd, GameEngine& engine) {
 			}
 
 			//e) switch game to play phase.
-			engine.currPhase = Phase::play;
+			engine.setCurrPhase(Phase::play);
 			
 			effect = "Finished startup phase, beginning main game loop.\n";
 		}
@@ -255,13 +244,8 @@ string playersAddedState::onCommand(Command* cmd, GameEngine& engine) {
 	return effect;
 }
 
-unique_ptr<State> playersAddedState::clone() const {
-    return unique_ptr<playersAddedState>(new playersAddedState(*this));
-}
-
 
 //====================================================PLAY====================================================
-
 
 /*
 AssignReinforcements State
@@ -269,12 +253,13 @@ AssignReinforcements State
 
 string assignReinforcementsState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect{};
-	for (const int id : engine.orderOfPlay) {
-		// not 13 units but (# of territories owned divided by 3, rounded down
-		// if player controls continent, add extra
+	for (const int id : *engine.getOrderOfPlay()) {
+		// (# of territories owned divided by 3, rounded down
 		// minimum units to add is 3.
-		int unitsToAssign = 13;
-		//
+		int unitsToAssign = engine.getPlayersMap().at(id)->getTerritories().size()/3;
+		if(unitsToAssign < 3) unitsToAssign = 3;
+	
+		// TODO: if player controls continent, add extra units, how ?
 
 		std::cout << "assigned " << unitsToAssign << " units to player " << id << "\n";
 		engine.assignUnitsToPlayer(unitsToAssign, id);
@@ -285,9 +270,6 @@ string assignReinforcementsState::onCommand(Command* cmd, GameEngine& engine) {
 	return effect;
 }
 
-unique_ptr<State> assignReinforcementsState::clone() const {
-    return unique_ptr<assignReinforcementsState>(new assignReinforcementsState(*this));
-}
 
 /*
 Issue Orders State
@@ -299,24 +281,33 @@ string issueOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 	while (true) {
 		orderCount = 0;
 
-		for (const int id : engine.orderOfPlay) {
-			std::cout << "Enter order for Player " << id << " (DEPLOY, ADVANCE, BOMB, BLOCKADE, AIRLIFT, NEGOTIATE), or blank for no order: ";
-
-			std::string orderType;
-			std::getline(std::cin, orderType);
-
-			if (orderType.empty()) continue;
-
+		for (const int id : *engine.getOrderOfPlay()) {
+			std::cout << "Enter order for Player " << id << " (DEPLOY, ADVANCE, BOMB, BLOCKADE, AIRLIFT, NEGOTIATE), or blank/Enter to skip your turn: ";
 			orders::Order* order = nullptr;
-			if (orderType == "BOMB") order = new orders::Bomb();
-			else if (orderType == "DEPLOY") order = new orders::Deploy();
-			else if (orderType == "ADVANCE") order = new orders::Advance();
-			else if (orderType == "BLOCKADE") order = new orders::Blockade();
-			else if (orderType == "AIRLIFT") order = new orders::Airlift();
-			else if (orderType == "NEGOTIATE") order = new orders::Negotiate();
+			bool isValidOrder = true;
+			do {
+				std::string orderType;
+				std::getline(std::cin, orderType);
+				isValidOrder = true;
+
+				if (orderType.empty()) continue;
+
+				if (orderType == "BOMB") order = new orders::Bomb();
+				else if (orderType == "DEPLOY") order = new orders::Deploy();
+				else if (orderType == "ADVANCE") order = new orders::Advance();
+				else if (orderType == "BLOCKADE") order = new orders::Blockade();
+				else if (orderType == "AIRLIFT") order = new orders::Airlift();
+				else if (orderType == "NEGOTIATE") order = new orders::Negotiate();
+				else {
+					orderType = "";
+					std::cout << "Invalid Order, please try again: ";
+					isValidOrder = false;
+				}
+
+			} while(!isValidOrder);
 
 			if (order) {
-				engine.playersMap->at(id)->issueOrder(order);
+				engine.getPlayersMap().at(id)->issueOrder(order);
 				orderCount++;
 			}
 		}
@@ -327,9 +318,6 @@ string issueOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 	return effect;
 }
 
-unique_ptr<State> issueOrdersState::clone() const {
-    return unique_ptr<issueOrdersState>(new issueOrdersState(*this));
-}
 
 /*
 Execute Orders State
@@ -340,8 +328,8 @@ string executeOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 	bool anyOrdersExecuted = false;
 	do{
 		anyOrdersExecuted = false;
-		for (const int id : engine.orderOfPlay) {
-			auto& orders = engine.playersMap->at(id)->getOrders();
+		for (const int id : *engine.getOrderOfPlay()) {
+			auto& orders = engine.getPlayersMap().at(id)->getOrders();
 			if(orders.size() == 0) continue;
 
 			
@@ -358,9 +346,6 @@ string executeOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 	return effect;
 }
 
-unique_ptr<State> executeOrdersState::clone() const {
-    return unique_ptr<executeOrdersState>(new executeOrdersState(*this));
-}
 
 /*
 Win State
@@ -380,9 +365,6 @@ string winState::onCommand(Command* cmd, GameEngine& engine) {
 	return effect;
 }
 
-unique_ptr<State> winState::clone() const {
-    return unique_ptr<winState>(new winState(*this));
-}
 
 /*
 End State
@@ -392,30 +374,56 @@ string endState::onCommand(Command* cmd, GameEngine& engine) {
 	return effect;
 }
 
+
+
+/*
+clone methods return a deep copy of the specific state
+This ensures polymorphic copying works correctly when cloning from a State pointer.
+*/
+unique_ptr<State> startState::clone() const {
+    return unique_ptr<startState>(new startState(*this));
+}
+unique_ptr<State> mapLoadedState::clone() const {
+    return unique_ptr<mapLoadedState>(new mapLoadedState(*this));
+}
+unique_ptr<State> mapValidatedState::clone() const {
+    return unique_ptr<mapValidatedState>(new mapValidatedState(*this));
+}
+unique_ptr<State> playersAddedState::clone() const {
+    return unique_ptr<playersAddedState>(new playersAddedState(*this));
+}
+unique_ptr<State> assignReinforcementsState::clone() const {
+    return unique_ptr<assignReinforcementsState>(new assignReinforcementsState(*this));
+}
+unique_ptr<State> issueOrdersState::clone() const {
+    return unique_ptr<issueOrdersState>(new issueOrdersState(*this));
+}
+unique_ptr<State> executeOrdersState::clone() const {
+    return unique_ptr<executeOrdersState>(new executeOrdersState(*this));
+}
+unique_ptr<State> winState::clone() const {
+    return unique_ptr<winState>(new winState(*this));
+}
 unique_ptr<State> endState::clone() const {
     return unique_ptr<endState>(new endState(*this));
 }
 
+
 /*
  GameEngine class, that manages all the game structure by keeping track of all the states, and the current state.
-*/
-
-/*
-
-	std::shared_ptr<Map> currMap;
-	unique_ptr<map<int, unique_ptr<Player>>> players;
 */
 GameEngine::GameEngine() : 
 	//allocate memory for the states smart_ptr
 	states{make_unique<map<StateID, unique_ptr<State>>>()},
 	//currState is initially null
 	currState{ nullptr },
-	//currMap is initially null
+	//currMap is initially nulls
 	currMap{nullptr},
 	//allocate memory for the players
 	playersMap{ make_unique<map<int, unique_ptr<Player>>>() },
-	numPlayersInGame (0),
-	currPhase(Phase::startup){
+	numPlayersInGame(make_unique<int>(0)),
+	currPhase(Phase::startup),
+	orderOfPlay (make_unique<vector<int>>()){
 
 
 	//allocate memory to every state and place them in the states map (key: stateID, val: unique_ptr to State object)
@@ -505,7 +513,24 @@ void GameEngine::mainGameLoop() {
 		if checkWin() -> check if a player owns all territories: that player calls win()
 		if anyHomelessPlayers() -> check if there is a player with no territories: those players are removed from the game.
 		*/
+		vector<int> playersToRemove;
+		for(const int id : *this->orderOfPlay){
+			if(playersMap->at(id)->getTerritories().size() == currMap->getAdjacencyMatrix().size()){
+				std::cout << "PLAYER " << id << " WON!.\n";
+				return;
+			}
+			else if(playersMap->at(id)->getTerritories().size() == 0){
+				playersToRemove.push_back(id);
+			}
 
+		}
+		for(int id : playersToRemove){
+			std::cout << "PLAYER " << id << " IS HOMELESS, REMOVING THAT PLATYER!.\n";
+			playersMap->erase(id);
+			auto it = std::find(orderOfPlay->begin(), orderOfPlay->end(), id);
+			if(it != orderOfPlay->end()) orderOfPlay->erase(it); //checking in case
+
+		}
 		std::cout << "\n Next turn ...\n\n";
 	}
 }
@@ -583,28 +608,66 @@ void GameEngine::transitionState(StateID id) {
 void GameEngine::printPlayersInGame() {
 
 	std::cout << "LISTING ALL PLAYERS IN THE GAME: \n\n";
-	for (const int id : this->orderOfPlay) {
+	for (const int id : *this->orderOfPlay) {
 		std::cout << "Player " << id << " is " << *this->playersMap.get()->at(id) << "\n";
 
 	}
 
 }
+void GameEngine::loadMap() {
+	namespace fs = std::filesystem;
+	fs::path dir_path = "map/map_files/";
 
-bool GameEngine::loadMap() {
-	std::shared_ptr<Map> asia = std::make_shared<Map>("map/map_files/Asia.map");
-	if(!asia.get()->validFile){
-		return false;
-
+	std::cout << "\nChoose from the following maps: \n\n";
+	for(auto& entry : fs::directory_iterator(dir_path)){
+		//stem only takes everythign before .map
+		std::cout << entry.path().filename().stem().string() << "\n";
 	}
 
-	this->currMap = asia;
-	std::cout << "Map is loaded into the game\n\n";
-	return true;
+	std::shared_ptr<Map> map;
+	string mapName{};
+    do {
+        std::cout << "\nChoose a map (enter the full name):\n";
+        std::getline(std::cin >> std::ws, mapName);
+		map = std::make_shared<Map>(dir_path.string() + mapName + ".map");
+
+		if(!map.get()->validFile){
+			//map contstructor prints an error message
+			continue;
+
+		}
+		else{
+			currMap = map;
+			std::cout << "Map is loaded into the game\n";
+			return;
+		}
+
+    } while (true);
+}
+
+void GameEngine::addPlayerToGame() {
+	int newPlayerNum = getNumPlayersInGame() + 1;
+	setNumPlayersInGame(newPlayerNum);
+	this->playersMap->emplace(newPlayerNum, make_unique<Player>());
+	this->orderOfPlay->push_back(newPlayerNum);
 
 }
-void GameEngine::addPlayerToGame() {
-	this->playersMap->emplace(++this->numPlayersInGame, make_unique<Player>());
-	this->orderOfPlay.push_back(this->numPlayersInGame);
+
+void GameEngine::assignTerritoriesFairly(){
+	vector<shared_ptr<Map::Territory>> allTerritories;
+	//adjacency : territoryName, TerritoryPointer, auto takes care of it.
+	for (const auto& p : currMap->getAdjacencyMatrix()) {
+		allTerritories.push_back(p.second);
+	}
+
+	auto it = playersMap->begin();
+	for(int i = 0; i < allTerritories.size(); i++){
+		Player* currentPlayer = it->second.get();
+		currentPlayer->addTerritory(allTerritories[i]);
+		it++;
+		if(it == playersMap->end()) it = playersMap->begin();
+	}
+	std::cout << "finished assigning territories fairly.\n";
 
 }
 
@@ -613,10 +676,10 @@ void GameEngine::shuffleOrderOfPlay() {
 	std::cout << "\nShuffling the order of play...\n";
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::shuffle(this->orderOfPlay.begin(), this->orderOfPlay.end(), gen);
+	std::shuffle(orderOfPlay->begin(), orderOfPlay->end(), gen);
 
 	std::cout << "new order of play: ";
-	for (const int id : this->orderOfPlay) {
+	for (const int id : *orderOfPlay) {
 		std::cout << id << " ";
 	}
 	std::cout << "\n\n";
@@ -636,4 +699,39 @@ void GameEngine::playerDrawsCard(int playerIdInMap) {
 	this->deckOfCards.get()->draw(*this->playersMap.get()->at(playerIdInMap).get()->getHand());
 }
 
+
+//getters
+std::map<int, std::unique_ptr<Player>>& GameEngine::getPlayersMap() {
+    return *playersMap;
+}
+
+std::shared_ptr<Map> GameEngine::getCurrMap() const {
+    return currMap;
+}
+
+int GameEngine::getNumPlayersInGame() {
+    return *numPlayersInGame.get();
+}
+
+Phase GameEngine::getCurrPhase() const {
+    return currPhase;
+}
+
+vector<int>* GameEngine::getOrderOfPlay() {
+    return orderOfPlay.get();
+}
+
+Deck* GameEngine::getDeckOfCards() const {
+    return deckOfCards.get();
+}
+
+//setters
+void GameEngine::setCurrPhase(Phase newPhase) {
+    currPhase = newPhase;
+}
+
+void GameEngine::setNumPlayersInGame(int currNumOfPlayers){
+
+	*this->numPlayersInGame = currNumOfPlayers;
+}
 

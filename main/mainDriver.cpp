@@ -14,7 +14,6 @@
 #include "../player/player.h"
 #include "../processor/CommandProcessor.h"
 
-void testStartupPhase();
 int main() {
     //testCards();
     testStartupPhase();	
