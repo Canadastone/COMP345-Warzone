@@ -69,7 +69,7 @@ void Player::issueOrder(orders::Order* o) {
 
 void Player::addTerritory(shared_ptr<Map::Territory> t) {
 
-    cout << "Adding territory to player" << endl;
+    cout << "Assigned territory: " << t->getName() << endl;
 
 	playerTerritories.push_back(t); 								// adds the given territory to the player's list of territories
 

@@ -205,21 +205,38 @@ private:
 	*/
 	unique_ptr<map<StateID, unique_ptr<State>>> states;
 
-	
+	/*
+	mapping an integer to a player
+	*/
+	unique_ptr<map<int, unique_ptr<Player>>> playersMap;
+
+	/*
+	using the int keys in playersMap to keep an order of play.
+	*/
+	unique_ptr<vector<int>> orderOfPlay;
+
+	/*
+	The current map object currently loaded in the game
+	*/
+	shared_ptr<Map> currMap;
+
+	/*
+	current number of player in the game
+	*/
+	unique_ptr<int> numPlayersInGame;
+
+	/*
+	current deck of cards object being used in the game
+	*/
+	unique_ptr<Deck> deckOfCards;
+
+	/*
+	current "global game phase" (Startup, play) as per A2 instructions.
+	*/
+	Phase currPhase;
 	
 public:
 	
-	unique_ptr<map<int, unique_ptr<Player>>> playersMap;
-	std::shared_ptr<Map> currMap;
-
-	int numPlayersInGame;
-
-	Phase currPhase;
-
-	vector<int> orderOfPlay;
-
-	unique_ptr<Deck> deckOfCards;
-
 	//GameEngine ctr.
 	GameEngine();
 
@@ -232,26 +249,6 @@ public:
 	//GameEngine streamInsertion operator
 	friend std::ostream& operator<<(std::ostream& os, const GameEngine& s);
 
-	//inits the startup phase as per part 2.
-	void startupPhase(CommandProcessor& commandProcessor);
-
-	//helpers for startupPhase
-	void printPlayersInGame();
-	bool loadMap();
-	void addPlayerToGame();
-	void shuffleOrderOfPlay();
-	void assignUnitsToPlayer(int units, int playerIdInMap);
-	void createDeck();
-	void playerDrawsCard(int playerIdInMap);
-
-
-
-
-
-	void mainGameLoop();
-	void reinforcmentPhase();
-	void issueOrdersPhase();
-	void executeOrdersPhase();
 
 	//initializes the first state.
 	void init();
@@ -261,6 +258,70 @@ public:
 
 	//Apply State transition.
 	void transitionState(StateID id);
+	
+	
+	//inits the startup phase as per part 2.
+	void startupPhase(CommandProcessor& commandProcessor);
+
+	//helpers for startupPhase
+
+	/*
+	calls the << operator for every play in the game
+	*/
+	void printPlayersInGame();
+
+	/*
+	promps the user to choose from a list of maps throught he command line, and loads the map into currMap
+	*/
+	void loadMap();
+
+	/*
+	Adds a player to the playersMap
+	*/
+	void addPlayerToGame();
+
+	/*
+	Assigns territories in round robin to each player
+	*/
+	void assignTerritoriesFairly();
+
+	/*
+	randomizes the indices in orderOfPlay
+	*/
+	void shuffleOrderOfPlay();
+
+	/*
+	Assigns the passed number of units to the player.
+	*/
+	void assignUnitsToPlayer(int units, int playerIdInMap);
+
+	/*
+	instantiates the deck object
+	*/
+	void createDeck();
+	/*
+	calls the player.draw() for a player.
+	*/
+	void playerDrawsCard(int playerIdInMap);
+
+
+
+	void mainGameLoop();
+	void reinforcmentPhase();
+	void issueOrdersPhase();
+	void executeOrdersPhase();
+
+	//getters
+	map<int, unique_ptr<Player>>& getPlayersMap();
+    shared_ptr<Map> getCurrMap() const;
+    int getNumPlayersInGame();
+    Phase getCurrPhase() const;
+    vector<int>* getOrderOfPlay();
+    Deck* getDeckOfCards() const;
+
+	//setters
+	void setCurrPhase(Phase newPhase);
+	void setNumPlayersInGame(int currNumOfPlayers);
 
 };
-void testGameStates();
+void testStartupPhase();
