@@ -20,8 +20,9 @@ Command& Command::operator=(const Command& otherCommand) {
     return *this;
 }
 void Command::saveEffect(const string& effect) {
-    std::cout << "Saved effect: " << effect << "\n";
+    std::cout << "Command's effect: " << effect << "\n";
     this->effect = effect;
+    this->notify(*this);
 }
 
 string Command::getCommandName() const {
@@ -42,4 +43,19 @@ StateID Command::getTransitionState(StateID currentState) {
         cout << "Invalid command: " << command << std::endl;
         return currentState;
     }
+}
+//Implements ILoggable functions
+std::string Command::stringToLog() const {
+    std::string textToLog = "Command's effect: " + this->effect;
+    return textToLog;
+}
+//Implements Subject functions
+void Command::attach(std::shared_ptr<LogObserver> pObserver) {
+    this->observer = pObserver;
+}
+void Command::detach() {
+    this->observer = nullptr;
+}
+void Command::notify(ILoggable& loggable) const {
+    this->observer->update(loggable);
 }

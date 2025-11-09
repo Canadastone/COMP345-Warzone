@@ -527,6 +527,25 @@ void GameEngine::executeOrdersPhase() {
 	this->getState()->onCommand(nullptr, *this);
 }
 
+std::string GameEngine::stringToLog() const {
+	State* currentState = this->currState;
+
+	std::string stateString = currentState->getStateName();
+
+	std::string logText = "GameEngine's new state: " + stateString;
+
+	return logText;
+}
+void GameEngine::attach(std::shared_ptr<LogObserver> pObserver) {
+	this->observer = pObserver;
+}
+void GameEngine::detach() {
+	this->observer = nullptr;
+}
+void GameEngine::notify(ILoggable& loggable) const {
+	this->observer->update(loggable);
+}
+
 /*
 Assignment operator definition
 */
@@ -577,6 +596,7 @@ void GameEngine::transitionState(StateID id) {
 		currState = states->at(id).get();
 		//==================NOTIFY LOGS ================================
 		std::cout << "\nTransitionned to state: " << *this->getState() << "\n";
+		this->notify(*this);
 	}
 }
 
@@ -591,7 +611,7 @@ void GameEngine::printPlayersInGame() {
 }
 
 bool GameEngine::loadMap() {
-	std::shared_ptr<Map> asia = std::make_shared<Map>("map/map_files/Asia.map");
+	std::shared_ptr<Map> asia = std::make_shared<Map>("Asia.map");
 	if(!asia.get()->validFile){
 		return false;
 
@@ -604,6 +624,7 @@ bool GameEngine::loadMap() {
 }
 void GameEngine::addPlayerToGame() {
 	this->playersMap->emplace(++this->numPlayersInGame, make_unique<Player>());
+	this->playersMap->at(this->numPlayersInGame)->getOrders().attach(this->observer);
 	this->orderOfPlay.push_back(this->numPlayersInGame);
 
 }

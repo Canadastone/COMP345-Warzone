@@ -13,16 +13,18 @@
 #include "../orders/orders.h"
 #include "../player/player.h"
 #include "../processor/CommandProcessor.h"
+#include "../logObserver/LoggingObserver.h"
 
+using namespace orders;
 void testStartupPhase();
 int main() {
     //testCards();
-    testStartupPhase();	
+    //testStartupPhase();	
     //testLoadMaps();
     //testOrdersLists();
 	//testPlayers();
     //runProcessor();
-
+    testLoggingObserver();
    return 0;
 
 }
