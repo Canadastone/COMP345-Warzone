@@ -63,5 +63,26 @@ bool CommandProcessor::validate(Command* command, StateID currentState) {
 }
 
 void CommandProcessor::saveCommand(Command* command) {
+    command->attach(this->observer);
     commands.push_back(command);
+    this->notify(*this);
+}
+
+//Implements ILoggable functions
+std::string CommandProcessor::stringToLog() const {
+    Command& latestCommand = *this->commands.back();
+    std::string latestCommandString = latestCommand.getCommandName();
+    std::string textToLog = "Command saved: " + latestCommandString;
+
+    return textToLog;
+}
+//Implements Subject functions
+void CommandProcessor::attach(std::shared_ptr<LogObserver> pObserver) {
+    this->observer = pObserver;
+}
+void CommandProcessor::detach() {
+    this->observer = nullptr;
+}
+void CommandProcessor::notify(ILoggable& loggable) const {
+    this->observer->update(loggable);
 }

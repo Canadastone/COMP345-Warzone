@@ -552,6 +552,25 @@ void GameEngine::executeOrdersPhase() {
 	this->getState()->onCommand(nullptr, *this);
 }
 
+std::string GameEngine::stringToLog() const {
+	State* currentState = this->currState;
+
+	std::string stateString = currentState->getStateName();
+
+	std::string logText = "GameEngine's new state: " + stateString;
+
+	return logText;
+}
+void GameEngine::attach(std::shared_ptr<LogObserver> pObserver) {
+	this->observer = pObserver;
+}
+void GameEngine::detach() {
+	this->observer = nullptr;
+}
+void GameEngine::notify(ILoggable& loggable) const {
+	this->observer->update(loggable);
+}
+
 /*
 Assignment operator definition
 */
@@ -602,6 +621,7 @@ void GameEngine::transitionState(StateID id) {
 		currState = states->at(id).get();
 		//==================NOTIFY LOGS ================================
 		std::cout << "\nTransitionned to state: " << *this->getState() << "\n";
+		this->notify(*this);
 	}
 }
 
@@ -649,6 +669,7 @@ void GameEngine::addPlayerToGame() {
 	int newPlayerNum = getNumPlayersInGame() + 1;
 	setNumPlayersInGame(newPlayerNum);
 	this->playersMap->emplace(newPlayerNum, make_unique<Player>());
+	this->playersMap->at(newPlayerNum)->getOrders().attach(this->observer);
 	this->orderOfPlay->push_back(newPlayerNum);
 
 }

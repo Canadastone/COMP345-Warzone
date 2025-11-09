@@ -65,6 +65,30 @@ namespace orders{
         return *this;
     }
 
+    std::string Order::stringToLog() const{
+        std::string commandEffect = this->effect;
+        std::string typeAsString =  getTypeAsString();
+        std::string loggedString = typeAsString + " Order executed: " + effect;
+
+        return loggedString;
+    }
+
+    void Order::attach(std::shared_ptr<LogObserver> pObserver) {
+        this->observer = pObserver;
+    }
+
+    void Order::detach() {
+        this->observer = nullptr;
+    }
+
+    void Order::notify(ILoggable& loggable) const{
+        this->observer->update(loggable);
+    }
+
+    void Order::notifyOrder(Order& order) {
+        this->notify(order);
+    }
+
     //overloaded << operator
     std::ostream& operator<<(std::ostream& os, const Order& order){
         os << order.getTypeAsString() << " Order, " << order.effect;
@@ -92,6 +116,7 @@ namespace orders{
        if(validate()){
             executed = true;
             //TODO implememt the rest of execute;
+            this->notifyOrder(*this);
         } 
     }
     
@@ -114,6 +139,7 @@ namespace orders{
        if(validate()){
             executed = true;
             //TODO implememt the rest of execute;
+            this->notifyOrder(*this);
         } 
     } 
 
@@ -136,6 +162,7 @@ namespace orders{
        if(validate()){
             executed = true;
             //TODO implememt the rest of execute;
+            this->notifyOrder(*this);
         } 
     } 
 
@@ -158,6 +185,7 @@ namespace orders{
        if(validate()){
             executed = true;
             //TODO implememt the rest of execute;
+            this->notifyOrder(*this);
         } 
     } 
 
@@ -196,6 +224,7 @@ namespace orders{
        if(validate()){
             executed = true;
             //TODO implememt the rest of execute;
+            this->notifyOrder(*this);
         } 
     }
     
@@ -203,6 +232,7 @@ namespace orders{
        if(validate()){
             executed = true;
             //TODO implememt the rest of execute;
+            this->notifyOrder(*this);
         } 
     } 
 
@@ -235,7 +265,9 @@ namespace orders{
     }
 
     void OrderList::add(Order* order){
+        order->attach(this->observer);
         orders.push_back(order);
+        this->notify(*this);
     }
 
     /**
@@ -326,5 +358,22 @@ namespace orders{
         }   
 
         return os;
+    }
+    std::string OrderList::stringToLog() const {
+        Order& order = *this->orders.back();
+        std::string cardAdded = order.getTypeAsString();
+        return cardAdded + " Order issued.";
+    }
+
+    void OrderList::attach(std::shared_ptr<LogObserver> pObserver) {
+        this->observer = pObserver;
+    }
+
+    void OrderList::detach() {
+        this->observer = nullptr;
+    }
+
+    void OrderList::notify(ILoggable& loggable) const {
+        this->observer->update(loggable);
     }
 }

@@ -2,6 +2,7 @@
 #define COMMAND_PROCESSOR
 
 #include "Command.h"
+#include "../logObserver/LoggingObserver.h"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -30,9 +31,10 @@ const std::map<std::string, CommandRule> commandRules = {
 };
 
 
-class CommandProcessor {
+class CommandProcessor : ILoggable, Subject {
     private:
         std::vector<Command*> commands;
+        std::shared_ptr<LogObserver> observer;
     public:
         CommandProcessor();
         ~CommandProcessor();
@@ -40,6 +42,13 @@ class CommandProcessor {
         virtual Command* getCommand();
         bool validate(Command* command, StateID state);
         void saveCommand(Command* command);
+
+        //Implements ILoggable functions
+        std::string stringToLog() const;
+        //Implements Subject functions
+        void attach(std::shared_ptr<LogObserver> pObserver);
+        void detach();
+        void notify(ILoggable& loggable) const;
 };
 void runProcessor();
 #endif

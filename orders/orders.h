@@ -13,7 +13,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-
+#include "../logObserver/LoggingObserver.h"
 
 //namespace containing all order related definitions
 namespace orders{
@@ -27,7 +27,11 @@ namespace orders{
     Base Absract Class, shall only be instantiated through its children
     defines what specific orders will implement
     */
-    class Order{
+    class Order : ILoggable, Subject{
+
+
+        private:
+            std::shared_ptr<LogObserver> observer;
        
         protected:
 
@@ -60,7 +64,18 @@ namespace orders{
             virtual void execute() = 0;
 
             Order& operator=(const Order& order);
-            friend std::ostream& operator<<(std::ostream& os, const Order& order);         
+            friend std::ostream& operator<<(std::ostream& os, const Order& order);
+            
+            //Implement ILoggable functions
+            std::string stringToLog() const override;
+            
+            //Implement Subject functions
+            void attach(std::shared_ptr<LogObserver> pObserver) override;
+            void detach() override;
+            void notify(ILoggable& loggable) const override;
+
+            //Subject notify helper method
+            void notifyOrder(Order& order);
     }; 
 
     //class Deploy, Child of abstract Order
@@ -121,11 +136,12 @@ namespace orders{
 
     //Class Order List, will store and handle the orders in the game
     //uses vector of pointers to contain the orders
-    class OrderList{
+    class OrderList : ILoggable, Subject{
         private:
             
         //internal vector holding pointers to all the orders 
         std::vector<Order*> orders;
+        std::shared_ptr<LogObserver> observer;
         
         //bound checker private helper
         bool indexOutOfBounds(int index) const;
@@ -146,7 +162,14 @@ namespace orders{
         void move(int fromIndex, int toIndex);
 
         OrderList& operator=(const OrderList& other);
-        friend std::ostream& operator<<(std::ostream& os, const OrderList& orderlist); 
+        friend std::ostream& operator<<(std::ostream& os, const OrderList& orderlist);
+
+        //Implement ILoggable functions
+        std::string stringToLog() const;
+        //Implement Subject functions
+        void attach(std::shared_ptr<LogObserver> pObserver);
+        void detach();
+        void notify(ILoggable& loggable) const;
     };
 }
 void testOrdersLists();

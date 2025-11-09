@@ -76,11 +76,6 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "locale": "cpp",
-        "stack": "cpp",
-        "filesystem": "cpp",
-        "chrono": "cpp",
-        "forward_list": "cpp",
-        "iomanip": "cpp",
-        "ratio": "cpp"
+        "stack": "cpp"
     }
 }
