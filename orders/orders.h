@@ -7,12 +7,12 @@
 * Date: 2025-10-07
 * Description: This file contains the declarations for the orders.cpp file
 */
-#ifndef ORDERS_H
-#define ORDERS_H
-
 #include <iostream>
 #include <vector>
 #include <string>
+#include "../player/player.h"
+#include "../map/map.h"
+#include "../cards/cards.h"
 
 
 //namespace containing all order related definitions
@@ -65,9 +65,15 @@ namespace orders{
 
     //class Deploy, Child of abstract Order
     class Deploy : public Order{
-        public:
+      private:
+        shared_ptr<Map::Territory> target;
+        shared_ptr<Player> player;
+        int units;
+
+      public:
 
         Deploy();
+        Deploy(shared_ptr<Player> player,int units, shared_ptr<Map::Territory> territory)
         Deploy(const Deploy& deploy);
         
         bool validate() const override;
@@ -75,18 +81,31 @@ namespace orders{
     };
     //class Advance, Child of abstract Order
     class Advance : public Order{
-        public:
+      private:
+        shared_ptr<Player> player;
+        shared_ptr<Map::Territory> source;
+        shared_ptr<Map::Territory> target;
+        int units;
+
+      public:
 
         Advance();
+        Advance(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target);
         Advance(const Advance& advance);
         bool validate() const override;
         void execute() override;
     };
     //class Bomb, Child of abstract Orde
     class Bomb : public Order{
+      private:
+        shared_ptr<Player> player;
+        shared_ptr<Map::Territory> target;
+        shared_ptr<Card> card;
+        
         public:
 
         Bomb();
+        Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> card);
         Bomb(const Bomb& bomb);
         bool validate() const override;
         void execute() override; 
@@ -106,8 +125,8 @@ namespace orders{
 
         Airlift();
         Airlift(const Airlift& airlift);
-        bool validate() const override;
-        void execute() override;
+        bool validate(Player& player) const override;
+        void execute(Player& player) override;
     };
     //class Negotiate, Child of abstract Order
     class Negotiate : public Order{
@@ -115,8 +134,8 @@ namespace orders{
 
         Negotiate();
         Negotiate(const Negotiate& negotiate);
-        bool validate() const override;
-        void execute() override;
+        bool validate(Player& player) const override;
+        void execute(Player& player) override;
     };
 
     //Class Order List, will store and handle the orders in the game
@@ -151,3 +170,6 @@ namespace orders{
 }
 void testOrdersLists();
 #endif
+
+
+//should the cards being used also fields for the orders
