@@ -8,7 +8,7 @@
 #include "../logObserver/LoggingObserver.h"
 
 void testLoggingObserver() {
-    LogObserver observer("C:\\Users\\liamd\\Documents\\A2_Part5_Log\\log.txt");
+    LogObserver observer("log.txt");
     std::shared_ptr<LogObserver> pObserver = std::make_shared<LogObserver>(observer);
 
     orders::OrderList* testList = new orders::OrderList();
