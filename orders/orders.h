@@ -100,26 +100,32 @@ namespace orders{
       private:
         shared_ptr<Player> player;
         shared_ptr<Map::Territory> target;
-        shared_ptr<Card> card;
+        shared_ptr<Card> BombCard;
         
-        public:
+      public:
 
         Bomb();
-        Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> card);
+        Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> bombCard);
         Bomb(const Bomb& bomb);
         bool validate() const override;
         void execute() override; 
     };
     //class Blockade, Child of abstract Orde
     class Blockade : public Order{
-        public:
+      private:
+        shared_ptr<Player> player;
+        shared_ptr<Territory> target;
+        shared_ptr<Card> blockadeCard;
+
+      public:
 
         Blockade();
+        Blockade(shared_ptr<Player>, shared_ptr<Territory>, shared_ptr<Card> blockadeCard);
         Blockade(const Blockade& blockade);
         bool validate() const override;
         void execute() override;
     };
-    //class AirLift, Child of abstract Orde
+    //class AirLift, Child of abstract Order
     class Airlift : public Order{
         public:
 
@@ -144,7 +150,7 @@ namespace orders{
         private:
             
         //internal vector holding pointers to all the orders 
-        std::vector<Order*> orders;
+        std::vector<shared_ptr<Order>> orders;
         
         //bound checker private helper
         bool indexOutOfBounds(int index) const;
@@ -160,8 +166,8 @@ namespace orders{
         Order* operator[](int index) const;
         void add(Order* order);
 
-        Order* remove(int index);
-        int indexOf(Order* order) const;
+        shared_ptr<Order> remove(int index);
+        int indexOf(shared_ptr<Order> order) const;
         void move(int fromIndex, int toIndex);
 
         OrderList& operator=(const OrderList& other);

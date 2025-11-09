@@ -66,11 +66,7 @@ namespace orders{
 
     //valid if order type is valid type and has not been executed
     bool Order::validate() const{
-        if(getTypeAsString() != "N/A" && !isExecuted()){
-            cout << *this << ". Order is valid." << endl;
-            return true;
-        }
-        return false;
+        return (getTypeAsString() != "N/A" && !isExecuted())
     }
             
     Order& Order::operator=(const Order& order){
@@ -98,7 +94,7 @@ namespace orders{
         target(nullptr),
         units(0);
         effect("order not excecuted yet"),
-        executed(false);
+        executed(false);=
       {}
 
     Deploy::Deploy(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> target)
@@ -228,16 +224,16 @@ namespace orders{
     Bomb::Bomb() 
         :   Order(orderType::BOMB),
             player(nullptr),
-            card(nullptr),
+            bombCard(nullptr),
             target(nullptr),
             effect("order not executed yet"),
             executed(false)
         {} 
 
-    Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> card)
+    Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> bombCard)
         :   Order(orderType::BOMB),
             player(player),
-            card(card),
+            bombCard(card),
             target(target),
             effect("order not executed yet"),
             executed(false)
@@ -246,14 +242,14 @@ namespace orders{
     Bomb::Bomb(const Bomb& bomb) 
         :   Order(orderType::BOMB),
             player(bomb.player),
-            card(bomb.card),
+            bombCard(bomb.bombCard),
             target(bomb.target),
             effect(bomb.effect),
             executed(bomb.executed)
         {} 
 
     bool Bomb::validate() const{
-        if(!Order::validate() && belongsToplayer(player, target))
+        if(!Order::validate() && belongsToplayer(player, target) && bombCard.getCardType() == cardType::BOMB)
             return false;
         List<shared_ptr<Map::Territory>> ownedTerritories (player.getTerritories());
         for( shared_ptr<Map::Territory> territory : ownedTerritories){
@@ -265,6 +261,7 @@ namespace orders{
     void Bomb::execute(){
         if(validate()){
             executed = true;
+            bombCard.play();:
             int initialUnits = 0/*target.numArmies*/;
             //target.numArmies /= 2;
             ostringstream oss;
@@ -274,37 +271,54 @@ namespace orders{
         } 
     } 
 
-    Blockade::Blockade() : Order(orderType::BLOCKADE){
-        effect = "order not excecuted yet";
-        executed = false;
-    }
-    Blockade::Blockade(const Blockade& blockade) : Order(orderType::BLOCKADE){
-        effect = blockade.effect;
-        executed = blockade.executed;
-    }
+    Blockade::Blockade() 
+      : Order(orderType::BLOCKADE)
+        player(nullptr),
+        target(nullptr),
+        blockadeCard(nullptr),
+        effect("order not excecuted yet"),
+        executed(false)
+      {}
+
+    Blockade::Blockade(shared_ptr<player>, shared_ptr<Territory> target, shared_ptr<Card> blockadeCard)
+      : Order(orderType::BLOCKADE)
+        player(player),
+        target(target),
+        blockadeCard(blockadeCard),
+        effect("order not excecuted yet"),
+        executed(false)
+      {}
+
+
+    Blockade::Blockade(const Blockade& blockade) 
+      : Order(orderType::BLOCKADE)
+        player(blockade.player),
+        target(blockade.target),
+        blockadeCard(blockade.blockadeCard),
+        effect("order not excecuted yet"),
+        executed(false)
+      {}
 
     bool Blockade::validate() const{
         if(Order::validate()){
-            return true;
+            return belongsToPlayer(player, target) && blockadeCard.getCardType == cardType::BLOCKADE;
         }
     }
 
     void Blockade::execute(){
        if(validate()){
             executed = true;
-            //TODO implememt the rest of execute;
-        } 
-    } 
-
-    Negotiate::Negotiate() : Order(orderType::NEGOTIATE){
-        effect = "order not excecuted yet";
-        executed = false;
+            blockadeCard.play();
+            player.removeTerritory(target);
+            /*target.numArmies *= 2*/
+            /*target.numArmies *= 2*/
     }
 
     bool Negotiate::validate() const{
         if(Order::validate()){
             return true;
         }
+        return false; 
     }
 
     Negotiate::Negotiate(const Negotiate& negotiate) : Order(orderType::NEGOTIATE){
@@ -365,7 +379,7 @@ namespace orders{
     }
 
     //overloads the [] operator
-    Order* OrderList::operator[](int index) const{
+    shared_ptr<Order> OrderList::operator[](int index) const{
         return orders.at(index);
     }
 
@@ -397,7 +411,7 @@ namespace orders{
       * will only return an index if the given pointer points to an order that is in the List
       * if no index found returns -1;
       */
-     int OrderList::indexOf(Order* order) const{
+     int OrderList::indexOf(shared_ptr<Order> order) const{
         for(int i = 0; i < size(); i++){
             if(order == (*this)[i]){
                 return i;
@@ -418,10 +432,10 @@ namespace orders{
             throw std::runtime_error(err);
         }
 
-        Order** innerArray = orders.data();
+        shared_ptr<Order>* innerArray = orders.data();
 
         if(toIndex > fromIndex){
-            Order* temp = innerArray[fromIndex];
+            shared_ptr<Order> temp = innerArray[fromIndex];
             for(int i = fromIndex; i < toIndex; i++){
                 innerArray[i] = innerArray[i+1];
             } 
@@ -429,10 +443,10 @@ namespace orders{
         }
 
         if(fromIndex > toIndex){
-            Order* temp = innerArray[fromIndex];
+            shared_ptr<Order> temp = innerArray[fromIndex];
             for(int i = fromIndex; i > toIndex; i--){
                 innerArray[i] = innerArray[i-1];
-            } 
+            }
             innerArray[toIndex] = temp;
         }
     }
