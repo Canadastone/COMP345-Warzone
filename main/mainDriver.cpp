@@ -15,7 +15,6 @@
 #include "../processor/CommandProcessor.h"
 #include "../logObserver/LoggingObserver.h"
 
-using namespace orders;
 void testStartupPhase();
 int main() {
     //testCards();
@@ -24,7 +23,7 @@ int main() {
     //testOrdersLists();
 	//testPlayers();
     //runProcessor();
-    testLoggingObserver();
+    // testLoggingObserver();
    return 0;
 
 }

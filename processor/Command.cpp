@@ -20,7 +20,7 @@ Command& Command::operator=(const Command& otherCommand) {
     return *this;
 }
 void Command::saveEffect(const string& effect) {
-    std::cout << "Command's effect: " << effect << "\n";
+    //std::cout << "Saved effect: " << effect << "\n"; DEBUGGING, WOULD NOTIFY HERE FOR PART 5 INSTEAD.
     this->effect = effect;
     this->notify(*this);
 }
