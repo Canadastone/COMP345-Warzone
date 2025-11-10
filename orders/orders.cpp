@@ -10,6 +10,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <random>
 #include "../player/player.h"
 #include "../map/map.h"
 
@@ -34,6 +35,11 @@ static bool areAdjacent(Map::Territory& terr1, Map::Territory& terr2){
 
 static bool hasSufficientUnits(Map::Territory& terr, int units){
     return terr.getUnits() >= units;
+}
+
+static void transferOwnership(shared_ptr<Player> prevOwner, shared_ptr<Player> nextOwner, shared_ptr<Map::Territory> terr){
+    prevOwner->removeTerritory(terr);
+    nextOwner->addTerritory(terr);
 }
 
 namespace orders{
@@ -209,15 +215,17 @@ namespace orders{
         int defendKillCount(0);
         int attackingUnits(units);
         int defensiveUnits(target->getUnits());
+
+        std::random_device randomDevice; 
+        std::mt19937 gen(randomDevice()); 
+        std::uniform_real_distribution<> dist(0.0, 10.0);
         
         for(int i = 0; i < attackingUnits; i++){
-            int rand = srand(time()) % 10;
-            if(rand < 6) attackKillCount++;
+            if(dist(gen) < 6) attackKillCount++;
         }
 
         for(int i = 0; i < defensiveUnits; i++){
-            int rand = srand(time()) % 10;
-            if(rand < 7) defendKillCount++;
+            if(dist(gen) < 7) defendKillCount++;
         }
 
         attackingUnits -= defendKillCount;
@@ -236,10 +244,12 @@ namespace orders{
         if(defensiveUnits == 0 && attackingUnits > 0){
             player->addTerritory(target);
             target->setUnits(attackingUnits);
+            transferOwnership(player, target->getOwnership(), target);
         } else {
             source->addUnits(attackingUnits);
             target->setUnits(defensiveUnits);
         }
+        
         this->notifyOrder(*this);
         //TODO: externally player recieves a card if they succesfully conquered at least one territory 
     } 
@@ -266,7 +276,7 @@ namespace orders{
         {} 
 
     bool Bomb::validate() const{
-        if(!Order::validate() && belongsToPlayer(*player, *target) && bombCard->getCardType() != CardType::BOMB)
+        if(!Order::validate() || belongsToPlayer(*player, *target) || bombCard->getCardType() != CardType::BOMB)
             return false;
         list<shared_ptr<Map::Territory>> ownedTerritories(player->getTerritories());
         for(shared_ptr<Map::Territory> territory : ownedTerritories){
@@ -293,14 +303,16 @@ namespace orders{
       : Order(orderType::BLOCKADE),
         player(nullptr),
         target(nullptr),
-        blockadeCard(nullptr)
+        blockadeCard(nullptr),
+        neutralPlayer(nullptr)
       {}
 
-    Blockade::Blockade(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> blockadeCard)
+    Blockade::Blockade(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> blockadeCard, shared_ptr<Player> neutralPlayer)
       : Order(orderType::BLOCKADE),
         player(player),
         target(target),
-        blockadeCard(blockadeCard)
+        blockadeCard(blockadeCard),
+        neutralPlayer(neutralPlayer)
       {}
 
 
@@ -308,8 +320,9 @@ namespace orders{
       : Order(blockade),
         player(blockade.player),
         target(blockade.target),
-        blockadeCard(blockade.blockadeCard)
-      {}
+        blockadeCard(blockade.blockadeCard),
+        neutralPlayer(blockade.neutralPlayer)
+    {}
 
     bool Blockade::validate() const{
         if(Order::validate()){
@@ -323,7 +336,7 @@ namespace orders{
             blockadeCard->play();
             player->removeTerritory(target);
             target->setUnits(target->getUnits()*2);
-            //TODO: add terrirtory to neutral player's territories.
+            transferOwnership(player, neutralPlayer, target);
             ostringstream oss;
             oss << target->getName() << "blockaded. Neutral Player now occupies it with "
             << target->getUnits() << " units";

@@ -6,7 +6,7 @@
 * Description: This file contains the implementation of the map
 */
 
-#include "Map.h"
+#include "map.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -279,6 +279,7 @@ Map::Territory::Territory(const Territory& territory) {
 
 	this->name = territory.name;
 	this->continent = territory.continent;
+	this->owner = territory.owner;
 	this->units = territory.units;
 	this->connectedTerritories = connectedTerritories;
 	
@@ -292,14 +293,15 @@ Map::Territory& Map::Territory::operator=(const Territory& territory) {
 
 	this->name = territory.name;
 	this->continent = territory.continent;
+	this->owner = territory.owner;
 	this->units = territory.units;
-	this->connectedTerritories = connectedTerritories;
+	this->connectedTerritories = territory.connectedTerritories;
 	
 	std::cout << "Territory Copy Assignment Operator Called!" << std::endl;
 	return *this;
 }
 
-bool Territory::operator==(const Territory& other) const {
+bool Map::Territory::operator==(const Territory& other) const {
     return units == other.units && name == other.name && continent == other.continent;
 }
 
@@ -321,20 +323,28 @@ int Map::Territory::getUnits(){
 	return units;
 }
 
-void void Map::Territory::addUnits(int n){
+void Map::Territory::addUnits(int n){
 	units += n;
 }
 
-void void Map::Territory::removeUnits(int n){
+void Map::Territory::removeUnits(int n){
 	units -= n;
 }
 
-void void Map::Territory::setUnits(int n){
+void Map::Territory::setUnits(int n){
 	units = n;
 }
 
 std::string Map::Territory::getContinent() {
 	return this->continent;
+}
+
+std::shared_ptr<Player> Map::Territory::getOwnership(){
+	return this->owner.lock();
+}
+
+void Map::Territory::setOwnership(std::shared_ptr<Player> owner){
+	this->owner = owner;
 }
 
 std::vector <std::shared_ptr<Map::Territory>> Map::Territory::getConnectedTerritories() {
@@ -346,6 +356,7 @@ void Map::Territory::printTerritory() {
 
 	std::cout << "Territory Name: " << this->name << std::endl;
 	std::cout << "Continent: " << this->continent << std::endl;
+	std::cout << "Owned by: " << *(this->owner) << std::endl;
 	std::cout << "Connected Territories: ";
 
 	for (std::shared_ptr<Territory> territory : this->connectedTerritories) {

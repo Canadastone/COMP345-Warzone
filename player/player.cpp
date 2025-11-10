@@ -77,6 +77,7 @@ void Player::addTerritory(shared_ptr<Map::Territory> t) {
     cout << "Assigned territory: " << t->getName() << endl;
 
 	playerTerritories.push_back(t); 								// adds the given territory to the player's list of territories
+    t->setOwnership(shared_from_this());
 
 }
 
@@ -85,7 +86,7 @@ void Player::removeTerritory(shared_ptr<Map::Territory> t) {
     cout << "Removing territory from player" << endl;
 
 	playerTerritories.remove(t); 			        			   // removes the given territory from the player's list of territories
-
+    t->setOwnership(nullptr);
 }
 
 void Player::addCard(shared_ptr<Card> c) {
@@ -139,7 +140,7 @@ Player& Player::operator=(const Player& other) {
 
 bool Player::operator==(const Player& p) const{
     return playerTerritories == p.playerTerritories && p.reinforcmentPool == reinforcmentPool;
-    //TODO compare  order lsit and cards aswell
+    //TODO compare  order list and cards aswell
 }
 
 std::ostream& operator<<(std::ostream& os, const Player& p) {

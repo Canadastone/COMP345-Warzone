@@ -132,11 +132,12 @@ namespace orders{
         shared_ptr<Player> player;
         shared_ptr<Map::Territory> target;
         shared_ptr<Card> blockadeCard;
+        shared_ptr<Player> neutralPlayer;
 
       public:
 
         Blockade();
-        Blockade(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> blockadeCard);
+        Blockade(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> blockadeCard, shared_ptr<Player> neutralPlayer);
         Blockade(const Blockade& blockade);
         bool validate() const override;
         void execute() override;

@@ -5,7 +5,7 @@
 #include "../cards/cards.h"
 using namespace std;
 
-class Player {
+class Player : public std::enable_shared_from_this<Player> {
 
 private:
 	list<std::shared_ptr<Map::Territory>> playerTerritories;        // territories owned by the player
