@@ -21,6 +21,8 @@ public:
 
 		std::string name, continent;
 
+		int units;
+
 		std::vector<std::shared_ptr<Territory>> connectedTerritories;
 
 	public:
@@ -55,6 +57,9 @@ public:
 		*
 		*/
 		Territory& operator=(const Territory&);
+
+
+		bool operator==(const Territory& other) const; 
 		/**
 		*
 		* @brief Stream Insertion Operator for Territory
@@ -94,6 +99,14 @@ public:
 		* @return a string that represents the name of the continent the Territory belongs to
 		*/
 		std::string getContinent();
+
+		int getUnits();
+
+		void addUnits(int n);
+	
+		void removeUnits(int n);
+
+		void setUnits(int n);
 		/**
 		*
 		* @brief Getter function for the connectedTerritories attribute

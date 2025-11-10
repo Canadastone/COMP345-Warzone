@@ -7,6 +7,7 @@
 #include <algorithm> 
 #include <random>
 #include "../processor/CommandProcessor.h"
+#include "../logObserver/LoggingObserver.h"
 
 #include "../player/player.h"
 
@@ -191,7 +192,7 @@ enum class Phase {
 /*
 Responsible for initalizing all the states, and for managing the game.
 */
-class GameEngine {
+class GameEngine : ILoggable, Subject {
 
 private:
 
@@ -204,6 +205,7 @@ private:
 	represents the mapping of ID -> StateObj.
 	*/
 	unique_ptr<map<StateID, unique_ptr<State>>> states;
+	std::shared_ptr<LogObserver> observer;
 
 	/*
 	mapping an integer to a player
@@ -323,5 +325,11 @@ public:
 	void setCurrPhase(Phase newPhase);
 	void setNumPlayersInGame(int currNumOfPlayers);
 
+	//Implements ILoggable functions
+	std::string stringToLog() const;
+	//Implements Subject functions
+	void attach(std::shared_ptr<LogObserver> pObserver);
+	void detach();
+	void notify(ILoggable& loggable) const;
 };
 void testStartupPhase();

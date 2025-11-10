@@ -14,6 +14,7 @@
 #include "../map/map.h"
 #include "../cards/cards.h"
 
+#include "../logObserver/LoggingObserver.h"
 
 //namespace containing all order related definitions
 namespace orders{
@@ -27,7 +28,11 @@ namespace orders{
     Base Absract Class, shall only be instantiated through its children
     defines what specific orders will implement
     */
-    class Order{
+    class Order : ILoggable, Subject{
+
+
+        private:
+            std::shared_ptr<LogObserver> observer;
        
         protected:
 
@@ -60,7 +65,18 @@ namespace orders{
             virtual void execute() = 0;
 
             Order& operator=(const Order& order);
-            friend std::ostream& operator<<(std::ostream& os, const Order& order);         
+            friend std::ostream& operator<<(std::ostream& os, const Order& order);
+            
+            //Implement ILoggable functions
+            std::string stringToLog() const override;
+            
+            //Implement Subject functions
+            void attach(std::shared_ptr<LogObserver> pObserver) override;
+            void detach() override;
+            void notify(ILoggable& loggable) const override;
+
+            //Subject notify helper method
+            void notifyOrder(Order& order);
     }; 
 
     //class Deploy, Child of abstract Order
@@ -73,7 +89,7 @@ namespace orders{
       public:
 
         Deploy();
-        Deploy(shared_ptr<Player> player,int units, shared_ptr<Map::Territory> territory);
+        Deploy(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> territory);
         Deploy(const Deploy& deploy);
         
         bool validate() const override;
@@ -120,7 +136,7 @@ namespace orders{
       public:
 
         Blockade();
-        Blockade(shared_ptr<Player>, shared_ptr<Map::Territory>, shared_ptr<Card> blockadeCard);
+        Blockade(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> blockadeCard);
         Blockade(const Blockade& blockade);
         bool validate() const override;
         void execute() override;
@@ -130,13 +146,14 @@ namespace orders{
       private:
         shared_ptr<Player> player;
         shared_ptr<Map::Territory> target;
+        shared_ptr<Map::Territory> source;
         shared_ptr<Card> airliftCard;
         int units;
 
       public:
 
         Airlift();
-        Airlift(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> target, shared_ptr<Card> airliftCard);
+        Airlift(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target, shared_ptr<Card> airliftCard);
         Airlift(const Airlift& airlift);
         bool validate() const override;
         void execute() override;
@@ -146,11 +163,11 @@ namespace orders{
       private:
         shared_ptr<Player> issuer;
         shared_ptr<Player> target;
-        shared_ptr<Card> negotiateCard;
+        shared_ptr<Card> diplomacyCard;
 
       public:
         Negotiate();
-        Negotiate(shared_ptr<Player> issuer, shared_ptr<Player> target, shared_ptr<Card> negotiateCard);
+        Negotiate(shared_ptr<Player> issuer, shared_ptr<Player> target, shared_ptr<Card> diplomacyCard);
         Negotiate(const Negotiate& negotiate);
         bool validate() const override;
         void execute() override;
@@ -158,11 +175,12 @@ namespace orders{
 
     //Class Order List, will store and handle the orders in the game
     //uses vector of pointers to contain the orders
-    class OrderList{
+    class OrderList : ILoggable, Subject{
         private:
             
         //internal vector holding pointers to all the orders 
         std::vector<shared_ptr<Order>> orders;
+        std::shared_ptr<LogObserver> observer;
         
         //bound checker private helper
         bool indexOutOfBounds(int index) const;
@@ -175,15 +193,22 @@ namespace orders{
 
 
         int size() const;
-        Order* operator[](int index) const;
-        void add(Order* order);
+        shared_ptr<Order> operator[](int index) const;
+        void add(shared_ptr<Order> order);
 
         shared_ptr<Order> remove(int index);
         int indexOf(shared_ptr<Order> order) const;
         void move(int fromIndex, int toIndex);
 
         OrderList& operator=(const OrderList& other);
-        friend std::ostream& operator<<(std::ostream& os, const OrderList& orderlist); 
+        friend std::ostream& operator<<(std::ostream& os, const OrderList& orderlist);
+
+        //Implement ILoggable functions
+        std::string stringToLog() const;
+        //Implement Subject functions
+        void attach(std::shared_ptr<LogObserver> pObserver);
+        void detach();
+        void notify(ILoggable& loggable) const;
     };
 }
 void testOrdersLists();

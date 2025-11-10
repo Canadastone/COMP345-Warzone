@@ -19,29 +19,37 @@ using namespace std;
 static bool belongsToPlayer(Player& player, Map::Territory& terr){
   list<shared_ptr<Map::Territory>> ownedTerritories(player.getTerritories());
   for(shared_ptr<Map::Territory> territory : ownedTerritories){
-    if(*territory == *terr) return true;
+    if(*territory == terr) return true;
   }
   return false;
 }
 
 static bool areAdjacent(Map::Territory& terr1, Map::Territory& terr2){
-  vector<shared_ptr<Map::Territory>> adjTerritories(terr1.connectedTerritories());
+  vector<shared_ptr<Map::Territory>> adjTerritories(terr1.getConnectedTerritories());
   for(shared_ptr<Map::Territory> territory : adjTerritories){
     if(*territory == terr2) return true;
   }
   return false;
 }
 
+static bool hasSufficientUnits(Map::Territory& terr, int units){
+    return terr.getUnits() >= units;
+}
+
 namespace orders{
 
     
-    Order::Order(const orderType t){
-        type = t;
-    }
+    Order::Order(const orderType t)
+    :   type(t),
+        effect("order not excecuted yet"),
+        executed(false)
+    {}
 
-    Order::Order(const Order& order){
-        type = order.type;
-    }
+    Order::Order(const Order& order)
+    :   type(order.type),
+        effect("order not excecuted yet"),
+        executed(false)
+    {}
 
     orderType Order::getType() const{
         return type;
@@ -80,6 +88,30 @@ namespace orders{
         return *this;
     }
 
+    std::string Order::stringToLog() const{
+        std::string commandEffect = this->effect;
+        std::string typeAsString =  getTypeAsString();
+        std::string loggedString = typeAsString + " Order executed: " + effect;
+
+        return loggedString;
+    }
+
+    void Order::attach(std::shared_ptr<LogObserver> pObserver) {
+        this->observer = pObserver;
+    }
+
+    void Order::detach() {
+        this->observer = nullptr;
+    }
+
+    void Order::notify(ILoggable& loggable) const{
+        this->observer->update(loggable);
+    }
+
+    void Order::notifyOrder(Order& order) {
+        this->notify(order);
+    }
+
     //overloaded << operator
     std::ostream& operator<<(std::ostream& os, const Order& order){
         os << order.getTypeAsString() << " Order, " << order.effect;
@@ -92,32 +124,26 @@ namespace orders{
       : Order(orderType::DEPLOY),
         player(nullptr),
         target(nullptr),
-        units(0),
-        effect("order not excecuted yet"),
-        executed(false)
+        units(0)
       {}
 
     Deploy::Deploy(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> target)
       : Order(orderType::DEPLOY),
         player(player),
         target(target),
-        units(units),
-        effect("order not executed yet"),
-        executed(false)
+        units(units)
       {}
 
     Deploy::Deploy(const Deploy& deploy) 
-      : Order(orderType::DEPLOY),
+      : Order(deploy),
         player(deploy.player),
         target(deploy.target),
-        units(deploy.units),
-        effect(deploy.effect),
-        executed(deploy.excecuted)
+        units(deploy.units)
       {}
 
     bool Deploy::validate() const{
         if(Order::validate()){
-            return belongsToPlayer(player, territory);
+            return belongsToPlayer(*player, *target) && player->getReinforcementPool() >= units;
         }
         return false;
     }
@@ -125,11 +151,12 @@ namespace orders{
     void Deploy::execute(){
        if(validate()){
            executed = true;
-           //decremement reinforcement pool cant do yet cause private acess in player class
-           //territory.numArmies += units;
+           player->assignReinforcments(-units);
+           target->addUnits(units);
            ostringstream oss;
-           oss << units << "units were deployed on " << target.getName();
+           oss << units << "units were deployed on " << target->getName();
            effect = oss.str();
+           this->notifyOrder(*this);
        } 
     }
     
@@ -138,34 +165,28 @@ namespace orders{
         player(nullptr),
         source(nullptr),
         target(nullptr),
-        units(0),
-        effect("order not excecuted yet"),
-        executed(false);
+        units(0)
       {}
 
-    Advance::Advance(shared_ptr<Player>, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target)
+    Advance::Advance(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target)
       : Order(orderType::ADVANCE),
         player(player),
         source(source),
         target(target),
-        units(units),
-        effect("order not executed yet"),
-        executed(false)
+        units(units)
       {} 
         
     Advance::Advance(const Advance& advance) 
-      : Order(orderType::ADVANCE),
+      : Order(advance),
         player(advance.player),
         source(advance.source),
         target(advance.target),
-        units(advance.units),
-        effect("order not executed yet"),
-        executed(false)
+        units(advance.units)
       {} 
 
     bool Advance::validate() const{
         if(Order::validate()){
-            return belongsToPlayer(player, source) && areAdjacent(source, target);
+            return belongsToPlayer(*player, *source) && areAdjacent(*source, *target) && hasSufficientUnits(*source, units);
         }
         return false;
     }
@@ -173,20 +194,21 @@ namespace orders{
     void Advance::execute(){
         if(!validate()) return;
         executed = true;
-        //source.numArmies -= units;
-        if(belongsToPlayer(player, target)){
-            //target.numArmies += units;
+        source->removeUnits(units);
+        if(belongsToPlayer(*player, *target)){
+            target->addUnits(units);
             ostringstream oss;
-            oss << units << "units moved to " << target.getName();
+            oss << units << "units moved to " << target->getName()
+            << ", from " << source->getName();
             effect = oss.str();
-
+            this->notifyOrder(*this);
             return;
         }
         
         int attackKillCount(0);
         int defendKillCount(0);
         int attackingUnits(units);
-        int defensiveUnits(0); /*defensiveUnits(target.numArmies);*/
+        int defensiveUnits(target->getUnits());
         
         for(int i = 0; i < attackingUnits; i++){
             int rand = srand(time()) % 10;
@@ -198,62 +220,57 @@ namespace orders{
             if(rand < 7) defendKillCount++;
         }
 
-        units -= defendKillCount;
+        attackingUnits -= defendKillCount;
         defensiveUnits -= attackKillCount;
         if(defensiveUnits < 0) defensiveUnits = 0;
-        if(units < 0) units = 0;
+        if(attackingUnits < 0) attackingUnits = 0;
 
         ostringstream oss;
-        oss << units << "units attacked" << target.getName() 
-        << ", where " << 0/*target.numArmies*/
+        oss << units << "units attacked" << target->getName() 
+        << ", where " << target->getUnits()
         << " units defended. "
         << attackingUnits << " attcking units survived"
         << "and " << defensiveUnits << " defensive units survived";
         effect = oss.str();
  
         if(defensiveUnits == 0 && attackingUnits > 0){
-            player.addMap::Territory(target);
-            //target.numArmies = attackingUnits;
+            player->addTerritory(target);
+            target->setUnits(attackingUnits);
         } else {
-            //source.numArmies += attackingUnits;
-            //target.numArmies = defendingUnits;
+            source->addUnits(attackingUnits);
+            target->setUnits(defensiveUnits);
         }
-        //TODO externally player recieves a card if they succesfully conquered at least one territory 
+        this->notifyOrder(*this);
+        //TODO: externally player recieves a card if they succesfully conquered at least one territory 
     } 
 
     Bomb::Bomb() 
         :   Order(orderType::BOMB),
             player(nullptr),
             bombCard(nullptr),
-            target(nullptr),
-            effect("order not executed yet"),
-            executed(false)
+            target(nullptr)
         {} 
 
-    Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> bombCard)
+    Bomb::Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> bombCard)
         :   Order(orderType::BOMB),
             player(player),
-            bombCard(card),
-            target(target),
-            effect("order not executed yet"),
-            executed(false)
+            bombCard(bombCard),
+            target(target)
         {} 
 
     Bomb::Bomb(const Bomb& bomb) 
-        :   Order(orderType::BOMB),
+        :   Order(bomb),
             player(bomb.player),
             bombCard(bomb.bombCard),
-            target(bomb.target),
-            effect(bomb.effect),
-            executed(bomb.executed)
+            target(bomb.target)
         {} 
 
     bool Bomb::validate() const{
-        if(!Order::validate() && belongsToplayer(player, target) && bombCard.getCardType() == cardType::BOMB)
+        if(!Order::validate() && belongsToPlayer(*player, *target) && bombCard->getCardType() != CardType::BOMB)
             return false;
-        List<shared_ptr<Map::Territory>> ownedTerritories (player.getTerritories());
-        for( shared_ptr<Map::Territory> territory : ownedTerritories){
-           if(areAdjacent(territory, target)) return true;
+        list<shared_ptr<Map::Territory>> ownedTerritories(player->getTerritories());
+        for(shared_ptr<Map::Territory> territory : ownedTerritories){
+           if(areAdjacent(*territory, *target)) return true;
         }
         return false;
     }
@@ -261,108 +278,152 @@ namespace orders{
     void Bomb::execute(){
         if(validate()){
             executed = true;
-            bombCard.play();:
-            int initialUnits = 0/*target.numArmies*/;
-            //target.numArmies /= 2;
+            bombCard->play();
+            int initialUnits = target->getUnits();
+            target->setUnits(initialUnits / 2);
             ostringstream oss;
-            oss << initialUnits << " units bombed in " << target.getName()
-            << "only " << 0/*target.numArmies*/ << "survived";
+            oss << initialUnits << " units bombed in " << target->getName()
+            << "only " << target->getUnits() << "survived";
             effect = oss.str();
+            this->notifyOrder(*this);
         } 
     } 
 
     Blockade::Blockade() 
-      : Order(orderType::BLOCKADE)
+      : Order(orderType::BLOCKADE),
         player(nullptr),
         target(nullptr),
-        blockadeCard(nullptr),
-        effect("order not excecuted yet"),
-        executed(false)
+        blockadeCard(nullptr)
       {}
 
-    Blockade::Blockade(shared_ptr<player>, shared_ptr<Territory> target, shared_ptr<Card> blockadeCard)
-      : Order(orderType::BLOCKADE)
+    Blockade::Blockade(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> blockadeCard)
+      : Order(orderType::BLOCKADE),
         player(player),
         target(target),
-        blockadeCard(blockadeCard),
-        effect("order not excecuted yet"),
-        executed(false)
+        blockadeCard(blockadeCard)
       {}
 
 
     Blockade::Blockade(const Blockade& blockade) 
-      : Order(orderType::BLOCKADE)
+      : Order(blockade),
         player(blockade.player),
         target(blockade.target),
-        blockadeCard(blockade.blockadeCard),
-        effect("order not excecuted yet"),
-        executed(false)
+        blockadeCard(blockade.blockadeCard)
       {}
 
     bool Blockade::validate() const{
         if(Order::validate()){
-            return belongsToPlayer(player, target) && blockadeCard.getCardType == cardType::BLOCKADE;
+            return belongsToPlayer(*player, *target) && blockadeCard->getCardType() == CardType::BLOCKADE;
         }
     }
 
     void Blockade::execute(){
        if(validate()){
             executed = true;
-            blockadeCard.play();
-            player.removeTerritory(target);
-            /*target.numArmies *= 2*/
-            /*target.numArmies *= 2*/
+            blockadeCard->play();
+            player->removeTerritory(target);
+            target->setUnits(target->getUnits()*2);
+            //TODO: add terrirtory to neutral player's territories.
+            ostringstream oss;
+            oss << target->getName() << "blockaded. Neutral Player now occupies it with "
+            << target->getUnits() << " units";
+            effect = oss.str();
+            this->notifyOrder(*this);
        }
     }
 
-    Negotiate::Negotiate(const Negotiate& negotiate) 
-    : Order(orderType::NEGOTIATE)
-      issuer(negotiate.player),
-      target(negotaite.target),
-      negotaiteCard(negotiate.negotaiteCard),
-      effect(negotiate.effect),
-      executed(negotiate.executed)  
+
+    Negotiate::Negotiate() 
+    : Order(orderType::NEGOTIATE),
+      issuer(nullptr),
+      target(nullptr),
+      diplomacyCard(nullptr)
     {}
 
-    void Negotiate::execute(){
-        if(validate()){
-                executed = true;
-                //TODO implememt the rest of execute;
-        }
-    } 
+    Negotiate::Negotiate(shared_ptr<Player> issuer, shared_ptr<Player> target, shared_ptr<Card> diplomacyCard)
+    : Order(orderType::NEGOTIATE),
+      issuer(issuer),
+      target(target),
+      diplomacyCard(diplomacyCard)
+    {}
+    
+
+    Negotiate::Negotiate(const Negotiate& negotiate) 
+    : Order(orderType::NEGOTIATE),
+      issuer(negotiate.issuer),
+      target(negotiate.target),
+      diplomacyCard(negotiate.diplomacyCard)
+    {}
 
     bool Negotiate::validate() const{
         if(Order::validate()){
-            return true;
+            return issuer != target && diplomacyCard->getCardType() == CardType::DIPLOMACY;
         }
         return false; 
     }
+    
+    void Negotiate::execute(){
+        if(validate()){
+            executed = true;
+            diplomacyCard->play();
+            //TODO add tag to players so that they cant attack eachother for this round.;
+            ostringstream oss;
+            oss << *issuer << " and " << *target
+            << " negotiated. They can no longer attack eachother this round";
+            effect = oss.str();
+            this->notifyOrder(*this);
+        }
+    }
 
     
+    Airlift::Airlift() 
+    : Order(orderType::AIRLIFT),
+        player(nullptr),
+        source(nullptr),
+        target(nullptr),
+        units(0),
+        airliftCard(nullptr)
+    {}
+    Airlift::Airlift(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target, shared_ptr<Card> airliftCard)
+      : Order(orderType::AIRLIFT),
+        player(player),
+        source(source),
+        target(target),
+        units(units),
+        airliftCard(airliftCard)
+    {}
 
-    Airlift::Airlift() : Order(orderType::AIRLIFT){
-        effect = "order not excecuted yet";
-        executed = false;
-    }
-    Airlift::Airlift(const Airlift& airlift) : Order(orderType::AIRLIFT){
-        effect = airlift.effect;
-        executed = airlift.executed;
-    } 
+    Airlift::Airlift(const Airlift& airlift) 
+    :   Order(airlift),
+        player(airlift.player),
+        source(airlift.source),
+        target(airlift.target),
+        units(airlift.units),
+        airliftCard(airlift.airliftCard)
+    {}
+        
 
     bool Airlift::validate() const{
         if(Order::validate()){
-            return true;
+            return belongsToPlayer(*player, *target) && belongsToPlayer(*player, *source) 
+                    && airliftCard->getCardType() == CardType::AIRLIFT && hasSufficientUnits(*source, units);
         }
     }
 
     void Airlift::execute(){
        if(validate()){
             executed = true;
-            //TODO implememt the rest of execute;
+            airliftCard->play();
+            source->removeUnits(units);
+        
+            target->addUnits(units);
+            ostringstream oss;
+            oss << units << "units airlifted to " << target->getName()
+            << ", from " << source->getName();
+            effect = oss.str();
+            this->notifyOrder(*this);
         } 
     }
-    
-    
 
 
     OrderList::OrderList(){}
@@ -374,8 +435,6 @@ namespace orders{
     }
 
     OrderList::~OrderList() {
-        for (auto order : orders)
-            delete order;
         orders.clear();
     }
 
@@ -392,8 +451,10 @@ namespace orders{
         return orders.at(index);
     }
 
-    void OrderList::add(Order* order){
+    void OrderList::add(shared_ptr<Order> order){
+        order->attach(this->observer);
         orders.push_back(order);
+        this->notify(*this);
     }
 
     /**
@@ -403,13 +464,13 @@ namespace orders{
      * instead returns the pointer to the removed element
      * must be call the destroyer externally.
      */
-    Order* OrderList::remove(int index){
+    shared_ptr<Order> OrderList::remove(int index){
 
         if (indexOutOfBounds(index)){
             string err = "Index " + std::to_string(index) + ",out of bounds"; 
             throw std::runtime_error(err);
         }
-        Order* removed = orders.at(index);
+        shared_ptr<Order> removed = orders.at(index);
         orders.erase(orders.begin() + index);
         return removed;
      }
@@ -485,4 +546,23 @@ namespace orders{
 
         return os;
     }
+
+    std::string OrderList::stringToLog() const {
+        Order& order = *this->orders.back();
+        std::string cardAdded = order.getTypeAsString();
+        return cardAdded + " Order issued.";
+    }
+
+    void OrderList::attach(std::shared_ptr<LogObserver> pObserver) {
+        this->observer = pObserver;
+    }
+
+    void OrderList::detach() {
+        this->observer = nullptr;
+    }
+
+    void OrderList::notify(ILoggable& loggable) const {
+        this->observer->update(loggable);
+    }
 }
+
