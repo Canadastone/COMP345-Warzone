@@ -47,14 +47,14 @@ namespace orders{
     
     Order::Order(const orderType t)
     :   type(t),
-        effect("order not excecuted yet"),
-        executed(false)
+        executed(false),
+        effect("order not excecuted yet")
     {}
 
     Order::Order(const Order& order)
     :   type(order.type),
-        effect("order not excecuted yet"),
-        executed(false)
+        executed(false),
+        effect("order not excecuted yet")
     {}
 
     orderType Order::getType() const{
@@ -129,22 +129,22 @@ namespace orders{
     Deploy::Deploy() 
       : Order(orderType::DEPLOY),
         player(nullptr),
-        target(nullptr),
-        units(0)
-      {}
+        units(),
+        target(nullptr)
+        {}
 
     Deploy::Deploy(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> target)
       : Order(orderType::DEPLOY),
         player(player),
-        target(target),
-        units(units)
+        units(units),
+        target(target)
       {}
 
     Deploy::Deploy(const Deploy& deploy) 
       : Order(deploy),
         player(deploy.player),
-        target(deploy.target),
-        units(deploy.units)
+        units(deploy.units),
+        target(deploy.target)
       {}
 
     bool Deploy::validate() const{
@@ -155,39 +155,41 @@ namespace orders{
     }
 
     void Deploy::execute(){
-       if(validate()){
+        if(validate()){
            executed = true;
            player->assignReinforcments(-units);
            target->addUnits(units);
            ostringstream oss;
-           oss << units << "units were deployed on " << target->getName();
+           oss << units << " units were deployed on " << target->getName();
            effect = oss.str();
-           this->notifyOrder(*this);
-       } 
+        } else{
+            effect = "execution failed, Order is Invalid";
+        }
+        this->notifyOrder(*this);
     }
     
     Advance::Advance() 
       : Order(orderType::ADVANCE),
         player(nullptr),
+        units(),
         source(nullptr),
-        target(nullptr),
-        units(0)
+        target(nullptr)
       {}
 
     Advance::Advance(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target)
       : Order(orderType::ADVANCE),
         player(player),
+        units(units),
         source(source),
-        target(target),
-        units(units)
+        target(target)
       {} 
         
     Advance::Advance(const Advance& advance) 
       : Order(advance),
         player(advance.player),
+        units(advance.units),
         source(advance.source),
-        target(advance.target),
-        units(advance.units)
+        target(advance.target)
       {} 
 
     bool Advance::validate() const{
@@ -198,13 +200,16 @@ namespace orders{
     }
 
     void Advance::execute(){
-        if(!validate()) return;
+        if(!validate()){
+            effect = "execution failed, Order is Invalid";
+            this->notifyOrder(*this);
+        } 
         executed = true;
         source->removeUnits(units);
         if(belongsToPlayer(*player, *target)){
             target->addUnits(units);
             ostringstream oss;
-            oss << units << "units moved to " << target->getName()
+            oss << units << " units moved to " << target->getName()
             << ", from " << source->getName();
             effect = oss.str();
             this->notifyOrder(*this);
@@ -234,17 +239,17 @@ namespace orders{
         if(attackingUnits < 0) attackingUnits = 0;
 
         ostringstream oss;
-        oss << units << "units attacked" << target->getName() 
+        oss << units << " units attacked " << target->getName() 
         << ", where " << target->getUnits()
         << " units defended. "
-        << attackingUnits << " attcking units survived"
+        << attackingUnits << " attcking units survived "
         << "and " << defensiveUnits << " defensive units survived";
         effect = oss.str();
  
         if(defensiveUnits == 0 && attackingUnits > 0){
             player->addTerritory(target);
             target->setUnits(attackingUnits);
-            transferOwnership(player, target->getOwnership(), target);
+            transferOwnership(target->getOwnership(), player, target);
         } else {
             source->addUnits(attackingUnits);
             target->setUnits(defensiveUnits);
@@ -257,22 +262,22 @@ namespace orders{
     Bomb::Bomb() 
         :   Order(orderType::BOMB),
             player(nullptr),
-            bombCard(nullptr),
-            target(nullptr)
+            target(nullptr),
+            bombCard(nullptr)     
         {} 
 
     Bomb::Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> bombCard)
         :   Order(orderType::BOMB),
             player(player),
-            bombCard(bombCard),
-            target(target)
+            target(target),
+            bombCard(bombCard)
         {} 
 
     Bomb::Bomb(const Bomb& bomb) 
         :   Order(bomb),
             player(bomb.player),
-            bombCard(bomb.bombCard),
-            target(bomb.target)
+            target(bomb.target),
+            bombCard(bomb.bombCard)
         {} 
 
     bool Bomb::validate() const{
@@ -293,10 +298,12 @@ namespace orders{
             target->setUnits(initialUnits / 2);
             ostringstream oss;
             oss << initialUnits << " units bombed in " << target->getName()
-            << "only " << target->getUnits() << "survived";
+            << ", only " << target->getUnits() << "survived";
             effect = oss.str();
-            this->notifyOrder(*this);
+        } else {
+             effect = "execution failed, Order is Invalid";
         } 
+        this->notifyOrder(*this);
     } 
 
     Blockade::Blockade() 
@@ -338,11 +345,13 @@ namespace orders{
             target->setUnits(target->getUnits()*2);
             transferOwnership(player, neutralPlayer, target);
             ostringstream oss;
-            oss << target->getName() << "blockaded. Neutral Player now occupies it with "
+            oss << target->getName() << " blockaded. Neutral Player now occupies it with "
             << target->getUnits() << " units";
             effect = oss.str();
-            this->notifyOrder(*this);
-       }
+        } else {
+            effect = "execution failed, Order is Invalid";
+        } 
+        this->notifyOrder(*this);
     }
 
 
@@ -381,37 +390,39 @@ namespace orders{
             diplomacyCard->play();
             //TODO add tag to players so that they cant attack eachother for this round.;
             ostringstream oss;
-            oss << *issuer << " and " << *target
+            oss << "issuer" << " and " << "target player"
             << " negotiated. They can no longer attack eachother this round";
             effect = oss.str();
-            this->notifyOrder(*this);
-        }
+        } else {
+            effect = "execution failed, Order is Invalid";
+        } 
+        this->notifyOrder(*this);
     }
 
     
     Airlift::Airlift() 
     : Order(orderType::AIRLIFT),
         player(nullptr),
+        units(0),
         source(nullptr),
         target(nullptr),
-        units(0),
         airliftCard(nullptr)
     {}
     Airlift::Airlift(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target, shared_ptr<Card> airliftCard)
       : Order(orderType::AIRLIFT),
         player(player),
+        units(units),
         source(source),
         target(target),
-        units(units),
         airliftCard(airliftCard)
     {}
 
     Airlift::Airlift(const Airlift& airlift) 
     :   Order(airlift),
         player(airlift.player),
+        units(airlift.units),
         source(airlift.source),
         target(airlift.target),
-        units(airlift.units),
         airliftCard(airlift.airliftCard)
     {}
         
@@ -431,11 +442,13 @@ namespace orders{
         
             target->addUnits(units);
             ostringstream oss;
-            oss << units << "units airlifted to " << target->getName()
+            oss << units << " units airlifted to " << target->getName()
             << ", from " << source->getName();
             effect = oss.str();
-            this->notifyOrder(*this);
+        } else {
+            effect = "execution failed, Order is Invalid";
         } 
+        this->notifyOrder(*this);
     }
 
 

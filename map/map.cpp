@@ -356,7 +356,6 @@ void Map::Territory::printTerritory() {
 
 	std::cout << "Territory Name: " << this->name << std::endl;
 	std::cout << "Continent: " << this->continent << std::endl;
-	std::cout << "Owned by: " << *(this->owner) << std::endl;
 	std::cout << "Connected Territories: ";
 
 	for (std::shared_ptr<Territory> territory : this->connectedTerritories) {

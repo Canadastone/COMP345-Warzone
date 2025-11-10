@@ -1,0 +1,21 @@
+Deploy Order executed: 5units were deployed on Alpha
+----------------------------------------------------------------------------------
+Advance Order executed: 6units attackedBeta, where 5 units defended. 4 attcking units survivedand 2 defensive units survived
+----------------------------------------------------------------------------------
+Negotiate Order executed: Player Territories:
+  Territory:Alpha
+
+  Territory:Gamma
+
+Player Orders:
+Player Hand:
+Card Type: Bomb
+ and Player Territories:
+  Territory:Beta
+
+Player Orders:
+Player Hand:
+ negotiated. They can no longer attack eachother this round
+----------------------------------------------------------------------------------
+Blockade Order executed: Gammablockaded. Neutral Player now occupies it with 8 units
+----------------------------------------------------------------------------------

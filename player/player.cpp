@@ -83,7 +83,7 @@ void Player::addTerritory(shared_ptr<Map::Territory> t) {
 
 void Player::removeTerritory(shared_ptr<Map::Territory> t) {
 
-    cout << "Removing territory from player" << endl;
+    cout << "Removing territory:" << t->getName() << endl;
 
 	playerTerritories.remove(t); 			        			   // removes the given territory from the player's list of territories
     t->setOwnership(nullptr);

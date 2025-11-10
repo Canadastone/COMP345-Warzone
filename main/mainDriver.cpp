@@ -18,12 +18,12 @@
 void testStartupPhase();
 int main() {
     //testCards();
-    //testStartupPhase();	
+    testStartupPhase();	
     //testLoadMaps();
-    //testOrdersLists();
+    //testOrderExecution();
 	//testPlayers();
     //runProcessor();
-    // testLoggingObserver();
+    //testLoggingObserver();
    return 0;
 
 }

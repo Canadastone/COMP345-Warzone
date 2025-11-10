@@ -10,11 +10,13 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include "../player/player.h"
+#include <memory> 
 #include "../map/map.h"
 #include "../cards/cards.h"
 
 #include "../logObserver/LoggingObserver.h"
+
+class Player; 
 
 //namespace containing all order related definitions
 namespace orders{
@@ -82,14 +84,14 @@ namespace orders{
     //class Deploy, Child of abstract Order
     class Deploy : public Order{
       private:
-        shared_ptr<Map::Territory> target;
         shared_ptr<Player> player;
         int units;
+        shared_ptr<Map::Territory> target;
 
       public:
 
         Deploy();
-        Deploy(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> territory);
+        Deploy(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> target);
         Deploy(const Deploy& deploy);
         
         bool validate() const override;
@@ -99,9 +101,10 @@ namespace orders{
     class Advance : public Order{
       private:
         shared_ptr<Player> player;
+        int units;
         shared_ptr<Map::Territory> source;
         shared_ptr<Map::Territory> target;
-        int units;
+        
 
       public:
 
@@ -146,10 +149,10 @@ namespace orders{
     class Airlift : public Order{
       private:
         shared_ptr<Player> player;
+        int units;
         shared_ptr<Map::Territory> target;
         shared_ptr<Map::Territory> source;
         shared_ptr<Card> airliftCard;
-        int units;
 
       public:
 
@@ -212,7 +215,7 @@ namespace orders{
         void notify(ILoggable& loggable) const;
     };
 }
-void testOrdersLists();
+void testOrderExecution();
 
 
 //should the cards being used also fields for the orders
