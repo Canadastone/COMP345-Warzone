@@ -16,18 +16,18 @@
 
 using namespace std;
 
-static bool belongsToPlayer(Player& player, <shared_ptr>Map::Territory terr){
-  List<shared_ptr<Map::Territory>> ownedTerritories (player.getTerritories());
-  for( shared_ptr<Map::Territory> territory : ownedTerritories){
+static bool belongsToPlayer(Player& player, Map::Territory& terr){
+  list<shared_ptr<Map::Territory>> ownedTerritories(player.getTerritories());
+  for(shared_ptr<Map::Territory> territory : ownedTerritories){
     if(*territory == *terr) return true;
   }
-  return falsea
+  return false;
 }
 
-static bool areAdjacent(shared_ptr<Map::Territory> terr1, shared_ptr<Map::Territory> terr2){
-  vector<shared_ptr<Map::Territory>> adjTerritories(terr1.getConnectedTerritories());
+static bool areAdjacent(Map::Territory& terr1, Map::Territory& terr2){
+  vector<shared_ptr<Map::Territory>> adjTerritories(terr1.connectedTerritories());
   for(shared_ptr<Map::Territory> territory : adjTerritories){
-    if(*territory == *terr2) return true;
+    if(*territory == terr2) return true;
   }
   return false;
 }
@@ -66,7 +66,7 @@ namespace orders{
 
     //valid if order type is valid type and has not been executed
     bool Order::validate() const{
-        return (getTypeAsString() != "N/A" && !isExecuted())
+        return (getTypeAsString() != "N/A" && !isExecuted());
     }
             
     Order& Order::operator=(const Order& order){
@@ -92,13 +92,13 @@ namespace orders{
       : Order(orderType::DEPLOY),
         player(nullptr),
         target(nullptr),
-        units(0);
+        units(0),
         effect("order not excecuted yet"),
-        executed(false);=
+        executed(false)
       {}
 
     Deploy::Deploy(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> target)
-      :
+      : Order(orderType::DEPLOY),
         player(player),
         target(target),
         units(units),
@@ -138,7 +138,7 @@ namespace orders{
         player(nullptr),
         source(nullptr),
         target(nullptr),
-        units(0);
+        units(0),
         effect("order not excecuted yet"),
         executed(false);
       {}
@@ -312,7 +312,24 @@ namespace orders{
             player.removeTerritory(target);
             /*target.numArmies *= 2*/
             /*target.numArmies *= 2*/
+       }
     }
+
+    Negotiate::Negotiate(const Negotiate& negotiate) 
+    : Order(orderType::NEGOTIATE)
+      issuer(negotiate.player),
+      target(negotaite.target),
+      negotaiteCard(negotiate.negotaiteCard),
+      effect(negotiate.effect),
+      executed(negotiate.executed)  
+    {}
+
+    void Negotiate::execute(){
+        if(validate()){
+                executed = true;
+                //TODO implememt the rest of execute;
+        }
+    } 
 
     bool Negotiate::validate() const{
         if(Order::validate()){
@@ -321,10 +338,7 @@ namespace orders{
         return false; 
     }
 
-    Negotiate::Negotiate(const Negotiate& negotiate) : Order(orderType::NEGOTIATE){
-        effect = negotiate.effect;
-        executed = negotiate.executed;
-    }
+    
 
     Airlift::Airlift() : Order(orderType::AIRLIFT){
         effect = "order not excecuted yet";
@@ -348,12 +362,7 @@ namespace orders{
         } 
     }
     
-    void Negotiate::execute(){
-       if(validate()){
-            executed = true;
-            //TODO implememt the rest of execute;
-        } 
-    } 
+    
 
 
     OrderList::OrderList(){}

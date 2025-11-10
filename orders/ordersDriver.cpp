@@ -33,8 +33,7 @@ void testOrdersLists() {
      std::cout << *testList << std::endl;
     
     std::cout << std::endl << "removing order at index 3: " << std::endl;
-    Order* removed = testList->remove(3);
-    delete removed;
+    shared_ptr<Order> removed = testList->remove(3);
     std::cout << *testList << std::endl;
     
     std::cout << "validating all remaining orders" << std::endl;

@@ -73,7 +73,7 @@ namespace orders{
       public:
 
         Deploy();
-        Deploy(shared_ptr<Player> player,int units, shared_ptr<Map::Territory> territory)
+        Deploy(shared_ptr<Player> player,int units, shared_ptr<Map::Territory> territory);
         Deploy(const Deploy& deploy);
         
         bool validate() const override;
@@ -100,7 +100,7 @@ namespace orders{
       private:
         shared_ptr<Player> player;
         shared_ptr<Map::Territory> target;
-        shared_ptr<Card> BombCard;
+        shared_ptr<Card> bombCard;
         
       public:
 
@@ -114,34 +114,46 @@ namespace orders{
     class Blockade : public Order{
       private:
         shared_ptr<Player> player;
-        shared_ptr<Territory> target;
+        shared_ptr<Map::Territory> target;
         shared_ptr<Card> blockadeCard;
 
       public:
 
         Blockade();
-        Blockade(shared_ptr<Player>, shared_ptr<Territory>, shared_ptr<Card> blockadeCard);
+        Blockade(shared_ptr<Player>, shared_ptr<Map::Territory>, shared_ptr<Card> blockadeCard);
         Blockade(const Blockade& blockade);
         bool validate() const override;
         void execute() override;
     };
     //class AirLift, Child of abstract Order
     class Airlift : public Order{
-        public:
+      private:
+        shared_ptr<Player> player;
+        shared_ptr<Map::Territory> target;
+        shared_ptr<Card> airliftCard;
+        int units;
+
+      public:
 
         Airlift();
+        Airlift(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> target, shared_ptr<Card> airliftCard);
         Airlift(const Airlift& airlift);
-        bool validate(Player& player) const override;
-        void execute(Player& player) override;
+        bool validate() const override;
+        void execute() override;
     };
     //class Negotiate, Child of abstract Order
     class Negotiate : public Order{
-        public:
+      private:
+        shared_ptr<Player> issuer;
+        shared_ptr<Player> target;
+        shared_ptr<Card> negotiateCard;
 
+      public:
         Negotiate();
+        Negotiate(shared_ptr<Player> issuer, shared_ptr<Player> target, shared_ptr<Card> negotiateCard);
         Negotiate(const Negotiate& negotiate);
-        bool validate(Player& player) const override;
-        void execute(Player& player) override;
+        bool validate() const override;
+        void execute() override;
     };
 
     //Class Order List, will store and handle the orders in the game
@@ -175,7 +187,6 @@ namespace orders{
     };
 }
 void testOrdersLists();
-#endif
 
 
 //should the cards being used also fields for the orders
