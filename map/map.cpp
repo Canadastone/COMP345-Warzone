@@ -32,6 +32,7 @@ Map::Map(std::string filePath) {
 	initializeContinentMap();
 	int indexOfLastSlash = filePath.find_last_of("/");
 	this->mapName = filePath.substr(indexOfLastSlash + 1);
+	this->continentControlBonuses = loader.generateContinentControlBonuses();
 	std::cout << "Successfully created map..." << std::endl;
 
 }
@@ -351,6 +352,13 @@ std::vector <std::shared_ptr<Map::Territory>> Map::Territory::getConnectedTerrit
 	return this->connectedTerritories;
 }
 
+std::map<std::string, std::shared_ptr<Map::Territory>> Map::getAdjacencyMatrix(){
+	return this->adjacencyMatrix;
+}
+
+std::map<std::string, std::vector<std::shared_ptr<Map::Territory>>> Map::getContinentMap(){
+	return this->continentMap;
+}
 
 void Map::Territory::printTerritory() {
 
@@ -364,7 +372,9 @@ void Map::Territory::printTerritory() {
 	std::cout << std::endl;
 	std::cout << "---------------------------------------------------------------" << std::endl;
 }
-
+std::map<std::string, int> Map::getContinentControlBonuses(){
+	return this->continentControlBonuses;
+}
 //-----------------------------------------------
 // MapLoader Functions
 //-----------------------------------------------
@@ -425,7 +435,29 @@ bool Map::MapLoader::validateFile() {
 
 	return hasMap && hasContinents && hasTerritories;
 }
+std::map<std::string, int> Map::MapLoader::generateContinentControlBonuses(){
+	std::map<std::string, int> controlBonuses {};
+	std::ifstream file(this->filePath);
 
+	std::string text;
+	bool startReading = false;
+
+	while (std::getline(file, text)) {
+		if (text.empty()) continue;
+		if (text == "[Continents]") {
+			startReading = true;
+			continue;
+		}
+		if (startReading == true) {
+			if (text[0] == '[') break;
+			int deli = text.find('=');
+			controlBonuses[text.substr(0, deli)] = stoi(text.substr(deli + 1));
+		}
+	}
+	file.close();
+	return controlBonuses;
+
+}
 std::vector<std::shared_ptr<Map::Territory>> Map::MapLoader::generateTerritories() {
 
 	std::vector<std::shared_ptr<Territory>> territoriesVector;

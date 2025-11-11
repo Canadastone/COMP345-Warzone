@@ -77,6 +77,7 @@ void Player::addTerritory(shared_ptr<Map::Territory> t) {
     cout << "Assigned territory: " << t->getName() << endl;
 
 	playerTerritories.push_back(t); 								// adds the given territory to the player's list of territories
+
     t->setOwnership(shared_from_this());
 
 }
