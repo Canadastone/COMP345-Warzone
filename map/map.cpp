@@ -22,7 +22,7 @@
 
 Map::Map(std::string filePath) {
 	MapLoader loader(filePath);
-	bool validFile = loader.validateFile();
+	validFile = loader.validateFile();
 	if (!validFile) {
 		std::cout << "Invalid file, cannot create map..." << std::endl;
 		return;
@@ -266,21 +266,19 @@ bool Map::validate() {
 //-----------------------------------------------
 
 Map::Territory::Territory() {
-	this->numArmies = 0;
+
 }
 
 Map::Territory::Territory(std::string name, std::string continent) {
 	this->name = name;
 	this->continent = continent;
-	this->numArmies = 0;
+
 }
 
 Map::Territory::Territory(const Territory& territory) {
 
 	this->name = territory.name;
 	this->continent = territory.continent;
-	this->owner = territory.owner;
-	this->numArmies = territory.numArmies;
 	this->connectedTerritories = connectedTerritories;
 	
 	std::cout << "Territory Copy Constructor Called!" << std::endl;
@@ -293,8 +291,6 @@ Map::Territory& Map::Territory::operator=(const Territory& territory) {
 
 	this->name = territory.name;
 	this->continent = territory.continent;
-	this->owner = territory.owner;
-	this->numArmies = territory.numArmies;
 	this->connectedTerritories = connectedTerritories;
 	
 	std::cout << "Territory Copy Assignment Operator Called!" << std::endl;
@@ -310,9 +306,6 @@ void Map::Territory::addConnection(std::shared_ptr<Territory> territory) {
 	this->connectedTerritories.push_back(territory);
 }
 
-void Map::Territory::setOwnership(std::shared_ptr<Player> owner) {
-	this->owner = owner;
-}
 
 std::string Map::Territory::getName() {
 	return this->name;
@@ -326,15 +319,11 @@ std::vector <std::shared_ptr<Map::Territory>> Map::Territory::getConnectedTerrit
 	return this->connectedTerritories;
 }
 
-std::shared_ptr<Player> Map::Territory::getOwnership() {
-	return this->owner;
-}
 
 void Map::Territory::printTerritory() {
 
 	std::cout << "Territory Name: " << this->name << std::endl;
 	std::cout << "Continent: " << this->continent << std::endl;
-	std::cout << "Owned by: " << this->owner << std::endl;
 	std::cout << "Connected Territories: ";
 
 	for (std::shared_ptr<Territory> territory : this->connectedTerritories) {

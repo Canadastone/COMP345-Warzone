@@ -34,27 +34,59 @@ namespace orders{
 
     //returns type of order as a string
     string Order::getTypeAsString() const{
-        switch (static_cast<int>(type)){ 
-            case static_cast<int>(orderType::DEPLOY): return "Deploy"; 
-            case static_cast<int>(orderType::ADVANCE): return "Advance"; 
-            case static_cast<int>(orderType::BOMB): return "Bomb"; 
-            case static_cast<int>(orderType::BLOCKADE): return "Blockade"; 
-            case static_cast<int>(orderType::AIRLIFT): return "Airlift"; 
-            case static_cast<int>(orderType::NEGOTIATE): return "Negotiate"; 
+        switch (type){ 
+            case orderType::DEPLOY: return "Deploy"; 
+            case orderType::ADVANCE: return "Advance"; 
+            case orderType::BOMB: return "Bomb"; 
+            case orderType::BLOCKADE: return "Blockade"; 
+            case orderType::AIRLIFT: return "Airlift"; 
+            case orderType::NEGOTIATE: return "Negotiate"; 
         } 
         return "N/A"; 
     }
 
+    //valid if order type is valid type and has not been executed
     bool Order::validate() const{
-        //TODO implememt Validate
-        return true;
+        if(getTypeAsString() != "N/A" && executed == false){
+            cout << *this << ". Order is valid." << endl;
+            return true;
+        }
+        return false;
     }
             
     Order& Order::operator=(const Order& order){
+
+        if(this == &order){
+            return *this;
+        }
         type = order.type;
         executed = order.executed;
         effect = order.effect;
         return *this;
+    }
+
+    std::string Order::stringToLog() const{
+        std::string commandEffect = this->effect;
+        std::string typeAsString =  getTypeAsString();
+        std::string loggedString = typeAsString + " Order executed: " + effect;
+
+        return loggedString;
+    }
+
+    void Order::attach(std::shared_ptr<LogObserver> pObserver) {
+        this->observer = pObserver;
+    }
+
+    void Order::detach() {
+        this->observer = nullptr;
+    }
+
+    void Order::notify(ILoggable& loggable) const{
+        this->observer->update(loggable);
+    }
+
+    void Order::notifyOrder(Order& order) {
+        this->notify(order);
     }
 
     //overloaded << operator
@@ -65,94 +97,134 @@ namespace orders{
 
     //Children Implementations of the Order Class:
 
-    Deploy::Deploy() : Order::Order(orderType::DEPLOY){
+    Deploy::Deploy() : Order(orderType::DEPLOY){
         effect = "order not excecuted yet";
         executed = false;
     }
-    Deploy::Deploy(const Deploy& deploy) : Order::Order(orderType::DEPLOY){
+    Deploy::Deploy(const Deploy& deploy) : Order(orderType::DEPLOY){
         effect = deploy.effect;
         executed = deploy.executed;
+    }
+
+    bool Deploy::validate() const{
+        if(Order::validate()){
+            return true;
+        }
     }
 
     void Deploy::execute(){
        if(validate()){
             executed = true;
             //TODO implememt the rest of execute;
+            this->notifyOrder(*this);
         } 
     }
     
-    Advance::Advance() : Order::Order(orderType::ADVANCE){
+    Advance::Advance() : Order(orderType::ADVANCE){
         effect = "order not excecuted yet";
         executed = false;
     }
-    Advance::Advance(const Advance& advance) : Order::Order(orderType::ADVANCE){
+    Advance::Advance(const Advance& advance) : Order(orderType::ADVANCE){
         effect = advance.effect;
         executed = advance.executed;
     }
 
+    bool Advance::validate() const{
+        if(Order::validate()){
+            return true;
+        }
+    }
 
     void Advance::execute(){
        if(validate()){
             executed = true;
             //TODO implememt the rest of execute;
+            this->notifyOrder(*this);
         } 
     } 
 
-    Bomb::Bomb() : Order::Order(orderType::BOMB){
+    Bomb::Bomb() : Order(orderType::BOMB){
         effect = "order not excecuted yet";
         executed = false;
     }
-    Bomb::Bomb(const Bomb& bomb) : Order::Order(orderType::BOMB){
+    Bomb::Bomb(const Bomb& bomb) : Order(orderType::BOMB){
         effect = bomb.effect;
         executed = bomb.executed;
+    }
+
+    bool Bomb::validate() const{
+        if(Order::validate()){
+            return true;
+        }
     }
 
     void Bomb::execute(){
        if(validate()){
             executed = true;
             //TODO implememt the rest of execute;
+            this->notifyOrder(*this);
         } 
     } 
 
-    Blockade::Blockade() : Order::Order(orderType::BLOCKADE){
+    Blockade::Blockade() : Order(orderType::BLOCKADE){
         effect = "order not excecuted yet";
         executed = false;
     }
-    Blockade::Blockade(const Blockade& blockade) : Order::Order(orderType::BLOCKADE){
+    Blockade::Blockade(const Blockade& blockade) : Order(orderType::BLOCKADE){
         effect = blockade.effect;
         executed = blockade.executed;
+    }
+
+    bool Blockade::validate() const{
+        if(Order::validate()){
+            return true;
+        }
     }
 
     void Blockade::execute(){
        if(validate()){
             executed = true;
             //TODO implememt the rest of execute;
+            this->notifyOrder(*this);
         } 
     } 
 
-    Negotiate::Negotiate() : Order::Order(orderType::NEGOTIATE){
+    Negotiate::Negotiate() : Order(orderType::NEGOTIATE){
         effect = "order not excecuted yet";
         executed = false;
     }
 
-    Negotiate::Negotiate(const Negotiate& negotiate) : Order::Order(orderType::NEGOTIATE){
+    bool Negotiate::validate() const{
+        if(Order::validate()){
+            return true;
+        }
+    }
+
+    Negotiate::Negotiate(const Negotiate& negotiate) : Order(orderType::NEGOTIATE){
         effect = negotiate.effect;
         executed = negotiate.executed;
     }
 
-    Airlift::Airlift() : Order::Order(orderType::AIRLIFT){
+    Airlift::Airlift() : Order(orderType::AIRLIFT){
         effect = "order not excecuted yet";
         executed = false;
     }
-    Airlift::Airlift(const Airlift& airlift) : Order::Order(orderType::AIRLIFT){
+    Airlift::Airlift(const Airlift& airlift) : Order(orderType::AIRLIFT){
         effect = airlift.effect;
         executed = airlift.executed;
     } 
+
+    bool Airlift::validate() const{
+        if(Order::validate()){
+            return true;
+        }
+    }
 
     void Airlift::execute(){
        if(validate()){
             executed = true;
             //TODO implememt the rest of execute;
+            this->notifyOrder(*this);
         } 
     }
     
@@ -160,6 +232,7 @@ namespace orders{
        if(validate()){
             executed = true;
             //TODO implememt the rest of execute;
+            this->notifyOrder(*this);
         } 
     } 
 
@@ -178,6 +251,9 @@ namespace orders{
         orders.clear();
     }
 
+    bool OrderList::indexOutOfBounds(int index) const{
+        return (index >= orders.size() || index < 0);
+    }
 
     int OrderList::size() const{
         return orders.size();
@@ -189,7 +265,9 @@ namespace orders{
     }
 
     void OrderList::add(Order* order){
+        order->attach(this->observer);
         orders.push_back(order);
+        this->notify(*this);
     }
 
     /**
@@ -257,6 +335,11 @@ namespace orders{
     }
     
     OrderList& OrderList::operator=(const OrderList& other){
+        
+        if(this == &other){
+            return *this;
+        }
+        
         for(int i = 0; i < size(); i++){
             add(other[i]);
         }
@@ -265,11 +348,32 @@ namespace orders{
 
     //overloaded << operator
     std::ostream& operator<<(std::ostream& os, const OrderList& orderList){
-
-        for(int i = 0; i < orderList.size(); i++){
-            os << "[" << i << "] " << *(orderList[i]) << std::endl;
+        
+        if( orderList.size() == 0){
+            os << "Empty List of Orders";
         }
 
+        for(int i = 0; i < orderList.size(); i++){
+            os << "[" << i << "] " << *(orderList[i]);
+        }   
+
         return os;
+    }
+    std::string OrderList::stringToLog() const {
+        Order& order = *this->orders.back();
+        std::string cardAdded = order.getTypeAsString();
+        return cardAdded + " Order issued.";
+    }
+
+    void OrderList::attach(std::shared_ptr<LogObserver> pObserver) {
+        this->observer = pObserver;
+    }
+
+    void OrderList::detach() {
+        this->observer = nullptr;
+    }
+
+    void OrderList::notify(ILoggable& loggable) const {
+        this->observer->update(loggable);
     }
 }

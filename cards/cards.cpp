@@ -36,7 +36,6 @@ CardType Card::getCardType() const {
 }
 void Card::play() {
     cout << "Playing " << cardTypeToString(*type) << " card" << endl;
-    // after play, return to the deck
 }
 
 Deck::Deck() {
@@ -84,7 +83,9 @@ void Hand::addCard(shared_ptr<Card> card) {
 // card is also returned to the deck
 void Hand::useCard(shared_ptr<Card> card, Deck& deck) {
     deck.returnCard(card);
+    // play card when used
     card -> play();
+    // remove card from hand after using it
     hand.erase(card);
 }
 multiset<shared_ptr<Card>> Hand::getHand() {

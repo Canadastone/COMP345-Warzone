@@ -12,15 +12,21 @@
 #include "../map/map.h"
 #include "../orders/orders.h"
 #include "../player/player.h"
+#include "../processor/CommandProcessor.h"
+#include "../logObserver/LoggingObserver.h"
 
-using namespace std;
 
+void testStartupPhase();
 int main() {
-    testCards();
-    testGameStates();	
-    testLoadMaps();
-    testOrdersLists();
-	testPlayers();
+    //testCards();
+    testStartupPhase();
+    //testLoadMaps();
+    //testOrdersLists(); 
+	//testPlayers();
+    //runProcessor();
+    //testLoggingObserver();
+	
+
    return 0;
 
 }

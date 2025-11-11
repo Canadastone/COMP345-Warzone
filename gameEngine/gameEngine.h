@@ -4,6 +4,12 @@
 #include <map>
 #include <memory>
 #include <unordered_set>
+#include <algorithm> 
+#include <random>
+#include "../processor/CommandProcessor.h"
+#include "../logObserver/LoggingObserver.h"
+
+#include "../player/player.h"
 
 using std::string;
 using std::unique_ptr;
@@ -16,22 +22,8 @@ Forward declarations
 class GameEngine;
 
 /*
-Enum representing states, used as a parameter to the template classes below.
-*/
-enum class StateID {
-	Start,
-	MapLoaded,
-	MapValidated,
-	PlayersAdded,
-	AssignReinforcements,
-	IssueOrders,
-	ExecuteOrders,
-	Win,
-	End
-};
-/*
 State abstract class as a base interface for every other state in the game engine.
-Define what all states must be able to do: onEnter, onCommand, ...
+Define what all states must be able to do: onCommand, ...
 */
 class State {
 
@@ -41,13 +33,9 @@ public:
 	State(const State& s);
 
 	/*
-	called when first entering a state.
-	*/
-	virtual void onEnter(GameEngine&) = 0;
-	/*
 	fires when a command is triggered, and manages it.
 	*/
-	virtual bool onCommand(string& cmd, GameEngine&) = 0;
+	virtual string onCommand(Command* cmd, GameEngine&) = 0;
 
 	//getters
 	virtual string& getStateName() const = 0;
@@ -97,7 +85,6 @@ public:
 Each derived class is defined here
 Every derived state: 
 	- uses the StateTemplate constructors
-	- has a different onEnter, and onCommand implementation
 	- needs a clone method unique to them.
 
 Now, this design makes it easy to define custom behavior for each state
@@ -111,8 +98,7 @@ class startState : public StateTemplate<StateID::Start> {
 public:
     using StateTemplate<StateID::Start>::StateTemplate;
 
-    void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
     unique_ptr<State> clone() const override;
 };
 
@@ -122,8 +108,7 @@ Map loaded state
 class mapLoadedState : public StateTemplate<StateID::MapLoaded> {
 public:
     using StateTemplate<StateID::MapLoaded>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 
@@ -133,8 +118,7 @@ Map validated state
 class mapValidatedState : public StateTemplate<StateID::MapValidated> {
 public:
     using StateTemplate<StateID::MapValidated>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 
@@ -144,8 +128,7 @@ Players Added State
 class playersAddedState : public StateTemplate<StateID::PlayersAdded> {
 public:
     using StateTemplate<StateID::PlayersAdded>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 
@@ -155,8 +138,7 @@ Assign Reinforcments State
 class assignReinforcementsState : public StateTemplate<StateID::AssignReinforcements> {
 public:
     using StateTemplate<StateID::AssignReinforcements>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 /*
@@ -165,8 +147,7 @@ Issue orders state
 class issueOrdersState : public StateTemplate<StateID::IssueOrders> {
 public:
     using StateTemplate<StateID::IssueOrders>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 
@@ -176,8 +157,7 @@ Execute orders state
 class executeOrdersState : public StateTemplate<StateID::ExecuteOrders> {
 public:
     using StateTemplate<StateID::ExecuteOrders>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 /*
@@ -186,8 +166,7 @@ Win state
 class winState : public StateTemplate<StateID::Win> {
 public:
     using StateTemplate<StateID::Win>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 
@@ -197,17 +176,23 @@ End state
 class endState : public StateTemplate<StateID::End> {
 public:
     using StateTemplate<StateID::End>::StateTemplate;
-    void onEnter(GameEngine& engine) override;
-    bool onCommand(string& cmd, GameEngine& engine) override;
+    string onCommand(Command* cmd, GameEngine& engine) override;
 	unique_ptr<State> clone() const override;
 };
 
 
 
+enum class Phase {
+	startup,
+	play
+
+};
+
+
 /*
 Responsible for initalizing all the states, and for managing the game.
 */
-class GameEngine {
+class GameEngine : ILoggable, Subject {
 
 private:
 
@@ -220,8 +205,40 @@ private:
 	represents the mapping of ID -> StateObj.
 	*/
 	unique_ptr<map<StateID, unique_ptr<State>>> states;
+	std::shared_ptr<LogObserver> observer;
+
+	/*
+	mapping an integer to a player
+	*/
+	unique_ptr<map<int, unique_ptr<Player>>> playersMap;
+
+	/*
+	using the int keys in playersMap to keep an order of play.
+	*/
+	unique_ptr<vector<int>> orderOfPlay;
+
+	/*
+	The current map object currently loaded in the game
+	*/
+	shared_ptr<Map> currMap;
+
+	/*
+	current number of player in the game
+	*/
+	unique_ptr<int> numPlayersInGame;
+
+	/*
+	current deck of cards object being used in the game
+	*/
+	unique_ptr<Deck> deckOfCards;
+
+	/*
+	current "global game phase" (Startup, play) as per A2 instructions.
+	*/
+	Phase currPhase;
 	
 public:
+	
 	//GameEngine ctr.
 	GameEngine();
 
@@ -234,6 +251,7 @@ public:
 	//GameEngine streamInsertion operator
 	friend std::ostream& operator<<(std::ostream& os, const GameEngine& s);
 
+
 	//initializes the first state.
 	void init();
 	//returns the current State.
@@ -242,6 +260,76 @@ public:
 
 	//Apply State transition.
 	void transitionState(StateID id);
+	
+	
+	//inits the startup phase as per part 2.
+	void startupPhase(CommandProcessor& commandProcessor);
 
+	//helpers for startupPhase
+
+	/*
+	calls the << operator for every play in the game
+	*/
+	void printPlayersInGame();
+
+	/*
+	promps the user to choose from a list of maps throught he command line, and loads the map into currMap
+	*/
+	void loadMap();
+
+	/*
+	Adds a player to the playersMap
+	*/
+	void addPlayerToGame();
+
+	/*
+	Assigns territories in round robin to each player
+	*/
+	void assignTerritoriesFairly();
+
+	/*
+	randomizes the indices in orderOfPlay
+	*/
+	void shuffleOrderOfPlay();
+
+	/*
+	Assigns the passed number of units to the player.
+	*/
+	void assignUnitsToPlayer(int units, int playerIdInMap);
+
+	/*
+	instantiates the deck object
+	*/
+	void createDeck();
+	/*
+	calls the player.draw() for a player.
+	*/
+	void playerDrawsCard(int playerIdInMap);
+
+
+
+	void mainGameLoop();
+	void reinforcmentPhase();
+	void issueOrdersPhase();
+	void executeOrdersPhase();
+
+	//getters
+	map<int, unique_ptr<Player>>& getPlayersMap();
+    shared_ptr<Map> getCurrMap() const;
+    int getNumPlayersInGame();
+    Phase getCurrPhase() const;
+    vector<int>* getOrderOfPlay();
+    Deck* getDeckOfCards() const;
+
+	//setters
+	void setCurrPhase(Phase newPhase);
+	void setNumPlayersInGame(int currNumOfPlayers);
+
+	//Implements ILoggable functions
+	std::string stringToLog() const;
+	//Implements Subject functions
+	void attach(std::shared_ptr<LogObserver> pObserver);
+	void detach();
+	void notify(ILoggable& loggable) const;
 };
-void testGameStates();
+void testStartupPhase();
