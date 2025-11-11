@@ -122,7 +122,7 @@ void Player::issueOrder(orders::Order* o) {
 
             // Deploy to territories from toDefend() list
 			playerOrders.attach(obsPtr); // Attach observer to the order
-            playerOrders.add(o);
+            playerOrders.add(std::shared_ptr<orders::Order>(o));
             
         } 
         
@@ -131,7 +131,7 @@ void Player::issueOrder(orders::Order* o) {
             // Player should deploy first, but still allow other orders
             cout << "Note: Reinforcement pool has " << reinforcmentPool << " armies. Consider deploying first." << endl;
 			playerOrders.attach(obsPtr); // Attach observer to the order
-            playerOrders.add(o);
+            playerOrders.add(std::shared_ptr<orders::Order>(o));
 
         }
     } 
@@ -145,13 +145,13 @@ void Player::issueOrder(orders::Order* o) {
             // Advance orders use toDefend() for moving armies between owned territories (defense)
             // or toAttack() for attacking enemy territories
 			playerOrders.attach(obsPtr); // Attach observer to the order
-            playerOrders.add(o);
+            playerOrders.add(std::shared_ptr<orders::Order>(o));
         }
 
         // Handle card-based orders: BOMB, BLOCKADE, AIRLIFT, NEGOTIATE
         else {
 			playerOrders.attach(obsPtr); // Attach observer to the order
-            playerOrders.add(o);
+            playerOrders.add(std::shared_ptr<orders::Order>(o));
         }
     }
 
