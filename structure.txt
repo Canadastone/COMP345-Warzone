@@ -1,0 +1,57 @@
+.
+├── cards
+│   ├── cards.cpp
+│   ├── cards.h
+│   └── cardsDriver.cpp
+├── executeVSCODE.bat
+├── gameEngine
+│   ├── gameEngine.cpp
+│   ├── gameEngine.h
+│   └── gameEngineDriver.cpp
+├── logObserver
+│   ├── LoggingObserver.cpp
+│   ├── LoggingObserver.h
+│   └── LoggingObserverDriver.cpp
+├── main
+│   └── mainDriver.cpp
+├── mainDriver.exe
+├── map
+│   ├── map_files
+│   │   ├── Africa.map
+│   │   ├── Asia.map
+│   │   ├── AsiaDisjoint.map
+│   │   ├── AsiaDisjointContinent.map
+│   │   ├── AsiaNoContinents.map
+│   │   ├── AsiaNoMap.map
+│   │   ├── AsiaNoTerritories.map
+│   │   └── Atlantis.map
+│   ├── map.cpp
+│   ├── map.h
+│   └── mapDriver.cpp
+├── orders
+│   ├── orders.cpp
+│   ├── orders.exe
+│   ├── orders.h
+│   ├── orders.obj
+│   ├── ordersDriver.cpp
+│   ├── ordersDriver.exe
+│   └── ordersDriver.obj
+├── player
+│   ├── player.cpp
+│   ├── player.h
+│   ├── player.obj
+│   ├── playerDriver.cpp
+│   └── playerDriver.obj
+├── processor
+│   ├── Command.cpp
+│   ├── Command.h
+│   ├── CommandProcessor.cpp
+│   ├── CommandProcessor.h
+│   ├── CommandProcessorDriver.cpp
+│   ├── commands.txt
+│   ├── FileCommandProcessorAdapter.cpp
+│   └── FileCommandProcessorAdapter.h
+├── README.md
+└── structure.txt
+
+10 directories, 45 files

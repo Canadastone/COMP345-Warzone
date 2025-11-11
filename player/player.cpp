@@ -27,6 +27,11 @@ Player::Player(const Player& other) {
 	playerOrders = other.playerOrders;                                  // copies the player's list of orders
     reinforcmentPool = other.reinforcmentPool;
 }
+
+int Player::getReinforcementPool(){
+    return reinforcmentPool;
+}
+
 void Player::assignReinforcments(int numToAdd) {
     reinforcmentPool += numToAdd;
 }
@@ -59,7 +64,7 @@ list<std::shared_ptr<Map::Territory>> Player::toAttack() {
 	return attackList;                                                  // returns list of territories to attack
 
 }
-void Player::issueOrder(orders::Order* o) {
+void Player::issueOrder(shared_ptr<orders::Order> o) {
 
     cout << "Issuing an order to player" << endl;
 
@@ -72,15 +77,16 @@ void Player::addTerritory(shared_ptr<Map::Territory> t) {
     cout << "Assigned territory: " << t->getName() << endl;
 
 	playerTerritories.push_back(t); 								// adds the given territory to the player's list of territories
+    t->setOwnership(shared_from_this());
 
 }
 
 void Player::removeTerritory(shared_ptr<Map::Territory> t) {
 
-    cout << "Removing territory from player" << endl;
+    cout << "Removing territory:" << t->getName() << endl;
 
 	playerTerritories.remove(t); 			        			   // removes the given territory from the player's list of territories
-
+    t->setOwnership(nullptr);
 }
 
 void Player::addCard(shared_ptr<Card> c) {
@@ -130,6 +136,11 @@ Player& Player::operator=(const Player& other) {
 
 	return *this;                                                   // returns a copy of the player
 
+}
+
+bool Player::operator==(const Player& p) const{
+    return playerTerritories == p.playerTerritories && p.reinforcmentPool == reinforcmentPool;
+    //TODO compare  order list and cards aswell
 }
 
 std::ostream& operator<<(std::ostream& os, const Player& p) {

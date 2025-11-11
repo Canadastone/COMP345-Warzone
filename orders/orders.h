@@ -7,13 +7,16 @@
 * Date: 2025-10-07
 * Description: This file contains the declarations for the orders.cpp file
 */
-#ifndef ORDERS_H
-#define ORDERS_H
-
 #include <iostream>
 #include <vector>
 #include <string>
+#include <memory> 
+#include "../map/map.h"
+#include "../cards/cards.h"
+
 #include "../logObserver/LoggingObserver.h"
+
+class Player; 
 
 //namespace containing all order related definitions
 namespace orders{
@@ -80,9 +83,15 @@ namespace orders{
 
     //class Deploy, Child of abstract Order
     class Deploy : public Order{
-        public:
+      private:
+        shared_ptr<Player> player;
+        int units;
+        shared_ptr<Map::Territory> target;
+
+      public:
 
         Deploy();
+        Deploy(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> target);
         Deploy(const Deploy& deploy);
         
         bool validate() const override;
@@ -90,45 +99,79 @@ namespace orders{
     };
     //class Advance, Child of abstract Order
     class Advance : public Order{
-        public:
+      private:
+        shared_ptr<Player> player;
+        int units;
+        shared_ptr<Map::Territory> source;
+        shared_ptr<Map::Territory> target;
+        
+
+      public:
 
         Advance();
+        Advance(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target);
         Advance(const Advance& advance);
         bool validate() const override;
         void execute() override;
     };
     //class Bomb, Child of abstract Orde
     class Bomb : public Order{
-        public:
+      private:
+        shared_ptr<Player> player;
+        shared_ptr<Map::Territory> target;
+        shared_ptr<Card> bombCard;
+        
+      public:
 
         Bomb();
+        Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> bombCard);
         Bomb(const Bomb& bomb);
         bool validate() const override;
         void execute() override; 
     };
     //class Blockade, Child of abstract Orde
     class Blockade : public Order{
-        public:
+      private:
+        shared_ptr<Player> player;
+        shared_ptr<Map::Territory> target;
+        shared_ptr<Card> blockadeCard;
+        shared_ptr<Player> neutralPlayer;
+
+      public:
 
         Blockade();
+        Blockade(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> blockadeCard, shared_ptr<Player> neutralPlayer);
         Blockade(const Blockade& blockade);
         bool validate() const override;
         void execute() override;
     };
-    //class AirLift, Child of abstract Orde
+    //class AirLift, Child of abstract Order
     class Airlift : public Order{
-        public:
+      private:
+        shared_ptr<Player> player;
+        int units;
+        shared_ptr<Map::Territory> target;
+        shared_ptr<Map::Territory> source;
+        shared_ptr<Card> airliftCard;
+
+      public:
 
         Airlift();
+        Airlift(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target, shared_ptr<Card> airliftCard);
         Airlift(const Airlift& airlift);
         bool validate() const override;
         void execute() override;
     };
     //class Negotiate, Child of abstract Order
     class Negotiate : public Order{
-        public:
+      private:
+        shared_ptr<Player> issuer;
+        shared_ptr<Player> target;
+        shared_ptr<Card> diplomacyCard;
 
+      public:
         Negotiate();
+        Negotiate(shared_ptr<Player> issuer, shared_ptr<Player> target, shared_ptr<Card> diplomacyCard);
         Negotiate(const Negotiate& negotiate);
         bool validate() const override;
         void execute() override;
@@ -140,7 +183,7 @@ namespace orders{
         private:
             
         //internal vector holding pointers to all the orders 
-        std::vector<Order*> orders;
+        std::vector<shared_ptr<Order>> orders;
         std::shared_ptr<LogObserver> observer;
         
         //bound checker private helper
@@ -154,11 +197,11 @@ namespace orders{
 
 
         int size() const;
-        Order* operator[](int index) const;
-        void add(Order* order);
+        shared_ptr<Order> operator[](int index) const;
+        void add(shared_ptr<Order> order);
 
-        Order* remove(int index);
-        int indexOf(Order* order) const;
+        shared_ptr<Order> remove(int index);
+        int indexOf(shared_ptr<Order> order) const;
         void move(int fromIndex, int toIndex);
 
         OrderList& operator=(const OrderList& other);
@@ -172,5 +215,7 @@ namespace orders{
         void notify(ILoggable& loggable) const;
     };
 }
-void testOrdersLists();
-#endif
+void testOrderExecution();
+
+
+//should the cards being used also fields for the orders

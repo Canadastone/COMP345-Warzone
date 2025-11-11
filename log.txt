@@ -1,0 +1,42 @@
+Deploy Order issued.
+----------------------------------------------------------------------------------
+Advance Order issued.
+----------------------------------------------------------------------------------
+Bomb Order issued.
+----------------------------------------------------------------------------------
+Blockade Order issued.
+----------------------------------------------------------------------------------
+Airlift Order issued.
+----------------------------------------------------------------------------------
+Negotiate Order issued.
+----------------------------------------------------------------------------------
+Blockade Order executed: Russia blockaded. Neutral Player now occupies it with 10 units
+----------------------------------------------------------------------------------
+Negotiate Order executed: issuer and target player negotiated. They can no longer attack eachother this round
+----------------------------------------------------------------------------------
+Deploy Order issued.
+----------------------------------------------------------------------------------
+Advance Order issued.
+----------------------------------------------------------------------------------
+Bomb Order issued.
+----------------------------------------------------------------------------------
+Blockade Order issued.
+----------------------------------------------------------------------------------
+Airlift Order issued.
+----------------------------------------------------------------------------------
+Negotiate Order issued.
+----------------------------------------------------------------------------------
+Deploy Order executed: execution failed, Order is Invalid
+----------------------------------------------------------------------------------
+Advance Order executed: execution failed, Order is Invalid
+----------------------------------------------------------------------------------
+Advance Order executed: 2 units attacked Morocco, where 3 units defended. 0 attcking units survivedand 1 defensive units survived
+----------------------------------------------------------------------------------
+Bomb Order executed: execution failed, Order is Invalid
+----------------------------------------------------------------------------------
+Blockade Order executed: Russia blockaded. Neutral Player now occupies it with 6 units
+----------------------------------------------------------------------------------
+Airlift Order executed: execution failed, Order is Invalid
+----------------------------------------------------------------------------------
+Negotiate Order executed: issuer and target player negotiated. They can no longer attack eachother this round
+----------------------------------------------------------------------------------

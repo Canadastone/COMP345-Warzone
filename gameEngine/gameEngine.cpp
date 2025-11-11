@@ -1,5 +1,5 @@
 #include <filesystem>
-#include "GameEngine.h"
+#include "gameEngine.h"
 
 //abstract State constructors definitions
 State::State() = default;
@@ -283,7 +283,7 @@ string issueOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 
 		for (const int id : *engine.getOrderOfPlay()) {
 			std::cout << "Enter order for Player " << id << " (DEPLOY, ADVANCE, BOMB, BLOCKADE, AIRLIFT, NEGOTIATE), or blank/Enter to skip your turn: ";
-			orders::Order* order = nullptr;
+			shared_ptr<orders::Order> order = nullptr;
 			bool isValidOrder = true;
 			do {
 				std::string orderType;
@@ -292,12 +292,12 @@ string issueOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 
 				if (orderType.empty()) continue;
 
-				if (orderType == "BOMB") order = new orders::Bomb();
-				else if (orderType == "DEPLOY") order = new orders::Deploy();
-				else if (orderType == "ADVANCE") order = new orders::Advance();
-				else if (orderType == "BLOCKADE") order = new orders::Blockade();
-				else if (orderType == "AIRLIFT") order = new orders::Airlift();
-				else if (orderType == "NEGOTIATE") order = new orders::Negotiate();
+				if (orderType == "BOMB") order = std::make_shared<orders::Bomb>();
+				else if (orderType == "DEPLOY") order = std::make_shared<orders::Deploy>();
+				else if (orderType == "ADVANCE") order = std::make_shared<orders::Advance>();
+				else if (orderType == "BLOCKADE") order = std::make_shared<orders::Blockade>();
+				else if (orderType == "AIRLIFT") order = std::make_shared<orders::Airlift>();
+				else if (orderType == "NEGOTIATE") order = std::make_shared<orders::Negotiate>();
 				else {
 					orderType = "";
 					std::cout << "Invalid Order, please try again: ";

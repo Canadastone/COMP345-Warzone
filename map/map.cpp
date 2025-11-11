@@ -6,7 +6,7 @@
 * Description: This file contains the implementation of the map
 */
 
-#include "Map.h"
+#include "map.h"
 #include <vector>
 #include <string>
 #include <iostream>
@@ -272,13 +272,15 @@ Map::Territory::Territory() {
 Map::Territory::Territory(std::string name, std::string continent) {
 	this->name = name;
 	this->continent = continent;
-
+	this->units = 0;
 }
 
 Map::Territory::Territory(const Territory& territory) {
 
 	this->name = territory.name;
 	this->continent = territory.continent;
+	this->owner = territory.owner;
+	this->units = territory.units;
 	this->connectedTerritories = connectedTerritories;
 	
 	std::cout << "Territory Copy Constructor Called!" << std::endl;
@@ -291,10 +293,16 @@ Map::Territory& Map::Territory::operator=(const Territory& territory) {
 
 	this->name = territory.name;
 	this->continent = territory.continent;
-	this->connectedTerritories = connectedTerritories;
+	this->owner = territory.owner;
+	this->units = territory.units;
+	this->connectedTerritories = territory.connectedTerritories;
 	
 	std::cout << "Territory Copy Assignment Operator Called!" << std::endl;
 	return *this;
+}
+
+bool Map::Territory::operator==(const Territory& other) const {
+    return units == other.units && name == other.name && continent == other.continent;
 }
 
 std::ostream& operator<<(std::ostream& os, const Map::Territory& territory) {
@@ -311,8 +319,32 @@ std::string Map::Territory::getName() {
 	return this->name;
 }
 
+int Map::Territory::getUnits(){
+	return units;
+}
+
+void Map::Territory::addUnits(int n){
+	units += n;
+}
+
+void Map::Territory::removeUnits(int n){
+	units -= n;
+}
+
+void Map::Territory::setUnits(int n){
+	units = n;
+}
+
 std::string Map::Territory::getContinent() {
 	return this->continent;
+}
+
+std::shared_ptr<Player> Map::Territory::getOwnership(){
+	return this->owner.lock();
+}
+
+void Map::Territory::setOwnership(std::shared_ptr<Player> owner){
+	this->owner = owner;
 }
 
 std::vector <std::shared_ptr<Map::Territory>> Map::Territory::getConnectedTerritories() {

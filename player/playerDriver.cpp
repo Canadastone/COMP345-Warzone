@@ -26,9 +26,9 @@ void testPlayers() {
 
     // Demonstrate issueOrder
     cout << "Calling issueOrder:" << endl;
-    p1.issueOrder(new orders::Bomb());
-    p1.issueOrder(new orders::Airlift());
-    p1.issueOrder(new orders::Negotiate());
+    p1.issueOrder(make_shared<orders::Bomb>());
+    p1.issueOrder(make_shared<orders::Airlift>());
+    p1.issueOrder(make_shared<orders::Negotiate>());
 
     // Demonstrate toAttack and toDefend
     cout << "Player 1 toAttack and toDefend:" << endl;
