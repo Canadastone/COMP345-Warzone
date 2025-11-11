@@ -28,47 +28,134 @@ Player::Player(const Player& other) {
     reinforcmentPool = other.reinforcmentPool;
 }
 
-int Player::getReinforcementPool(){
-    return reinforcmentPool;
-}
-
 void Player::assignReinforcments(int numToAdd) {
     reinforcmentPool += numToAdd;
 }
+
+int Player::getReinforcementPool() const {
+    return reinforcmentPool;
+}
+
+void Player::decrementReinforcementPool(int numToRemove) {
+    reinforcmentPool -= numToRemove;
+    if (reinforcmentPool < 0) {
+        reinforcmentPool = 0; // Ensure it doesn't go negative
+    }
+}
+
 list<std::shared_ptr<Map::Territory>> Player::toDefend() {
 
 	list<std::shared_ptr<Map::Territory>> defendList;                   // list of territories to defend
 
-    std::shared_ptr<Map::Territory> t1 = make_shared<Map::Territory>("Test Territory One", "Test Continent One");
-    std::shared_ptr<Map::Territory> t2 = make_shared<Map::Territory>("Test Territory Two", "Test Continent Two");
-	std::shared_ptr<Map::Territory> t3 = make_shared<Map::Territory>("Test Territory Three", "Test Continent Three");
-
-	defendList.push_back(t1);                                           // adds arbitrary territories to the defend list
-    defendList.push_back(t2);
-	defendList.push_back(t3);
+	// Return all territories owned by the player in priority order
+	// Priority: territories that are adjacent to enemy territories should be defended first
+	for (auto& territory : playerTerritories) {
+		defendList.push_back(territory);
+	}
 
 	return defendList;                                                  // returns list of territories to defend
 
 
 }
+
 list<std::shared_ptr<Map::Territory>> Player::toAttack() {
 
 	list<std::shared_ptr<Map::Territory>> attackList;                   // list of territories to attack
 
-    std::shared_ptr<Map::Territory> t1 = make_shared<Map::Territory>("Test Territory One", "Test Continent One");
-    std::shared_ptr<Map::Territory> t2 = make_shared<Map::Territory>("Test Territory Two", "Test Continent One");
-
-	attackList.push_back(t1);                                           // adds arbitrary territories to the attack list
-    attackList.push_back(t2);
+	// Find all neighboring territories that are NOT owned by this player
+	// These are potential attack targets
+	for (auto& ownedTerritory : playerTerritories) {
+		// Get all connected territories
+		auto connectedTerritories = ownedTerritory->getConnectedTerritories();
+		
+		for (auto& neighbor : connectedTerritories) {
+			// Check if this neighbor is NOT owned by the player
+			bool isOwned = false;
+			for (auto& playerTerritory : playerTerritories) {
+				if (playerTerritory->getName() == neighbor->getName()) {
+					isOwned = true;
+					break;
+				}
+			}
+			
+			// If not owned and not already in attack list, add it
+			if (!isOwned) {
+				bool alreadyInList = false;
+				for (auto& attackTarget : attackList) {
+					if (attackTarget->getName() == neighbor->getName()) {
+						alreadyInList = true;
+						break;
+					}
+				}
+				if (!alreadyInList) {
+					attackList.push_back(neighbor);
+				}
+			}
+		}
+	}
 
 	return attackList;                                                  // returns list of territories to attack
 
 }
-void Player::issueOrder(shared_ptr<orders::Order> o) {
+
+void Player::issueOrder(orders::Order* o) {
 
     cout << "Issuing an order to player" << endl;
 
-	playerOrders.add(o);                            // adds the given order to the player's list of orders
+	LogObserver observer("C:\\Users\\cyrus\\Desktop\\School-Stuff\\COMP345\\COMP345-Warzone-main\\game_log.txt");
+	std::shared_ptr<LogObserver> obsPtr = std::make_shared<LogObserver>(observer);
+
+    // Get the list of territories to defend (player's own territories in priority)
+    list<std::shared_ptr<Map::Territory>> defendList = toDefend();
+
+    // Get the list of territories to attack (neighboring enemy territories)
+    list<std::shared_ptr<Map::Territory>> attackList = toAttack();
+    
+    // Priority 1: Deploy all armies from reinforcement pool first
+    // As long as the player has armies in their reinforcement pool,
+    // they should issue deploy orders and no other orders
+
+    if (reinforcmentPool > 0) {
+
+        // Prioritize Deploy orders while reinforcement pool is not empty
+        if (o->getType() == orders::orderType::DEPLOY) {
+
+            // Deploy to territories from toDefend() list
+			playerOrders.attach(obsPtr); // Attach observer to the order
+            playerOrders.add(o);
+            
+        } 
+        
+        else {
+
+            // Player should deploy first, but still allow other orders
+            cout << "Note: Reinforcement pool has " << reinforcmentPool << " armies. Consider deploying first." << endl;
+			playerOrders.attach(obsPtr); // Attach observer to the order
+            playerOrders.add(o);
+
+        }
+    } 
+    
+    else {
+        
+        // Priority 2: Once all armies are deployed, can issue other types of orders
+        
+        // Handle Advance orders
+        if (o->getType() == orders::orderType::ADVANCE) {
+            // Advance orders use toDefend() for moving armies between owned territories (defense)
+            // or toAttack() for attacking enemy territories
+			playerOrders.attach(obsPtr); // Attach observer to the order
+            playerOrders.add(o);
+        }
+
+        // Handle card-based orders: BOMB, BLOCKADE, AIRLIFT, NEGOTIATE
+        else {
+			playerOrders.attach(obsPtr); // Attach observer to the order
+            playerOrders.add(o);
+        }
+    }
+
+	cout << "Order issued successfully" << endl;
 
 }
 
@@ -78,16 +165,14 @@ void Player::addTerritory(shared_ptr<Map::Territory> t) {
 
 	playerTerritories.push_back(t); 								// adds the given territory to the player's list of territories
 
-    t->setOwnership(shared_from_this());
-
 }
 
 void Player::removeTerritory(shared_ptr<Map::Territory> t) {
 
-    cout << "Removing territory:" << t->getName() << endl;
+    cout << "Removing territory from player" << endl;
 
 	playerTerritories.remove(t); 			        			   // removes the given territory from the player's list of territories
-    t->setOwnership(nullptr);
+
 }
 
 void Player::addCard(shared_ptr<Card> c) {
@@ -137,11 +222,6 @@ Player& Player::operator=(const Player& other) {
 
 	return *this;                                                   // returns a copy of the player
 
-}
-
-bool Player::operator==(const Player& p) const{
-    return playerTerritories == p.playerTerritories && p.reinforcmentPool == reinforcmentPool;
-    //TODO compare  order list and cards aswell
 }
 
 std::ostream& operator<<(std::ostream& os, const Player& p) {

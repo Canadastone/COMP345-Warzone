@@ -210,7 +210,7 @@ private:
 	/*
 	mapping an integer to a player
 	*/
-	unique_ptr<map<int, shared_ptr<Player>>> playersMap;
+	unique_ptr<map<int, unique_ptr<Player>>> playersMap;
 
 	/*
 	using the int keys in playersMap to keep an order of play.
@@ -314,7 +314,7 @@ public:
 	void executeOrdersPhase();
 
 	//getters
-	map<int, shared_ptr<Player>>& getPlayersMap();
+	map<int, unique_ptr<Player>>& getPlayersMap();
     shared_ptr<Map> getCurrMap() const;
     int getNumPlayersInGame();
     Phase getCurrPhase() const;
