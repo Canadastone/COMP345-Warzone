@@ -89,6 +89,10 @@
         "execution": "cpp",
         "mutex": "cpp",
         "print": "cpp",
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "chrono": "cpp",
+        "filesystem": "cpp",
+        "forward_list": "cpp",
+        "iomanip": "cpp"
     }
 }

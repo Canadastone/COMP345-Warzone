@@ -212,6 +212,8 @@ public:
 		* @return Returns a vector that contains the references to all the territories (our nodes) that will be used by the map.
 		*/
 		std::vector<std::shared_ptr<Territory>> generateTerritories();
+
+		std::map<std::string, int> generateContinentControlBonuses();
 		/**
 		*
 		* @brief The function that validates the file before parsing the data
@@ -297,9 +299,9 @@ public:
 	*/
 	bool validate();
 
-	std::map<std::string, std::shared_ptr<Map::Territory>> getAdjacencyMatrix(){
-		return this->adjacencyMatrix;
-	}
+	std::map<std::string, std::shared_ptr<Map::Territory>> getAdjacencyMatrix();
+	std::map<std::string, std::vector<std::shared_ptr<Territory>>> getContinentMap();
+	std::map<std::string, int> getContinentControlBonuses();
 private:
 
 	std::map<std::string, std::shared_ptr<Territory>> adjacencyMatrix;
@@ -307,6 +309,8 @@ private:
 	std::map<std::string, std::vector<std::shared_ptr<Territory>>> continentMap;
 
 	std::string mapName;
+
+	std::map<std::string, int> continentControlBonuses;
 	/**
 	*
 	* @brief Function that intializes the continent map

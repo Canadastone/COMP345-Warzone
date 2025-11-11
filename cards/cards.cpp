@@ -41,11 +41,11 @@ void Card::play() {
 Deck::Deck() {
     // generate a deck
     vector<CardTypeQtyTemplate> deckConfiguration = {
-        { CardType::AIRLIFT, 2 },
-        { CardType::BLOCKADE, 1 },
-        { CardType::BOMB, 1 },
-        { CardType::DIPLOMACY, 1 },
-        { CardType::REINFORCEMENT, 2 }
+        { CardType::AIRLIFT, 15 },
+        { CardType::BLOCKADE, 15 },
+        { CardType::BOMB, 15 },
+        { CardType::DIPLOMACY, 15 },
+        { CardType::REINFORCEMENT, 15 }
     };
     
     for(CardTypeQtyTemplate cardType : deckConfiguration) {

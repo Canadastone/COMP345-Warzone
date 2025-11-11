@@ -1,5 +1,6 @@
 g++ ^
 -fmax-errors=5 ^
+logObserver/LoggingObserver.cpp ^
 orders/orders.cpp ^
 player/player.cpp ^
 map/map.cpp ^
@@ -14,5 +15,6 @@ processor/CommandProcessorDriver.cpp ^
 orders/ordersDriver.cpp ^
 player/playerDriver.cpp ^
 cards/cardsDriver.cpp ^
+logObserver/LoggingObserverDriver.cpp ^
 main/mainDriver.cpp ^
 -o mainDriver
