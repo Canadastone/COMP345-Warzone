@@ -1,5 +1,0 @@
-validatemap
-loadmap map.map
-addplayer josh
-
-add whatever commands to test out the flow
