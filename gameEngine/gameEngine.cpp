@@ -159,7 +159,6 @@ string mapLoadedState::onCommand(Command* cmd, GameEngine& engine) {
 	return effect;
 }
 
-
 /*
 Map Validated State
 */
@@ -184,10 +183,11 @@ Players Added State
 
 string playersAddedState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
-
+	bool sixPlayers = false;
 	if (cmd->getCommandName() == "addplayer") {
 		if (engine.getNumPlayersInGame() + 1 > 6) {
 			effect = "can't add more than 6 players to the game.\n";
+			sixPlayers = true;
 		}
 		else {
 			effect = "added player to the game, stayed in players added state.\n";
@@ -198,7 +198,7 @@ string playersAddedState::onCommand(Command* cmd, GameEngine& engine) {
 	}
 
 
-	else if (cmd->getCommandName() == "gamestart") {
+	if (cmd->getCommandName() == "gamestart" || sixPlayers) {
 		if (engine.getNumPlayersInGame() < 2) {
 			std::cout << "Minimum of 2 players to proceed, currently: " << engine.getNumPlayersInGame() << " players.\n";
 			effect = "Minimum of 2 players required, currently: " + std::to_string(engine.getNumPlayersInGame()) + " players. Went back to players added state.\n";
@@ -253,13 +253,35 @@ AssignReinforcements State
 
 string assignReinforcementsState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect{};
+	auto continentsMap = engine.getCurrMap()->getContinentMap();
+
+
+	std::cout << "\n";
 	for (const int id : *engine.getOrderOfPlay()) {
 		// (# of territories owned divided by 3, rounded down
-		// minimum units to add is 3.
 		int unitsToAssign = engine.getPlayersMap().at(id)->getTerritories().size()/3;
+
+		shared_ptr<Player> player = engine.getPlayersMap().at(id);
+		unordered_set<string> playerTerritories;
+		for (auto& t : player->getTerritories()) {
+        	playerTerritories.insert(t->getName());
+    	}
+		for(auto& p : continentsMap){
+			int count = 0;
+			for(auto& t : p.second){
+				if(playerTerritories.count(t->getName()) > 0)
+					count++;
+				
+			}
+			if(count == p.second.size()){
+				std::cout << "Player " << id << " owns continent " << p.first;
+				unitsToAssign += engine.getCurrMap()->getContinentControlBonuses().at(p.first);
+			}
+
+		}
+		// minimum units to add is 3.
 		if(unitsToAssign < 3) unitsToAssign = 3;
 	
-		// TODO: if player controls continent, add extra units, how ?
 
 		std::cout << "assigned " << unitsToAssign << " units to player " << id << "\n";
 		engine.assignUnitsToPlayer(unitsToAssign, id);
@@ -291,13 +313,34 @@ string issueOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 				isValidOrder = true;
 
 				if (orderType.empty()) continue;
-
-				if (orderType == "BOMB") order = new orders::Bomb();
-				else if (orderType == "DEPLOY") order = new orders::Deploy();
-				else if (orderType == "ADVANCE") order = new orders::Advance();
-				else if (orderType == "BLOCKADE") order = new orders::Blockade();
-				else if (orderType == "AIRLIFT") order = new orders::Airlift();
-				else if (orderType == "NEGOTIATE") order = new orders::Negotiate();
+				
+				/*
+				Deploy(shared_ptr player, int units, shared_ptrMap::Territory target);
+				Advance(shared_ptr player, int units, shared_ptrMap::Territory source, shared_ptrMap::Territory target);
+				Bomb(shared_ptr player, shared_ptrMap::Territory target, shared_ptr bombCard);
+				Blockade(shared_ptr player, shared_ptrMap::Territory target, shared_ptr blockadeCard, shared_ptr neutralPlayer);
+				Airlift(shared_ptr player, int units, shared_ptrMap::Territory source, shared_ptrMap::Territory target, shared_ptr airliftCard);
+				Negotiate(shared_ptr issuer, shared_ptr target, shared_ptr diplomacyCard);
+				
+				*/
+				if (orderType == "BOMB") {
+					order = new orders::Bomb();
+				}
+				else if (orderType == "DEPLOY") {
+					order = new orders::Deploy();
+				}
+				else if (orderType == "ADVANCE") {
+					order = new orders::Advance();
+				}
+				else if (orderType == "BLOCKADE") {
+					order = new orders::Blockade();
+				}
+				else if (orderType == "AIRLIFT") {
+					order = new orders::Airlift();
+				}
+				else if (orderType == "NEGOTIATE") {
+					order = new orders::Negotiate();
+				}
 				else {
 					orderType = "";
 					std::cout << "Invalid Order, please try again: ";
@@ -444,7 +487,7 @@ GameEngine::GameEngine() :
 	//currMap is initially nulls
 	currMap{nullptr},
 	//allocate memory for the players
-	playersMap{ make_unique<map<int, unique_ptr<Player>>>() },
+	playersMap{ make_unique<map<int, shared_ptr<Player>>>() },
 	numPlayersInGame(make_unique<int>(0)),
 	currPhase(Phase::startup),
 	orderOfPlay (make_unique<vector<int>>()){
@@ -476,14 +519,20 @@ Copy constructor definition
 */
 GameEngine::GameEngine(const GameEngine& other){
 	
-	if(other.states){
+	if(other.states && other.playersMap && other.orderOfPlay){
 		//creates a new pointer to a map, then deep copies the states from other into the new map by using the clone method polymorphically.
 		states = make_unique<map<StateID, unique_ptr<State>>>();
 		for(const std::pair<const StateID, unique_ptr<State>>& p : *other.states){
 			(*states)[p.first] = p.second->clone();
 		}
 		//same thing for playersMap
-
+		playersMap = make_unique<map<int, shared_ptr<Player>>>();
+		for(const auto& p : *other.playersMap){
+			(*playersMap)[p.first] = make_shared<Player>(*p.second);
+		}
+		orderOfPlay = make_unique<vector<int>>(*other.orderOfPlay);
+		numPlayersInGame = make_unique<int>(*other.numPlayersInGame);
+		currPhase = other.currPhase;
 		//Update currState to reference the same state (by ID) as in the original GameEngine
 		currState = other.currState ? states->at(other.currState->getID()).get() : nullptr;
 
@@ -493,8 +542,29 @@ GameEngine::GameEngine(const GameEngine& other){
 		currState = nullptr;
 		playersMap = nullptr;
 		currMap = nullptr;
+		orderOfPlay = nullptr;
+		numPlayersInGame = nullptr;
+		currPhase = Phase::startup;
 	}
 	
+}
+/*
+Assignment operator definition
+*/
+GameEngine& GameEngine::operator=(const GameEngine& other){
+	//compare both addresses to check for self assignment
+	if(this != &other){
+		//since the assignment operator also does a deep copy, just use the copy constructor, and then move ownership to assignee.
+		GameEngine tempEngine(other);
+		states = std::move(tempEngine.states);
+		playersMap = std::move(tempEngine.playersMap);
+		orderOfPlay = std::move(tempEngine.orderOfPlay);
+		numPlayersInGame = std::move(tempEngine.numPlayersInGame);
+		currPhase = tempEngine.currPhase;
+		currState = tempEngine.currState;
+	}
+	return *this;
+
 }
 
 void GameEngine::startupPhase(CommandProcessor& commandProcessor) {
@@ -595,20 +665,7 @@ void GameEngine::notify(ILoggable& loggable) const {
 	this->observer->update(loggable);
 }
 
-/*
-Assignment operator definition
-*/
-GameEngine& GameEngine::operator=(const GameEngine& other){
-	//compare both addresses to check for self assignment
-	if(this != &other){
-		//since the assignment operator also does a deep copy, just use the copy constructor, and then move ownership to assignee.
-		GameEngine tempEngine(other);
-		states = std::move(tempEngine.states);
-		currState = tempEngine.currState;
-	}
-	return *this;
 
-}
 /*
 Stream operator definition
 */ 
@@ -660,7 +717,7 @@ void GameEngine::printPlayersInGame() {
 }
 void GameEngine::loadMap() {
 	namespace fs = std::filesystem;
-	fs::path dir_path = "./";
+	fs::path dir_path = "map/map_files/";
 
 	std::cout << "\nChoose from the following maps: \n\n";
 	for(auto& entry : fs::directory_iterator(dir_path)){
@@ -746,7 +803,7 @@ void GameEngine::playerDrawsCard(int playerIdInMap) {
 
 
 //getters
-std::map<int, std::unique_ptr<Player>>& GameEngine::getPlayersMap() {
+std::map<int, std::shared_ptr<Player>>& GameEngine::getPlayersMap() {
     return *playersMap;
 }
 
