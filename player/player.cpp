@@ -59,6 +59,12 @@ Player::Player() {
     cout << "Player created" << endl;                               
     playerHand = make_shared<Hand>();                                   // gives the player a hand of cards by default
     reinforcmentPool = 0;
+    committedReinforcements = 0;
+    playerOrders = orders::OrderList();
+
+    LogObserver observer("./log.txt");
+	std::shared_ptr<LogObserver> obsPtr = std::make_shared<LogObserver>(observer);
+    playerOrders.attach(obsPtr); 
 }
 
 Player::Player(const Player& other) {
@@ -67,6 +73,7 @@ Player::Player(const Player& other) {
 	playerTerritories = other.playerTerritories;                        // copies the player's list of territories
 	playerOrders = other.playerOrders;                                  // copies the player's list of orders
     reinforcmentPool = other.reinforcmentPool;
+    committedReinforcements = other.committedReinforcements;
 }
 
 void Player::assignReinforcments(int numToAdd) {
@@ -148,8 +155,6 @@ bool Player::issueOrder(const std::shared_ptr<Map>& map, Deck* deck) {
     cout << "Issuing an order to player" << endl;
 
     std::shared_ptr<Player> self = shared_from_this();
-
-
     // Get the list of territories to defend (player's own territories in priority)
     list<std::shared_ptr<Map::Territory>> defendList = toDefend();
     printTerritoryList("territories you must defend (territories you own)", defendList);
@@ -172,10 +177,11 @@ bool Player::issueOrder(const std::shared_ptr<Map>& map, Deck* deck) {
         auto target = map->getTerritory(targetName);
         if (!target) { std::cout << "Invalid territory.\n"; return false; }
 
-        std::cout << "How many units to deploy (max " << reinforcmentPool << "): ";
+        int availableReinforcements = reinforcmentPool - committedReinforcements;
+        std::cout << "How many units to deploy (max " << availableReinforcements << "): ";
         int units = 0; std::cin >> units;
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        if (units <= 0 || units > reinforcmentPool) {
+        if (units <= 0 || units > availableReinforcements) {
             std::cout << "Invalid units.\n"; return false;
         }
 
@@ -185,7 +191,7 @@ bool Player::issueOrder(const std::shared_ptr<Map>& map, Deck* deck) {
         return true;
     }
 
-    std::cout << "Enter order  (ADVANCE, BOMB, AIRLIFT, BLOCKADE, NEGOTIATE) or hit Enter to skip: ";
+    std::cout << "No reinforcements left, Enter order (ADVANCE, BOMB, AIRLIFT, BLOCKADE, NEGOTIATE) or hit Enter to skip: ";
     std::string orderType;
     std::getline(std::cin, orderType);
     if (orderType.empty()) return false;
@@ -214,6 +220,11 @@ bool Player::issueOrder(const std::shared_ptr<Map>& map, Deck* deck) {
         playerOrders.add(order);
         return true;
     }
+    if (orderType == "BOMB" || orderType == "AIRLIFT" || orderType == "BLOCKADE" || orderType == "NEGOTIATE"){
+        if(playerHand->getHand().empty()){
+            cout << "Hand is empty must have a card to call this order";
+        }
+    }
 	std::cout << "Order issued successfully" << endl;
 
 }
@@ -222,7 +233,7 @@ void Player::issueOrder(orders::Order* o) {
 
     cout << "Issuing an order to player" << endl;
 
-	LogObserver observer("C:\\Users\\cyrus\\Desktop\\School-Stuff\\COMP345\\COMP345-Warzone-main\\game_log.txt");
+	LogObserver observer("./log.txt");
 	std::shared_ptr<LogObserver> obsPtr = std::make_shared<LogObserver>(observer);
 
     // Get the list of territories to defend (player's own territories in priority)
