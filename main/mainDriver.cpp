@@ -22,8 +22,8 @@ int main() {
     //testLoadMaps();
     //testOrderExecution();
 	//testPlayers();
-    //runProcessor();
-    testLoggingObserver();
+    //testCommandProcessor();
+    //testLoggingObserver();
    return 0;
 
 }
