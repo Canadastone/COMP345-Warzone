@@ -1,5 +1,5 @@
 #include <filesystem>
-#include "gameEngine.h"
+#include "GameEngine.h"
 
 //abstract State constructors definitions
 State::State() = default;
@@ -119,6 +119,7 @@ string startState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
 
 	if (cmd->getCommandName() == "loadmap") {
+
 		engine.loadMap();
 		effect = "loaded map, proceeded to map loaded state.\n";
 		engine.transitionState(StateID::MapLoaded);
@@ -157,7 +158,6 @@ string mapLoadedState::onCommand(Command* cmd, GameEngine& engine) {
 	}
 	return effect;
 }
-
 
 /*
 Map Validated State
@@ -305,7 +305,7 @@ string issueOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 
 		for (const int id : *engine.getOrderOfPlay()) {
 			std::cout << "Enter order for Player " << id << " (DEPLOY, ADVANCE, BOMB, BLOCKADE, AIRLIFT, NEGOTIATE), or blank/Enter to skip your turn: ";
-			shared_ptr<orders::Order> order = nullptr;
+			orders::Order* order = nullptr;
 			bool isValidOrder = true;
 			do {
 				std::string orderType;
@@ -313,13 +313,34 @@ string issueOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 				isValidOrder = true;
 
 				if (orderType.empty()) continue;
-
-				if (orderType == "BOMB") order = std::make_shared<orders::Bomb>();
-				else if (orderType == "DEPLOY") order = std::make_shared<orders::Deploy>();
-				else if (orderType == "ADVANCE") order = std::make_shared<orders::Advance>();
-				else if (orderType == "BLOCKADE") order = std::make_shared<orders::Blockade>();
-				else if (orderType == "AIRLIFT") order = std::make_shared<orders::Airlift>();
-				else if (orderType == "NEGOTIATE") order = std::make_shared<orders::Negotiate>();
+				
+				/*
+				Deploy(shared_ptr player, int units, shared_ptrMap::Territory target);
+				Advance(shared_ptr player, int units, shared_ptrMap::Territory source, shared_ptrMap::Territory target);
+				Bomb(shared_ptr player, shared_ptrMap::Territory target, shared_ptr bombCard);
+				Blockade(shared_ptr player, shared_ptrMap::Territory target, shared_ptr blockadeCard, shared_ptr neutralPlayer);
+				Airlift(shared_ptr player, int units, shared_ptrMap::Territory source, shared_ptrMap::Territory target, shared_ptr airliftCard);
+				Negotiate(shared_ptr issuer, shared_ptr target, shared_ptr diplomacyCard);
+				
+				*/
+				if (orderType == "BOMB") {
+					order = new orders::Bomb();
+				}
+				else if (orderType == "DEPLOY") {
+					order = new orders::Deploy();
+				}
+				else if (orderType == "ADVANCE") {
+					order = new orders::Advance();
+				}
+				else if (orderType == "BLOCKADE") {
+					order = new orders::Blockade();
+				}
+				else if (orderType == "AIRLIFT") {
+					order = new orders::Airlift();
+				}
+				else if (orderType == "NEGOTIATE") {
+					order = new orders::Negotiate();
+				}
 				else {
 					orderType = "";
 					std::cout << "Invalid Order, please try again: ";
@@ -347,23 +368,47 @@ Execute Orders State
 
 string executeOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
-	bool anyOrdersExecuted = false;
-	do{
-		anyOrdersExecuted = false;
+	
+	// Phase 1: Execute all Deploy orders first (in round-robin fashion)
+	std::cout << "=== Executing Deploy Orders ===" << std::endl;
+	bool anyDeployOrdersExecuted = false;
+	do {
+		anyDeployOrdersExecuted = false;
 		for (const int id : *engine.getOrderOfPlay()) {
 			auto& orders = engine.getPlayersMap().at(id)->getOrders();
-			if(orders.size() == 0) continue;
-
 			
-			auto topOrder = orders[orders.size() - 1];
-			std::cout << "executing player " << id << "'s " << topOrder->getTypeAsString() << " order.\n";
-			topOrder->execute();
-			orders.remove(orders.size() - 1);
-			anyOrdersExecuted = true;
+			// Find the first Deploy order in this player's order list
+			for (int i = 0; i < orders.size(); i++) {
+				if (orders[i]->getType() == orders::orderType::DEPLOY) {
+					std::cout << "Executing Player " << id << "'s " << orders[i]->getTypeAsString() << " order.\n";
+					orders[i]->execute(); // validate() is called inside execute()
+					orders.remove(i);
+					anyDeployOrdersExecuted = true;
+					break; // Move to next player after executing one Deploy order
+				}
+			}
 		}
-	} while(anyOrdersExecuted);
-	std::cout << "Successfully finished executing orders.\n";
+	} while (anyDeployOrdersExecuted);
 	
+	// Phase 2: Execute all other orders (in round-robin fashion)
+	std::cout << "\n=== Executing Other Orders ===" << std::endl;
+	bool anyOtherOrdersExecuted = false;
+	do {
+		anyOtherOrdersExecuted = false;
+		for (const int id : *engine.getOrderOfPlay()) {
+			auto& orders = engine.getPlayersMap().at(id)->getOrders();
+			if (orders.size() == 0) continue;
+			
+			// Execute the first order (FIFO - First In First Out)
+			auto nextOrder = orders[0];
+			std::cout << "Executing Player " << id << "'s " << nextOrder->getTypeAsString() << " order.\n";
+			nextOrder->execute(); // validate() is called inside execute()
+			orders.remove(0);
+			anyOtherOrdersExecuted = true;
+		}
+	} while (anyOtherOrdersExecuted);
+	
+	std::cout << "\nSuccessfully finished executing all orders.\n";
 
 	return effect;
 }
@@ -521,6 +566,7 @@ GameEngine& GameEngine::operator=(const GameEngine& other){
 	return *this;
 
 }
+
 void GameEngine::startupPhase(CommandProcessor& commandProcessor) {
 	currState = states->at(StateID::Start).get();
 	std::cout << "Beginning startup, entering state:  " << *this->getState() << "\n";
@@ -530,8 +576,7 @@ void GameEngine::startupPhase(CommandProcessor& commandProcessor) {
 			break;
 		}
 
-		commandProcessor.readCommand();     
-
+		commandProcessor.readCommand();          
 		Command* cmd = commandProcessor.getCommand();
 		bool isValidCommand = commandProcessor.validate(cmd, this->getState()->getID());
 
@@ -574,7 +619,7 @@ void GameEngine::mainGameLoop() {
 
 		}
 		for(int id : playersToRemove){
-			std::cout << "PLAYER " << id << " IS HOMELESS, REMOVING THAT PLATYER!.\n";
+			std::cout << "PLAYER " << id << " IS HOMELESS, REMOVING THAT PLAYER!.\n";
 			playersMap->erase(id);
 			auto it = std::find(orderOfPlay->begin(), orderOfPlay->end(), id);
 			if(it != orderOfPlay->end()) orderOfPlay->erase(it); //checking in case
@@ -619,6 +664,7 @@ void GameEngine::detach() {
 void GameEngine::notify(ILoggable& loggable) const {
 	this->observer->update(loggable);
 }
+
 
 /*
 Stream operator definition
@@ -703,7 +749,7 @@ void GameEngine::loadMap() {
 void GameEngine::addPlayerToGame() {
 	int newPlayerNum = getNumPlayersInGame() + 1;
 	setNumPlayersInGame(newPlayerNum);
-	this->playersMap->emplace(newPlayerNum, make_shared<Player>());
+	this->playersMap->emplace(newPlayerNum, make_unique<Player>());
 	this->playersMap->at(newPlayerNum)->getOrders().attach(this->observer);
 	this->orderOfPlay->push_back(newPlayerNum);
 
@@ -720,7 +766,6 @@ void GameEngine::assignTerritoriesFairly(){
 	for(int i = 0; i < allTerritories.size(); i++){
 		Player* currentPlayer = it->second.get();
 		currentPlayer->addTerritory(allTerritories[i]);
-
 		it++;
 		if(it == playersMap->end()) it = playersMap->begin();
 	}
