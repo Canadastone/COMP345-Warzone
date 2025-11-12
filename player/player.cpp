@@ -10,8 +10,49 @@
 #include "../orders/orders.h"
 #include <iostream>
 #include <list>
+#include <vector>
 
 using namespace std;
+using namespace orders;
+
+static shared_ptr<Map::Territory> promptPick(const string& prompt, const vector<shared_ptr<Map::Territory>>& list) {
+    if (list.empty()) { 
+        cout << "No territories available." << endl; 
+        return nullptr; 
+    }
+
+    cout << "\n" << prompt << "\n";
+    for (size_t i = 0; i < list.size(); ++i) {
+        auto& t = list[i];
+        std::cout << "  [" << i << "] " << t->getName()
+                  << " (units=" << t->getUnits() << ")\n";
+    }
+    cout << "Choose index : ";
+
+    string line; 
+    getline(cin, line);
+    if (line.empty()) return nullptr;
+
+    try {
+        size_t idx = static_cast<size_t>(std::stoul(line));
+        if (idx < list.size()) return list[idx];
+    } catch (...) {}
+    cout << "Invalid choice.\n";
+    return nullptr;
+}
+
+
+static void printTerritoryList(string title, const std::list<std::shared_ptr<Map::Territory>>& terrList) {
+    cout << title << ":" << endl;
+    bool first = true;
+    for (auto& t : terrList) {
+        if (!first) std::cout << ", ";
+        cout << t->getName() << endl;
+        first = false;
+    }
+    cout << endl;
+}
+
 
 Player::Player() {
 
@@ -98,64 +139,77 @@ list<std::shared_ptr<Map::Territory>> Player::toAttack() {
 
 }
 
-void Player::issueOrder(orders::Order* o) {
+bool Player::issueOrder(const std::shared_ptr<Map>& map, Deck* deck) {
 
     cout << "Issuing an order to player" << endl;
 
-	LogObserver observer("C:\\Users\\cyrus\\Desktop\\School-Stuff\\COMP345\\COMP345-Warzone-main\\game_log.txt");
-	std::shared_ptr<LogObserver> obsPtr = std::make_shared<LogObserver>(observer);
+    std::shared_ptr<Player> self = shared_from_this();
+
 
     // Get the list of territories to defend (player's own territories in priority)
     list<std::shared_ptr<Map::Territory>> defendList = toDefend();
+    printTerritoryList("territories you must defend (territories you own)", defendList);
 
     // Get the list of territories to attack (neighboring enemy territories)
     list<std::shared_ptr<Map::Territory>> attackList = toAttack();
+    printTerritoryList("territories you must attack (adjacent territories)", attackList);
     
-    // Priority 1: Deploy all armies from reinforcement pool first
-    // As long as the player has armies in their reinforcement pool,
-    // they should issue deploy orders and no other orders
 
-    if (reinforcmentPool > 0) {
-
-        // Prioritize Deploy orders while reinforcement pool is not empty
-        if (o->getType() == orders::orderType::DEPLOY) {
-
-            // Deploy to territories from toDefend() list
-			playerOrders.attach(obsPtr); // Attach observer to the order
-            playerOrders.add(std::shared_ptr<orders::Order>(o));
-            
-        } 
-        
-        else {
-
-            // Player should deploy first, but still allow other orders
-            cout << "Note: Reinforcement pool has " << reinforcmentPool << " armies. Consider deploying first." << endl;
-			playerOrders.attach(obsPtr); // Attach observer to the order
-            playerOrders.add(std::shared_ptr<orders::Order>(o));
-
-        }
-    } 
-    
-    else {
-        
-        // Priority 2: Once all armies are deployed, can issue other types of orders
-        
-        // Handle Advance orders
-        if (o->getType() == orders::orderType::ADVANCE) {
-            // Advance orders use toDefend() for moving armies between owned territories (defense)
-            // or toAttack() for attacking enemy territories
-			playerOrders.attach(obsPtr); // Attach observer to the order
-            playerOrders.add(std::shared_ptr<orders::Order>(o));
+    //priority deploy if you have reinforcements
+    if(reinforcmentPool > 0){
+        if (defendList.empty()) {
+            std::cout << "No territories to defend. Skipping.\n";
+            return false;
         }
 
-        // Handle card-based orders: BOMB, BLOCKADE, AIRLIFT, NEGOTIATE
-        else {
-			playerOrders.attach(obsPtr); // Attach observer to the order
-            playerOrders.add(std::shared_ptr<orders::Order>(o));
+        cout << "you have active reinforcements you must deploy" << endl;
+        std::cout << "Choose target territory: ";
+        std::string targetName; std::getline(std::cin, targetName);
+        auto target = map->getTerritory(targetName);
+        if (!target) { std::cout << "Invalid territory.\n"; return false; }
+
+        std::cout << "How many units to deploy (max " << reinforcmentPool << "): ";
+        int units = 0; std::cin >> units;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        if (units <= 0 || units > reinforcmentPool) {
+            std::cout << "Invalid units.\n"; return false;
         }
+
+        auto order = std::make_shared<orders::Deploy>(self, units, target);
+        playerOrders.add(order);
+        return true;
     }
 
-	cout << "Order issued successfully" << endl;
+    std::cout << "Enter order  (ADVANCE, BOMB, AIRLIFT, BLOCKADE, NEGOTIATE) or hit Enter to skip: ";
+    std::string orderType;
+    std::getline(std::cin, orderType);
+    if (orderType.empty()) return false;
+
+    // --- ADVANCE ---
+    if (orderType == "ADVANCE") {
+        if (defendList.empty()) { std::cout << "You own no territories. cannot advance\n"; return false; }
+
+        std::cout << "Source (owned) territory name: ";
+        std::string srcName; std::getline(std::cin, srcName);
+        auto src = map->getTerritory(srcName);
+        if (!src) { std::cout << "Invalid source.\n"; return false; }
+
+        std::cout << "Target territory name (must be adjacent to source): ";
+        std::string dstName; std::getline(std::cin, dstName);
+        auto dst = map->getTerritory(dstName);
+        if (!dst) { std::cout << "Invalid target.\n"; return false; }
+
+        std::cout << "Units to move/attack with (available on " << srcName
+                  << ": " << src->getUnits() << "): ";
+        int units = 0; std::cin >> units;
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        if (units <= 0) { std::cout << "Invalid units.\n"; return false; }
+
+        auto order = std::make_shared<orders::Advance>(self, units, src, dst);
+        playerOrders.add(order);
+        return true;
+    }
+	std::cout << "Order issued successfully" << endl;
 
 }
 

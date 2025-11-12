@@ -5,7 +5,7 @@
 #include "../cards/cards.h"
 using namespace std;
 
-class Player {
+class Player : public std::enable_shared_from_this<Player> {
 
 private:
 	list<std::shared_ptr<Map::Territory>> playerTerritories;        // territories owned by the player
@@ -24,7 +24,7 @@ public:
 	void removeCard(std::shared_ptr<Card> c);                       // removes a card from the player's hand
 	list<std::shared_ptr<Map::Territory>> toDefend();				// returns a list of territories the player has to defend
 	list<std::shared_ptr<Map::Territory>> toAttack();				// returns a list of territories the player can attack
-	void issueOrder(orders::Order* o);					// adds an order to the player's list of orders
+	bool issueOrder(const std::shared_ptr<Map>& map, Deck* deck);				// adds an order to the player's list of orders
 	list<std::shared_ptr<Map::Territory>> getTerritories();			// returns the list of territories owned by the player
 	orders::OrderList& getOrders();									// returns the list of orders issued by the player
 	std::shared_ptr<Hand> getHand();								// returns the player's hand of cards
