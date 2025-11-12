@@ -8,6 +8,7 @@ using namespace std;
 class Player : public std::enable_shared_from_this<Player> {
 
 private:
+	int committedReinforcements;
 	list<std::shared_ptr<Map::Territory>> playerTerritories;        // territories owned by the player
 	orders::OrderList playerOrders;              					// orders issued by the player
 	std::shared_ptr<Hand> playerHand;                               // the player's hand of cards
@@ -24,7 +25,8 @@ public:
 	void removeCard(std::shared_ptr<Card> c);                       // removes a card from the player's hand
 	list<std::shared_ptr<Map::Territory>> toDefend();				// returns a list of territories the player has to defend
 	list<std::shared_ptr<Map::Territory>> toAttack();				// returns a list of territories the player can attack
-	bool issueOrder(const std::shared_ptr<Map>& map, Deck* deck);				// adds an order to the player's list of orders
+	bool issueOrder(const std::shared_ptr<Map>& map, Deck* deck);
+	void issueOrder(orders::Order* o);				// adds an order to the player's list of orders
 	list<std::shared_ptr<Map::Territory>> getTerritories();			// returns the list of territories owned by the player
 	orders::OrderList& getOrders();									// returns the list of orders issued by the player
 	std::shared_ptr<Hand> getHand();								// returns the player's hand of cards
@@ -33,7 +35,7 @@ public:
 	void assignReinforcments(int numToAdd);							// assigns reinforcments to the reinforcmentPool
 	int getReinforcementPool() const;								// returns the number of armies in the reinforcement pool
 	void decrementReinforcementPool(int numToRemove);				// removes armies from the reinforcement pool
-
+	void resetCommittedReinforcements();
 
 };
 void testPlayers();													// function to test the Player class

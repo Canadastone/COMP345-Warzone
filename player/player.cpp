@@ -84,6 +84,10 @@ void Player::decrementReinforcementPool(int numToRemove) {
     }
 }
 
+void Player::resetCommittedReinforcements(){
+    committedReinforcements = 0;
+}
+
 list<std::shared_ptr<Map::Territory>> Player::toDefend() {
 
 	list<std::shared_ptr<Map::Territory>> defendList;                   // list of territories to defend
@@ -156,14 +160,14 @@ bool Player::issueOrder(const std::shared_ptr<Map>& map, Deck* deck) {
     
 
     //priority deploy if you have reinforcements
-    if(reinforcmentPool > 0){
+    if(reinforcmentPool - committedReinforcements > 0){
         if (defendList.empty()) {
             std::cout << "No territories to defend. Skipping.\n";
             return false;
         }
 
-        cout << "you have active reinforcements you must deploy" << endl;
-        std::cout << "Choose target territory: ";
+        cout << "you have active reinforcements you must deploy on your territries" << endl;
+        std::cout << "Choose territory to deploy units: ";
         std::string targetName; std::getline(std::cin, targetName);
         auto target = map->getTerritory(targetName);
         if (!target) { std::cout << "Invalid territory.\n"; return false; }
@@ -176,6 +180,7 @@ bool Player::issueOrder(const std::shared_ptr<Map>& map, Deck* deck) {
         }
 
         auto order = std::make_shared<orders::Deploy>(self, units, target);
+        committedReinforcements+=units;
         playerOrders.add(order);
         return true;
     }
@@ -189,7 +194,7 @@ bool Player::issueOrder(const std::shared_ptr<Map>& map, Deck* deck) {
     if (orderType == "ADVANCE") {
         if (defendList.empty()) { std::cout << "You own no territories. cannot advance\n"; return false; }
 
-        std::cout << "Source (owned) territory name: ";
+        std::cout << "from where will you advance your units (Source territory name): ";
         std::string srcName; std::getline(std::cin, srcName);
         auto src = map->getTerritory(srcName);
         if (!src) { std::cout << "Invalid source.\n"; return false; }
@@ -210,6 +215,67 @@ bool Player::issueOrder(const std::shared_ptr<Map>& map, Deck* deck) {
         return true;
     }
 	std::cout << "Order issued successfully" << endl;
+
+}
+
+void Player::issueOrder(orders::Order* o) {
+
+    cout << "Issuing an order to player" << endl;
+
+	LogObserver observer("C:\\Users\\cyrus\\Desktop\\School-Stuff\\COMP345\\COMP345-Warzone-main\\game_log.txt");
+	std::shared_ptr<LogObserver> obsPtr = std::make_shared<LogObserver>(observer);
+
+    // Get the list of territories to defend (player's own territories in priority)
+    list<std::shared_ptr<Map::Territory>> defendList = toDefend();
+
+    // Get the list of territories to attack (neighboring enemy territories)
+    list<std::shared_ptr<Map::Territory>> attackList = toAttack();
+    
+    // Priority 1: Deploy all armies from reinforcement pool first
+    // As long as the player has armies in their reinforcement pool,
+    // they should issue deploy orders and no other orders
+
+    if (reinforcmentPool > 0) {
+
+        // Prioritize Deploy orders while reinforcement pool is not empty
+        if (o->getType() == orders::orderType::DEPLOY) {
+
+            // Deploy to territories from toDefend() list
+			playerOrders.attach(obsPtr); // Attach observer to the order
+            playerOrders.add(std::shared_ptr<orders::Order>(o));
+            
+        } 
+        
+        else {
+
+            // Player should deploy first, but still allow other orders
+            cout << "Note: Reinforcement pool has " << reinforcmentPool << " armies. Consider deploying first." << endl;
+			playerOrders.attach(obsPtr); // Attach observer to the order
+            playerOrders.add(std::shared_ptr<orders::Order>(o));
+
+        }
+    } 
+    
+    else {
+        
+        // Priority 2: Once all armies are deployed, can issue other types of orders
+        
+        // Handle Advance orders
+        if (o->getType() == orders::orderType::ADVANCE) {
+            // Advance orders use toDefend() for moving armies between owned territories (defense)
+            // or toAttack() for attacking enemy territories
+			playerOrders.attach(obsPtr); // Attach observer to the order
+            playerOrders.add(std::shared_ptr<orders::Order>(o));
+        }
+
+        // Handle card-based orders: BOMB, BLOCKADE, AIRLIFT, NEGOTIATE
+        else {
+			playerOrders.attach(obsPtr); // Attach observer to the order
+            playerOrders.add(std::shared_ptr<orders::Order>(o));
+        }
+    }
+
+	cout << "Order issued successfully" << endl;
 
 }
 

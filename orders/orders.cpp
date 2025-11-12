@@ -158,6 +158,7 @@ namespace orders{
         if(validate()){
            executed = true;
            player->assignReinforcments(-units);
+           player->resetCommittedReinforcements();
            target->addUnits(units);
            ostringstream oss;
            oss << units << " units were deployed on " << target->getName();
