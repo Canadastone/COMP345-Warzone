@@ -6,7 +6,7 @@ using namespace std;
 
 void testPlayers() {
 
-    cout << "Testing Player class" << endl;
+    /*cout << "Testing Player class" << endl;
 
 
     Player p1;
@@ -83,6 +83,6 @@ void testPlayers() {
         cout << "Player 3 has " << p3.getTerritories().size() << " territories" << endl;
 
 		// Demonstrate stream insertion operator
-        cout << p1 << endl;
+        cout << p1 << endl;*/
 
     };

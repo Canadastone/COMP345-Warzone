@@ -1,5 +1,5 @@
 #include <filesystem>
-#include "GameEngine.h"
+#include "gameEngine.h"
 
 //abstract State constructors definitions
 State::State() = default;
@@ -299,63 +299,19 @@ Issue Orders State
 
 string issueOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
-	int orderCount;
 	while (true) {
-		orderCount = 0;
+		bool anyIssued = false;
 
-		for (const int id : *engine.getOrderOfPlay()) {
-			std::cout << "Enter order for Player " << id << " (DEPLOY, ADVANCE, BOMB, BLOCKADE, AIRLIFT, NEGOTIATE), or blank/Enter to skip your turn: ";
-			orders::Order* order = nullptr;
-			bool isValidOrder = true;
-			do {
-				std::string orderType;
-				std::getline(std::cin, orderType);
-				isValidOrder = true;
-
-				if (orderType.empty()) continue;
-				
-				/*
-				Deploy(shared_ptr player, int units, shared_ptrMap::Territory target);
-				Advance(shared_ptr player, int units, shared_ptrMap::Territory source, shared_ptrMap::Territory target);
-				Bomb(shared_ptr player, shared_ptrMap::Territory target, shared_ptr bombCard);
-				Blockade(shared_ptr player, shared_ptrMap::Territory target, shared_ptr blockadeCard, shared_ptr neutralPlayer);
-				Airlift(shared_ptr player, int units, shared_ptrMap::Territory source, shared_ptrMap::Territory target, shared_ptr airliftCard);
-				Negotiate(shared_ptr issuer, shared_ptr target, shared_ptr diplomacyCard);
-				
-				*/
-				if (orderType == "BOMB") {
-					order = new orders::Bomb();
-				}
-				else if (orderType == "DEPLOY") {
-					order = new orders::Deploy();
-				}
-				else if (orderType == "ADVANCE") {
-					order = new orders::Advance();
-				}
-				else if (orderType == "BLOCKADE") {
-					order = new orders::Blockade();
-				}
-				else if (orderType == "AIRLIFT") {
-					order = new orders::Airlift();
-				}
-				else if (orderType == "NEGOTIATE") {
-					order = new orders::Negotiate();
-				}
-				else {
-					orderType = "";
-					std::cout << "Invalid Order, please try again: ";
-					isValidOrder = false;
-				}
-
-			} while(!isValidOrder);
-
-			if (order) {
-				engine.getPlayersMap().at(id)->issueOrder(order);
-				orderCount++;
-			}
+		for (int id : *engine.getOrderOfPlay()) {
+			auto player = engine.getPlayersMap().at(id);
+			std::cout << "\n--------- Player " << id << " Issue Order -------------\n";
+			bool issued = player->issueOrder(engine.getCurrMap(), engine.getDeckOfCards());
+			if (issued) anyIssued = true;
 		}
 
-		if (orderCount == 0) break;
+		if (!anyIssued) {
+			break;
+		}
 	}
 	
 	return effect;
@@ -749,7 +705,7 @@ void GameEngine::loadMap() {
 void GameEngine::addPlayerToGame() {
 	int newPlayerNum = getNumPlayersInGame() + 1;
 	setNumPlayersInGame(newPlayerNum);
-	this->playersMap->emplace(newPlayerNum, make_unique<Player>());
+	this->playersMap->emplace(newPlayerNum, make_shared<Player>());
 	this->playersMap->at(newPlayerNum)->getOrders().attach(this->observer);
 	this->orderOfPlay->push_back(newPlayerNum);
 
