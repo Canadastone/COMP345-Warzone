@@ -50,5 +50,5 @@ class CommandProcessor : ILoggable, Subject {
         void detach();
         void notify(ILoggable& loggable) const;
 };
-void runProcessor();
+void testCommandProcessor();
 #endif

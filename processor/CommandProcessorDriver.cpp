@@ -2,7 +2,7 @@
 #include "../gameEngine/gameEngine.h"
 #include "FileCommandProcessorAdapter.h"
 
-void runProcessor() {
+void testCommandProcessor() {
     GameEngine* engine = new GameEngine();
     engine->init();  
     StateID currentState = engine->getState()->getID(); 
@@ -40,7 +40,7 @@ void runProcessor() {
         }
         else {
             string fileName = choice.substr(spaceIndex + 1);
-            FileReader* fr = new FileReader("C:\\Users\\josht\\Documents\\COMP345\\COMP345-Warzone\\processor\\" + fileName);
+            FileReader* fr = new FileReader("C:\\Users\\liamd\\Documents\\Github\\COMP345-Warzone\\processor\\" + fileName);
             FileCommandProcessorAdapter fcp(fr);
             while(true) {
                 fcp.readCommand();
