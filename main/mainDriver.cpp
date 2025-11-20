@@ -7,23 +7,12 @@
 */
 
 #include <iostream>
-#include "../cards/cards.h"
-#include "../gameEngine/gameEngine.h"
-#include "../map/map.h"
-#include "../orders/orders.h"
-#include "../player/player.h"
-#include "../processor/CommandProcessor.h"
-#include "../logObserver/LoggingObserver.h"
+#include "../playerStrategies/PlayerStrategies.h";
 
 void testStartupPhase();
 int main() {
-    //testCards();
-    //testStartupPhase();	
-    //testLoadMaps();
-    //testOrderExecution();
-	//testPlayers();
-    //runProcessor();
-    testLoggingObserver();
-   return 0;
+    
+    testPlayerStrategies();
+    return 0;
 
 }

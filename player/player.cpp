@@ -341,6 +341,10 @@ orders::OrderList& Player::getOrders() {
 
 }
 
+void Player::setStrategy(unique_ptr<PlayerStrategy> strategy) {
+    this->strategy = std::move(strategy);
+}
+
 Player& Player::operator=(const Player& other) {
 
     cout << "Player copy assignment operator called" << endl;
