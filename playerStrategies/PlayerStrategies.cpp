@@ -4,6 +4,10 @@
 #include <memory>
 #include <stdio.h>
 
+void PlayerStrategy::setPlayer(std::shared_ptr<Player> player) {
+    this->player = player;
+}
+
 PlayerStrategy& PlayerStrategy::operator=(const PlayerStrategy& ps) {
 
     if (this != &ps) {
@@ -21,8 +25,6 @@ HumanPlayer::HumanPlayer(std::shared_ptr<Player> player){
     this->player = player;
 }
 bool HumanPlayer::issueOrder() {
-
-    std::cout << "Human Player issued order" << std::endl;
 
     return false;
 }
@@ -46,8 +48,6 @@ AggressivePlayer::AggressivePlayer(std::shared_ptr<Player> player){
 }
 bool AggressivePlayer::issueOrder() {
 
-    std::cout << "Aggressive Player issued order" << std::endl;
-
     return false;
 }
 list<std::shared_ptr<Map::Territory>> AggressivePlayer::toAttack() {
@@ -69,8 +69,6 @@ BenevolentPlayer::BenevolentPlayer(std::shared_ptr<Player> player){
     this->player = player;
 }
 bool BenevolentPlayer::issueOrder() {
-
-    std::cout << "Benevolent Player issued order" << std::endl;
 
     return false;
 }
@@ -94,9 +92,6 @@ NeutralPlayer::NeutralPlayer(std::shared_ptr<Player> player){
 }
 bool NeutralPlayer::issueOrder() {
 
-    std::cout << "Neutral Player issued order" << std::endl;
-
-
     return false;
 }
 list<std::shared_ptr<Map::Territory>> NeutralPlayer::toAttack() {
@@ -118,9 +113,6 @@ CheaterPlayer::CheaterPlayer(std::shared_ptr<Player> player){
     this->player = player;
 }
 bool CheaterPlayer::issueOrder() {
-
-    std::cout << "Cheater Player issued order" << std::endl;
-
 
     return false;
 }

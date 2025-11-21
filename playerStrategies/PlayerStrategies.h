@@ -12,6 +12,7 @@ class PlayerStrategy{
         virtual bool issueOrder() = 0;
         virtual list<std::shared_ptr<Map::Territory>> toAttack() = 0;
         virtual list<std::shared_ptr<Map::Territory>> toDefend() = 0;
+        void setPlayer(std::shared_ptr<Player> player);
         PlayerStrategy& operator=(const PlayerStrategy& ps);
 };
 
