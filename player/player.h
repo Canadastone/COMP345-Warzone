@@ -3,8 +3,10 @@
 #include "../orders/orders.h"
 #include "../map/map.h"
 #include "../cards/cards.h"
+#include "../playerStrategies/PlayerStrategies.h"
 using namespace std;
 
+class PlayerStrategy;
 class Player : public std::enable_shared_from_this<Player> {
 
 private:
@@ -15,6 +17,7 @@ private:
 
 	//temporary reinforcmentPool (number of armies a player has in their pool)
 	int reinforcmentPool;
+	unique_ptr<PlayerStrategy> strategy;
 
 public:
 	Player();                                                       // default constructor
@@ -36,6 +39,6 @@ public:
 	int getReinforcementPool() const;								// returns the number of armies in the reinforcement pool
 	void decrementReinforcementPool(int numToRemove);				// removes armies from the reinforcement pool
 	void resetCommittedReinforcements();
-
+	void setStrategy(unique_ptr<PlayerStrategy> strategy);
 };
 void testPlayers();													// function to test the Player class
