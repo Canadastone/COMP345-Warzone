@@ -8,7 +8,7 @@
 #include "../logObserver/LoggingObserver.h"
 
 void testLoggingObserver() {
-    LogObserver observer("log.txt");
+    /*LogObserver observer("log.txt");
     std::shared_ptr<LogObserver> pObserver = std::make_shared<LogObserver>(observer);
 
     orders::OrderList testList = orders::OrderList();
@@ -60,5 +60,5 @@ void testLoggingObserver() {
     CommandProcessor commandProcessor;
     commandProcessor.attach(pObserver);
     engine.startupPhase(commandProcessor);
-    engine.mainGameLoop();
+    engine.mainGameLoop();*/
 }

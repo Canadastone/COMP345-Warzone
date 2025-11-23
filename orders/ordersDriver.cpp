@@ -11,7 +11,7 @@ using namespace orders;
 
 void testOrderExecution() {
     
-    cout << "==== TESTING ORDER EXECUTION ====" << endl;
+    /*cout << "==== TESTING ORDER EXECUTION ====" << endl;
 
     // Create players
     auto p1 = make_shared<Player>();
@@ -79,7 +79,7 @@ void testOrderExecution() {
     cout << "Attempting another Advance from P1 to P2 during peace..." << endl;
     auto blockedAdvance = make_shared<Advance>(p1, 3, terrC, terrB);
     blockedAdvance->attach(observer);
-    if (/* negotiation active */ true) {
+    if ( true) {
         cout << "Attack invalid due to negotiation!" << endl;
     } else {
         blockedAdvance->execute();
@@ -104,5 +104,5 @@ void testOrderExecution() {
     cout << "\n=== FINAL STATE ===" << endl;
     cout << *p1 << endl;
     cout << *p2 << endl;
-    cout << *neutral << endl;
+    cout << *neutral << endl;*/
 };

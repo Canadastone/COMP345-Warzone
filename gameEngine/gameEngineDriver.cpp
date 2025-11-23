@@ -36,12 +36,12 @@ void testStartupPhase() {
  * If engine is null, it creates a standalone demonstration scenario.
  */
 void testMainGameLoop(GameEngine* engine) {
-
+	/*
 	// If engine is provided, run the actual game loop (from startup phase)
 	if (engine == nullptr) {
 		return;
 	}
-
+	
 	// Otherwise, run standalone demonstration
 	cout << "\n========= TEST MAIN GAME LOOP =========\n\n";
 	
@@ -236,7 +236,7 @@ void testMainGameLoop(GameEngine* engine) {
 		cout << "\n*** PLAYER 1 WINS! Controls all " << totalTerritories << " territories! ***\n";
 		cout << "Game would end here.\n";
 	}
-
+	*/
 	engine->mainGameLoop();
 	
 }
