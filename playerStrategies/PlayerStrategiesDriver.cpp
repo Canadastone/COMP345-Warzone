@@ -8,7 +8,7 @@ class Map;
 void testPlayerStrategies(){
 
 	auto player = std::make_shared<Player>();
-	std::shared_ptr<Map> map = std::make_shared<Map>("Africa.map");
+	std::shared_ptr<Map> map = std::make_shared<Map>("map/map_files/Africa.map");
 	
 	Deck deck;
 	Deck* p_deck = &deck;

@@ -91,6 +91,14 @@ void Hand::useCard(shared_ptr<Card> card, Deck& deck) {
 multiset<shared_ptr<Card>> Hand::getHand() {
     return hand;
 }
+bool Hand::contains(CardType type) const {
+    for (const auto& card : hand) {
+        if (card->getCardType() == type) {
+            return true;
+        }
+    }
+    return false;
+}
 int Hand::size() const {
     return hand.size();
 }

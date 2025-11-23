@@ -40,11 +40,13 @@ static bool hasSufficientUnits(Map::Territory& terr, int units){
 static void transferOwnership(shared_ptr<Player> prevOwner, shared_ptr<Player> nextOwner, shared_ptr<Map::Territory> terr){
     prevOwner->removeTerritory(terr);
     nextOwner->addTerritory(terr);
+    terr->setOwnership(nextOwner);
 }
 
 namespace orders{
 
-    
+    std::shared_ptr<Player> Order::neutralPlayer;
+
     Order::Order(const orderType t)
     :   type(t),
         executed(false),
@@ -65,6 +67,12 @@ namespace orders{
         return executed;
     }
 
+    shared_ptr<Player> Order::getNeutral(){
+        if (!neutralPlayer) {
+        neutralPlayer = std::make_shared<Player>();
+        }
+        return neutralPlayer;
+    }
     //returns type of order as a string
     string Order::getTypeAsString() const{
         switch (type){ 
@@ -123,6 +131,30 @@ namespace orders{
         os << order.getTypeAsString() << " Order, " << order.effect;
             return os;
     }
+
+   // static helper implementation
+    std::set<std::pair<const Player*, const Player*>> Order::s_truces;
+
+    std::pair<const Player*, const Player*>Order::normPair(const std::shared_ptr<Player>& a, const std::shared_ptr<Player>& b) {
+        const Player* pa = a.get();
+        const Player* pb = b.get();
+        return (pa < pb) ? std::make_pair(pa, pb) : std::make_pair(pb, pa);
+    }
+
+    void Order::addTruce(const std::shared_ptr<Player>& a, const std::shared_ptr<Player>& b) {
+        if (!a || !b || a.get() == b.get()) return;
+        s_truces.insert(normPair(a, b));
+    }
+
+    bool Order::haveTruce(const std::shared_ptr<Player>& a, const std::shared_ptr<Player>& b) {
+        if (!a || !b || a.get() == b.get()) return false;
+        return s_truces.count(normPair(a, b)) != 0;
+    }
+
+    void Order::clearTruces() {
+        s_truces.clear();
+    }
+
 
     //Children Implementations of the Order Class:
 
@@ -194,16 +226,19 @@ namespace orders{
       {} 
 
     bool Advance::validate() const{
-        if(Order::validate()){
-            return belongsToPlayer(*player, *source) && areAdjacent(*source, *target) && hasSufficientUnits(*source, units);
-        }
-        return false;
+        if(!Order::validate()) return false;
+
+        shared_ptr<Player> defender = target->getOwnership();
+        if (Order::haveTruce(player, defender)) return false; 
+
+        return belongsToPlayer(*player, *source) && areAdjacent(*source, *target) && hasSufficientUnits(*source, units);
     }
 
     void Advance::execute(){
         if(!validate()){
             effect = "execution failed, Order is Invalid";
             this->notifyOrder(*this);
+            return;
         } 
         executed = true;
         source->removeUnits(units);
@@ -248,7 +283,6 @@ namespace orders{
         effect = oss.str();
  
         if(defensiveUnits == 0 && attackingUnits > 0){
-            player->addTerritory(target);
             target->setUnits(attackingUnits);
             transferOwnership(target->getOwnership(), player, target);
         } else {
@@ -264,13 +298,15 @@ namespace orders{
         :   Order(orderType::BOMB),
             player(nullptr),
             target(nullptr),
+            deck(nullptr),
             bombCard(nullptr)     
         {} 
 
-    Bomb::Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> bombCard)
+    Bomb::Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, Deck* deck, shared_ptr<Card> bombCard)
         :   Order(orderType::BOMB),
             player(player),
             target(target),
+            deck(deck),
             bombCard(bombCard)
         {} 
 
@@ -278,6 +314,7 @@ namespace orders{
         :   Order(bomb),
             player(bomb.player),
             target(bomb.target),
+            deck(deck),
             bombCard(bomb.bombCard)
         {} 
 
@@ -294,7 +331,7 @@ namespace orders{
     void Bomb::execute(){
         if(validate()){
             executed = true;
-            bombCard->play();
+            player->getHand()->useCard(bombCard, *deck);
             int initialUnits = target->getUnits();
             target->setUnits(initialUnits / 2);
             ostringstream oss;
@@ -311,16 +348,16 @@ namespace orders{
       : Order(orderType::BLOCKADE),
         player(nullptr),
         target(nullptr),
-        blockadeCard(nullptr),
-        neutralPlayer(nullptr)
+        deck(nullptr),
+        blockadeCard(nullptr)
       {}
 
-    Blockade::Blockade(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> blockadeCard, shared_ptr<Player> neutralPlayer)
+    Blockade::Blockade(shared_ptr<Player> player, shared_ptr<Map::Territory> target, Deck* deck, shared_ptr<Card> blockadeCard)
       : Order(orderType::BLOCKADE),
         player(player),
         target(target),
-        blockadeCard(blockadeCard),
-        neutralPlayer(neutralPlayer)
+        deck(deck),
+        blockadeCard(blockadeCard)
       {}
 
 
@@ -328,23 +365,24 @@ namespace orders{
       : Order(blockade),
         player(blockade.player),
         target(blockade.target),
-        blockadeCard(blockade.blockadeCard),
-        neutralPlayer(blockade.neutralPlayer)
+        deck(blockade.deck),
+        blockadeCard(blockade.blockadeCard)
     {}
 
     bool Blockade::validate() const{
         if(Order::validate()){
             return belongsToPlayer(*player, *target) && blockadeCard->getCardType() == CardType::BLOCKADE;
         }
+        return false;
     }
 
     void Blockade::execute(){
        if(validate()){
             executed = true;
-            blockadeCard->play();
+            player->getHand()->useCard(blockadeCard, *deck);
             player->removeTerritory(target);
             target->setUnits(target->getUnits()*2);
-            transferOwnership(player, neutralPlayer, target);
+            transferOwnership(player, getNeutral(), target);
             ostringstream oss;
             oss << target->getName() << " blockaded. Neutral Player now occupies it with "
             << target->getUnits() << " units";
@@ -360,13 +398,15 @@ namespace orders{
     : Order(orderType::NEGOTIATE),
       issuer(nullptr),
       target(nullptr),
+      deck(nullptr),
       diplomacyCard(nullptr)
     {}
 
-    Negotiate::Negotiate(shared_ptr<Player> issuer, shared_ptr<Player> target, shared_ptr<Card> diplomacyCard)
+    Negotiate::Negotiate(shared_ptr<Player> issuer, shared_ptr<Player> target, Deck* deck, shared_ptr<Card> diplomacyCard)
     : Order(orderType::NEGOTIATE),
       issuer(issuer),
       target(target),
+      deck(deck),
       diplomacyCard(diplomacyCard)
     {}
     
@@ -375,6 +415,7 @@ namespace orders{
     : Order(orderType::NEGOTIATE),
       issuer(negotiate.issuer),
       target(negotiate.target),
+      deck(negotiate.deck),
       diplomacyCard(negotiate.diplomacyCard)
     {}
 
@@ -388,8 +429,10 @@ namespace orders{
     void Negotiate::execute(){
         if(validate()){
             executed = true;
-            diplomacyCard->play();
-            //TODO add tag to players so that they cant attack eachother for this round.;
+            issuer->getHand()->useCard(diplomacyCard, *deck);
+ 
+            Order::addTruce(issuer, target);
+
             ostringstream oss;
             oss << "issuer" << " and " << "target player"
             << " negotiated. They can no longer attack eachother this round";
@@ -407,14 +450,16 @@ namespace orders{
         units(0),
         source(nullptr),
         target(nullptr),
+        deck(nullptr),
         airliftCard(nullptr)
     {}
-    Airlift::Airlift(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target, shared_ptr<Card> airliftCard)
+    Airlift::Airlift(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target, Deck* deck, shared_ptr<Card> airliftCard)
       : Order(orderType::AIRLIFT),
         player(player),
         units(units),
         source(source),
         target(target),
+        deck(deck),
         airliftCard(airliftCard)
     {}
 
@@ -424,6 +469,7 @@ namespace orders{
         units(airlift.units),
         source(airlift.source),
         target(airlift.target),
+        deck(airlift.deck),
         airliftCard(airlift.airliftCard)
     {}
         
@@ -433,12 +479,13 @@ namespace orders{
             return belongsToPlayer(*player, *target) && belongsToPlayer(*player, *source) 
                     && airliftCard->getCardType() == CardType::AIRLIFT && hasSufficientUnits(*source, units);
         }
+        return false;
     }
 
     void Airlift::execute(){
        if(validate()){
             executed = true;
-            airliftCard->play();
+            player->getHand()->useCard(airliftCard, *deck);
             source->removeUnits(units);
         
             target->addUnits(units);
@@ -549,14 +596,9 @@ namespace orders{
     }
     
     OrderList& OrderList::operator=(const OrderList& other){
-        
-        if(this == &other){
-            return *this;
-        }
-        
-        for(int i = 0; i < size(); i++){
-            add(other[i]);
-        }
+        if (this == &other) return *this;
+        orders.clear();
+        for (int i=0; i<other.size(); ++i) add(other[i]);
         return *this;
     }
 

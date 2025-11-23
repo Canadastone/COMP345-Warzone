@@ -28,7 +28,7 @@ public:
 	void removeCard(std::shared_ptr<Card> c);                       // removes a card from the player's hand
 	list<std::shared_ptr<Map::Territory>> toDefend();				// returns a list of territories the player has to defend
 	list<std::shared_ptr<Map::Territory>> toAttack();				// returns a list of territories the player can attack
-	bool issueOrder(const std::shared_ptr<Map>& map, Deck* deck);
+	bool issueOrder(const map<int, shared_ptr<Player>>& players, const std::shared_ptr<Map>& map, Deck* deck);
 	void issueOrder(orders::Order* o);				// adds an order to the player's list of orders
 	list<std::shared_ptr<Map::Territory>> getTerritories();			// returns the list of territories owned by the player
 	orders::OrderList& getOrders();									// returns the list of orders issued by the player
@@ -36,6 +36,7 @@ public:
 	Player& operator=(const Player& p);								// copy assignment operator
 	friend ostream& operator<<(ostream& os, const Player& p);		// stream insertion operator
 	void assignReinforcments(int numToAdd);							// assigns reinforcments to the reinforcmentPool
+	void commitReinforcements(int unitsToCommit);
 	int getReinforcementPool() const;								// returns the number of armies in the reinforcement pool
 	void decrementReinforcementPool(int numToRemove);				// removes armies from the reinforcement pool
 	void resetCommittedReinforcements();

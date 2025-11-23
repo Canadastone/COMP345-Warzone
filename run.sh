@@ -11,6 +11,8 @@ gameEngine/gameEngine.cpp \
 processor/Command.cpp \
 processor/CommandProcessor.cpp \
 processor/FileCommandProcessorAdapter.cpp \
+playerStrategies/playerStrategies.cpp \
+playerStrategies/playerStrategiesDriver.cpp \
 map/mapDriver.cpp \
 gameEngine/gameEngineDriver.cpp \
 processor/CommandProcessorDriver.cpp \

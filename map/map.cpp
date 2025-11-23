@@ -24,7 +24,7 @@ Map::Map(std::string filePath) {
 	MapLoader loader(filePath);
 	validFile = loader.validateFile();
 	if (!validFile) {
-		std::cout << "Invalid file, cannot create map..." << std::endl;
+		std::cout << "Invalid file: " << filePath << ", cannot create map..." << std::endl;
 		return;
 	}
 	std::vector<std::shared_ptr<Territory>> territories = loader.generateTerritories();
@@ -303,7 +303,7 @@ Map::Territory& Map::Territory::operator=(const Territory& territory) {
 }
 
 bool Map::Territory::operator==(const Territory& other) const {
-    return units == other.units && name == other.name && continent == other.continent;
+    name == other.name && continent == other.continent;
 }
 
 std::ostream& operator<<(std::ostream& os, const Map::Territory& territory) {

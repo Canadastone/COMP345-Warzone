@@ -1,5 +1,6 @@
 #include <filesystem>
 #include "gameEngine.h"
+#include "../orders/orders.h"
 
 //abstract State constructors definitions
 State::State() = default;
@@ -299,13 +300,13 @@ Issue Orders State
 
 string issueOrdersState::onCommand(Command* cmd, GameEngine& engine) {
 	string effect;
+	orders::Order::clearTruces();
 	while (true) {
 		bool anyIssued = false;
-
 		for (int id : *engine.getOrderOfPlay()) {
 			auto player = engine.getPlayersMap().at(id);
 			std::cout << "\n--------- Player " << id << " Issue Order -------------\n";
-			bool issued = player->issueOrder(engine.getCurrMap(), engine.getDeckOfCards());
+			bool issued = player->issueOrder(engine.getPlayersMap(), engine.getCurrMap(), engine.getDeckOfCards());
 			if (issued) anyIssued = true;
 		}
 

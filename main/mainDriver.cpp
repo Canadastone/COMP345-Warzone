@@ -8,11 +8,13 @@
 
 #include <iostream>
 #include "../playerStrategies/PlayerStrategies.h";
+#include "../gameEngine/gameEngine.h"
 
 void testStartupPhase();
 int main() {
     
-    testPlayerStrategies();
+    //testPlayerStrategies();
+    testStartupPhase();
     return 0;
 
 }

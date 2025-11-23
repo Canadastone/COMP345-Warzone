@@ -40,7 +40,7 @@ void testCommandProcessor() {
         }
         else {
             string fileName = choice.substr(spaceIndex + 1);
-            FileReader* fr = new FileReader("C:\\Users\\liamd\\Documents\\Github\\COMP345-Warzone\\processor\\" + fileName);
+            FileReader* fr = new FileReader("./processor/" + fileName);
             FileCommandProcessorAdapter fcp(fr);
             while(true) {
                 fcp.readCommand();

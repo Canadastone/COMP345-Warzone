@@ -9,6 +9,7 @@
 */
 #include <iostream>
 #include <vector>
+#include <set>
 #include <string>
 #include <memory> 
 #include "../map/map.h"
@@ -35,7 +36,11 @@ namespace orders{
 
         private:
             std::shared_ptr<LogObserver> observer;
-       
+
+            //static fields fro order excecution
+            static shared_ptr<Player> neutralPlayer;
+            static std::set<std::pair<const Player*, const Player*>> s_truces;
+            static std::pair<const Player*, const Player*> normPair(const std::shared_ptr<Player>& a, const std::shared_ptr<Player>& b);
         protected:
 
             orderType type; 
@@ -59,6 +64,7 @@ namespace orders{
             orderType getType() const;
             bool isExecuted() const;
             std::string getTypeAsString() const;
+            
 
             //checks the validity of the order
             virtual bool validate() const;
@@ -79,6 +85,12 @@ namespace orders{
 
             //Subject notify helper method
             void notifyOrder(Order& order);
+
+            //static helpers
+            static shared_ptr<Player> getNeutral();
+            static void addTruce(const std::shared_ptr<Player>& a, const std::shared_ptr<Player>& b);
+            static bool haveTruce(const std::shared_ptr<Player>& a, const std::shared_ptr<Player>& b);
+            static void clearTruces(); 
     }; 
 
     //class Deploy, Child of abstract Order
@@ -119,12 +131,13 @@ namespace orders{
       private:
         shared_ptr<Player> player;
         shared_ptr<Map::Territory> target;
+        Deck* deck;
         shared_ptr<Card> bombCard;
         
       public:
 
         Bomb();
-        Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> bombCard);
+        Bomb(shared_ptr<Player> player, shared_ptr<Map::Territory> target, Deck* deck, shared_ptr<Card> bombCard);
         Bomb(const Bomb& bomb);
         bool validate() const override;
         void execute() override; 
@@ -134,13 +147,13 @@ namespace orders{
       private:
         shared_ptr<Player> player;
         shared_ptr<Map::Territory> target;
+        Deck* deck;
         shared_ptr<Card> blockadeCard;
-        shared_ptr<Player> neutralPlayer;
 
       public:
 
         Blockade();
-        Blockade(shared_ptr<Player> player, shared_ptr<Map::Territory> target, shared_ptr<Card> blockadeCard, shared_ptr<Player> neutralPlayer);
+        Blockade(shared_ptr<Player> player, shared_ptr<Map::Territory> target, Deck* deck, shared_ptr<Card> blockadeCard);
         Blockade(const Blockade& blockade);
         bool validate() const override;
         void execute() override;
@@ -152,12 +165,13 @@ namespace orders{
         int units;
         shared_ptr<Map::Territory> target;
         shared_ptr<Map::Territory> source;
+        Deck* deck;
         shared_ptr<Card> airliftCard;
 
       public:
 
         Airlift();
-        Airlift(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target, shared_ptr<Card> airliftCard);
+        Airlift(shared_ptr<Player> player, int units, shared_ptr<Map::Territory> source, shared_ptr<Map::Territory> target, Deck* deck, shared_ptr<Card> airliftCard);
         Airlift(const Airlift& airlift);
         bool validate() const override;
         void execute() override;
@@ -167,11 +181,12 @@ namespace orders{
       private:
         shared_ptr<Player> issuer;
         shared_ptr<Player> target;
+        Deck* deck;
         shared_ptr<Card> diplomacyCard;
 
       public:
         Negotiate();
-        Negotiate(shared_ptr<Player> issuer, shared_ptr<Player> target, shared_ptr<Card> diplomacyCard);
+        Negotiate(shared_ptr<Player> issuer, shared_ptr<Player> target, Deck* deck, shared_ptr<Card> diplomacyCard);
         Negotiate(const Negotiate& negotiate);
         bool validate() const override;
         void execute() override;

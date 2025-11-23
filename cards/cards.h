@@ -55,6 +55,7 @@ class Hand {
         void addCard(shared_ptr<Card> card);
         void useCard(shared_ptr<Card> card, Deck& deck);
         multiset<shared_ptr<Card>> getHand();
+        bool contains(CardType type) const;
         int size() const;
 };
 void testCards();
