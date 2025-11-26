@@ -251,7 +251,12 @@ namespace orders{
             this->notifyOrder(*this);
             return;
         }
-        
+       
+        // convert NeutralPlayer to AggressivePlayer when attacked
+        shared_ptr<Player> defender = target->getOwnership();
+        if (defender) {
+            defender->convertNeutralIfAttacked();
+        }
         int attackKillCount(0);
         int defendKillCount(0);
         int attackingUnits(units);
@@ -330,6 +335,13 @@ namespace orders{
 
     void Bomb::execute(){
         if(validate()){
+
+            // convert NeutralPlayer to AggressivePlayer when attacked
+            shared_ptr<Player> defender = target->getOwnership();
+            if (defender) {
+                defender->convertNeutralIfAttacked();
+            }
+            
             executed = true;
             player->getHand()->useCard(bombCard, *deck);
             int initialUnits = target->getUnits();

@@ -193,6 +193,16 @@ void Player::issueOrder(orders::Order* o) {
 
 }
 
+// converts NeutralPlayer to AggressivePlayer when attacked
+void Player::convertNeutralIfAttacked() {
+    if (strategy && strategy->isNeutral()) {
+        std::shared_ptr<Player> self = shared_from_this();
+        strategy = std::make_unique<AggressivePlayer>(self);
+    }
+}
+
+PlayerStrategy* Player::getStrategy() const { return strategy.get(); }
+
 void Player::addTerritory(shared_ptr<Map::Territory> t) {
 
     cout << "Assigned territory: " << t->getName() << endl;
