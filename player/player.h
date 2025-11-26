@@ -38,8 +38,11 @@ public:
 	void assignReinforcments(int numToAdd);							// assigns reinforcments to the reinforcmentPool
 	void commitReinforcements(int unitsToCommit);
 	int getReinforcementPool() const;								// returns the number of armies in the reinforcement pool
+	int getCommitedReinforcements() const;
 	void decrementReinforcementPool(int numToRemove);				// removes armies from the reinforcement pool
 	void resetCommittedReinforcements();
 	void setStrategy(unique_ptr<PlayerStrategy> strategy);
+	void addOrder(std::shared_ptr<orders::Order> order);
+	
 };
 void testPlayers();													// function to test the Player class
