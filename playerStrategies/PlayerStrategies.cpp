@@ -18,6 +18,42 @@ PlayerStrategy& PlayerStrategy::operator=(const PlayerStrategy& ps) {
     return *this;
 }
 
+static list<shared_ptr<Map::Territory>> getalladjacentTerritories(const shared_ptr<Player> player){
+    list<std::shared_ptr<Map::Territory>> attackList;
+    // Find all neighboring territories that are NOT owned by this player
+    // These are potential attack targets
+    for (auto& ownedTerritory : player->getTerritories()) {
+        // Get all connected territories
+        auto connectedTerritories = ownedTerritory->getConnectedTerritories();
+
+        for (auto& neighbor : connectedTerritories) {
+            // Check if this neighbor is NOT owned by the player
+            bool isOwned = false;
+            for (auto& playerTerritory : player->getTerritories()) {
+                if (playerTerritory->getName() == neighbor->getName()) {
+                    isOwned = true;
+                    break;
+                }
+            }
+
+            // If not owned and not already in attack list, add it
+            if (!isOwned) {
+                bool alreadyInList = false;
+                for (auto& attackTarget : attackList) {
+                    if (attackTarget->getName() == neighbor->getName()) {
+                        alreadyInList = true;
+                        break;
+                    }
+                }
+                if (!alreadyInList) {
+                    attackList.push_back(neighbor);
+                }
+            }
+        }
+    }
+    return attackList;  
+}
+
 static void printTerritoryList(string title, const list<std::shared_ptr<Map::Territory>>& terrList) {
     cout << title << ":" << endl;
     bool first = true;
@@ -296,40 +332,7 @@ bool HumanPlayer::issueOrder(const map<int, shared_ptr<Player>>& players, const 
 }
 list<std::shared_ptr<Map::Territory>> HumanPlayer::toAttack() {
 
-    list<std::shared_ptr<Map::Territory>> attackList;
-    // Find all neighboring territories that are NOT owned by this player
-    // These are potential attack targets
-    for (auto& ownedTerritory : player->getTerritories()) {
-        // Get all connected territories
-        auto connectedTerritories = ownedTerritory->getConnectedTerritories();
-
-        for (auto& neighbor : connectedTerritories) {
-            // Check if this neighbor is NOT owned by the player
-            bool isOwned = false;
-            for (auto& playerTerritory : player->getTerritories()) {
-                if (playerTerritory->getName() == neighbor->getName()) {
-                    isOwned = true;
-                    break;
-                }
-            }
-
-            // If not owned and not already in attack list, add it
-            if (!isOwned) {
-                bool alreadyInList = false;
-                for (auto& attackTarget : attackList) {
-                    if (attackTarget->getName() == neighbor->getName()) {
-                        alreadyInList = true;
-                        break;
-                    }
-                }
-                if (!alreadyInList) {
-                    attackList.push_back(neighbor);
-                }
-            }
-        }
-    }
-
-    return attackList;
+    return getalladjacentTerritories(player);
 }
 list<std::shared_ptr<Map::Territory>> HumanPlayer::toDefend() {
     list<std::shared_ptr<Map::Territory>> defendList;                   // list of territories to defend
@@ -349,17 +352,65 @@ AggressivePlayer::AggressivePlayer(std::shared_ptr<Player> player) {
     this->player = player;
 }
 bool AggressivePlayer::issueOrder(const map<int, shared_ptr<Player>>& players, const std::shared_ptr<Map>& map, Deck* deck) {
+        //strongest territory
+    auto strongestTerritory = player->toDefend().front();
 
+    //if player has reinforcemnts deploy them on strongest defended terrritory
+    if(player->getReinforcementPool() > 0){
+        player->addOrder(std::make_shared<orders::Deploy>(player,player->getReinforcementPool(), strongestTerritory));
+        player->assignReinforcments(player->getReinforcementPool());
+        return true;
+    }
+    //strongest enemy territory
+    auto attackList = this->toAttack();
+    auto target = attackList.front();
+
+    //if has bomb card use it on enemy territory with most units
+    if (!attackList.empty() && player->getHand()->contains(CardType::BOMB)) {
+        for (const auto& card : player->getHand()->getHand()) {
+            if (card->getCardType() == CardType::BOMB) {
+                auto order = std::make_shared<orders::Bomb>(player, target, deck, card);
+                player->addOrder(order);
+                return true;
+            }
+        }
+    }
+
+    //finally advance units from you r strongest to the oponenets strongest nation
+    if (!attackList.empty()) {
+
+        int armiesToSend = strongestTerritory->getUnits();
+
+        auto advanceOrder = std::make_shared<orders::Advance>(player,strongestTerritory,target,armiesToSend);
+
+        player->addOrder(advanceOrder);
+        return true;
+    }
     return false;
 }
+//gets all adjacent territories and sorts them by number of units on them (attack the strongest armies)
 list<std::shared_ptr<Map::Territory>> AggressivePlayer::toAttack() {
-    list<std::shared_ptr<Map::Territory>> list;
-
+    list<std::shared_ptr<Map::Territory>> list =  getalladjacentTerritories(player);
+    
+    // Sort in Descending order of army count.
+    list.sort([](const std::shared_ptr<Map::Territory>& a, const std::shared_ptr<Map::Territory>& b) {
+        return a->getUnits() > b->getUnits();  
+    });
     return list;
 }
-list<std::shared_ptr<Map::Territory>> AggressivePlayer::toDefend() {
-    list<std::shared_ptr<Map::Territory>> list;
 
+//gets all of its own territories and sorts them by number of units on them (defend the strongest armies)
+list<std::shared_ptr<Map::Territory>> AggressivePlayer::toDefend() {
+    //getting all territories owned by the player
+    list<std::shared_ptr<Map::Territory>> list;
+    for (auto& territory : player->getTerritories()) {
+        list.push_back(territory);
+    }
+    // Sort in Descending order of army count.
+    list.sort([](const std::shared_ptr<Map::Territory>& a, const std::shared_ptr<Map::Territory>& b) {
+        return a->getUnits() > b->getUnits();   
+    });
+    
     return list;
 }
 
@@ -372,16 +423,89 @@ BenevolentPlayer::BenevolentPlayer(std::shared_ptr<Player> player) {
 }
 bool BenevolentPlayer::issueOrder(const map<int, shared_ptr<Player>>& players, const std::shared_ptr<Map>& map, Deck* deck) {
 
-    return false;
-}
-list<std::shared_ptr<Map::Territory>> BenevolentPlayer::toAttack() {
-    list<std::shared_ptr<Map::Territory>> list;
+    
+    // deploys on territory that has least amount of army units
+    
 
+    if (player->getReinforcementPool() > 0) {
+        auto defendList = this->toDefend();
+        if (!defendList.empty()) {
+            auto weakest = defendList.front(); // lowest army territory
+            int reinforcements = player->getReinforcementPool();
+
+            player->addOrder(std::make_shared<orders::Deploy>(
+                player,
+                weakest,
+                reinforcements
+            ));
+
+            player->assignReinforcments(player->getReinforcementPool());
+            return true;
+        }
+    }
+
+    //if has diplomacy card will use it
+    if (player->getHand()->contains(CardType::DIPLOMACY)) {
+        for (const auto& card : player->getHand()->getHand()) {
+            auto targetPlayer = players.at(0);
+            if (card->getCardType() == CardType::DIPLOMACY) {
+                auto order = std::make_shared<orders::Negotiate>(player,targetPlayer, deck, card);
+                player->addOrder(order);
+                return true;
+            }
+        }
+    }
+
+    //advances armies to distribute them cleanly
+    auto defendList = this->toDefend();
+    if (defendList.size() >= 2) {
+
+        auto weakest = defendList.front();
+        auto strongest = defendList.back();
+
+        // Only move if strongest has enough armies to spare
+        if (strongest->getUnits() > 1) {
+            int moveAmount = strongest->getUnits() / 2;  // move half
+
+            auto advanceOrder = std::make_shared<orders::Advance>(
+                player,
+                strongest,
+                weakest,
+                moveAmount
+            );
+
+            player->addOrder(advanceOrder);
+            return true;
+        }
+    }
+    return false;
+} 
+//returns a list of its own territories (never attacks others)
+list<std::shared_ptr<Map::Territory>> BenevolentPlayer::toAttack() {
+
+    //getting all territories owned by the player
+    list<std::shared_ptr<Map::Territory>> list;
+    for (auto& territory : player->getTerritories()) {
+        list.push_back(territory);
+    }
+    // Sort in Ascending order of army count.
+    list.sort([](const std::shared_ptr<Map::Territory>& a, const std::shared_ptr<Map::Territory>& b) {
+        return a->getUnits() < b->getUnits();   
+    });
     return list;
 }
+//returns its own territories sorted by least amount of units
 list<std::shared_ptr<Map::Territory>> BenevolentPlayer::toDefend() {
+    
+    //getting all territories owned by the player
     list<std::shared_ptr<Map::Territory>> list;
-
+    for (auto& territory : player->getTerritories()) {
+        list.push_back(territory);
+    }
+    // Sort in Ascending order of army count.
+    list.sort([](const std::shared_ptr<Map::Territory>& a, const std::shared_ptr<Map::Territory>& b) {
+        return a->getUnits() < b->getUnits();   
+    });
     return list;
 }
 
