@@ -13,8 +13,8 @@
 void testStartupPhase();
 int main() {
     
-    //testPlayerStrategies();
-    testStartupPhase();
+    testPlayerStrategies();
+    //testStartupPhase();
     return 0;
 
 }
