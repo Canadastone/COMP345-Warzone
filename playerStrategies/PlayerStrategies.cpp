@@ -17,6 +17,7 @@ PlayerStrategy& PlayerStrategy::operator=(const PlayerStrategy& ps) {
 
     return *this;
 }
+
 static void printTerritoryList(string title, const list<std::shared_ptr<Map::Territory>>& terrList) {
     cout << title << ":" << endl;
     bool first = true;
@@ -38,17 +39,6 @@ static void printHand(Player& player) {
             cout << card->getCardType() << " CARD" << endl;
         }
     }
-}
-
-static int pickOrderType(bool reinforcementLock) {
-    //TODO cant skip, must add functionality
-    string OrderTypePrompt = "Enter order number (DEPLOY [1], ADVANCE [2], BOMB [3], AIRLIFT [4], BLOCKADE [5], NEGOTIATE [6]) or [0] to skip: ";
-    int pick = promptPickInteger(OrderTypePrompt, 0, 7);
-    if (reinforcementLock && (pick != 1 && pick != 0)) {
-        cout << "you must choose DEPLOY [1], since you have units in your reinforcement poool" << endl;
-        return pickOrderType(reinforcementLock);
-    }
-    return pick;
 }
 
 static int promptPickInteger(string prompt, int lowerBound, int upperBound) {
@@ -98,6 +88,19 @@ static std::shared_ptr<Player>promptPickPlayer(const std::string& prompt, const 
     }
     return it->second;
 }
+
+static int pickOrderType(bool reinforcementLock) {
+    //TODO cant skip, must add functionality
+    string OrderTypePrompt = "Enter order number (DEPLOY [1], ADVANCE [2], BOMB [3], AIRLIFT [4], BLOCKADE [5], NEGOTIATE [6]) or [0] to skip: ";
+    int pick = promptPickInteger(OrderTypePrompt, 0, 7);
+    if (reinforcementLock && (pick != 1 && pick != 0)) {
+        cout << "you must choose DEPLOY [1], since you have units in your reinforcement poool" << endl;
+        return pickOrderType(reinforcementLock);
+    }
+    return pick;
+}
+
+
 
 static shared_ptr<orders::Deploy> promptDeployOrder(const shared_ptr<Player>& player, const list<shared_ptr<Map::Territory>>& defendList, int reinforcementPool, int committedReinforcements) {
 
