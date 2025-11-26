@@ -379,7 +379,7 @@ bool AggressivePlayer::issueOrder(const map<int, shared_ptr<Player>>& players, c
 
         int armiesToSend = strongestTerritory->getUnits();
 
-        auto advanceOrder = std::make_shared<orders::Advance>(player,strongestTerritory,target,armiesToSend);
+        auto advanceOrder = std::make_shared<orders::Advance>(player, armiesToSend,strongestTerritory,target);
 
         player->addOrder(advanceOrder);
         return true;
@@ -433,8 +433,8 @@ bool BenevolentPlayer::issueOrder(const map<int, shared_ptr<Player>>& players, c
 
             player->addOrder(std::make_shared<orders::Deploy>(
                 player,
-                weakest,
-                reinforcements
+                reinforcements,
+                weakest
             ));
 
             player->assignReinforcments(player->getReinforcementPool());
@@ -467,9 +467,9 @@ bool BenevolentPlayer::issueOrder(const map<int, shared_ptr<Player>>& players, c
 
             auto advanceOrder = std::make_shared<orders::Advance>(
                 player,
+                moveAmount,
                 strongest,
-                weakest,
-                moveAmount
+                weakest
             );
 
             player->addOrder(advanceOrder);
