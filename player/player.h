@@ -43,6 +43,6 @@ public:
 	void resetCommittedReinforcements();
 	void setStrategy(unique_ptr<PlayerStrategy> strategy);
 	void addOrder(std::shared_ptr<orders::Order> order);
-	
+
 };
 void testPlayers();													// function to test the Player class
