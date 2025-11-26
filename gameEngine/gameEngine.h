@@ -103,6 +103,17 @@ public:
 };
 
 /*
+Tournament state
+*/
+class tournamentState : public StateTemplate<StateID::Tournament> {
+public:
+	using StateTemplate<StateID::Tournament>::StateTemplate;
+
+	string onCommand(Command* cmd, GameEngine& engine) override;
+	unique_ptr<State> clone() const override;
+};
+
+/*
 Map loaded state
 */
 class mapLoadedState : public StateTemplate<StateID::MapLoaded> {
@@ -306,7 +317,10 @@ public:
 	*/
 	void playerDrawsCard(int playerIdInMap);
 
-
+	/*
+	handles functionality of tournament mode
+	*/
+	void tournamentMode(std::string args, GameEngine& engine);
 
 	void mainGameLoop();
 	void reinforcmentPhase();
@@ -333,3 +347,4 @@ public:
 	void notify(ILoggable& loggable) const;
 };
 void testStartupPhase();
+void testTournament();

@@ -1,5 +1,8 @@
 #include <filesystem>
+#include <cctype>
+#include <typeinfo>
 #include "gameEngine.h"
+#include "../playerStrategies/PlayerStrategies.h"
 #include "../orders/orders.h"
 
 //abstract State constructors definitions
@@ -126,9 +129,24 @@ string startState::onCommand(Command* cmd, GameEngine& engine) {
 		engine.transitionState(StateID::MapLoaded);
 		
 	}
+	else if (cmd->getCommandName() == "tournament") {
+		effect = "tournament mode selected...";
+		engine.transitionState(StateID::Tournament);
+	}
 	
 	
 	return effect;
+}
+
+/*
+Tournament State
+*/
+
+string tournamentState::onCommand(Command* cmd, GameEngine& engine) {
+	std::string argumentString = cmd->getArgument();
+	std::cout << argumentString << std::endl;
+
+	return "Tournament Over";
 }
 
 
@@ -451,7 +469,7 @@ GameEngine::GameEngine() :
 
 
 	//allocate memory to every state and place them in the states map (key: stateID, val: unique_ptr to State object)
-	states->emplace(StateID::Start, make_unique<startState>("start", unordered_set<string>{ "loadmap" })); // StateTemplate(const string& stateName, const unordered_set<string>& stateValidCommands);
+	states->emplace(StateID::Start, make_unique<startState>("start", unordered_set<string>{ "loadmap", "tournament" })); // StateTemplate(const string& stateName, const unordered_set<string>& stateValidCommands);
 
 	states->emplace(StateID::MapLoaded, make_unique<mapLoadedState>("mapLoaded", unordered_set<string>{ "loadmap", "validatemap" }));
 
@@ -551,6 +569,202 @@ void GameEngine::startupPhase(CommandProcessor& commandProcessor) {
 		delete cmd;
 	}
 	
+}
+
+void GameEngine::tournamentMode(std::string args, GameEngine& engine) {
+	std::cout << "In tournament mode..." << std::endl;
+
+	bool containsMapArg = std::string::npos != args.find("-M");
+	bool containsPlayerArg = std::string::npos != args.find("-P");
+	bool containsGamesArg = std::string::npos != args.find("-G");
+	bool containsMaxTurnsArg = std::string::npos != args.find("-D");
+
+	//Validate all necessary arguments are there
+	bool isValidCommand = containsMapArg && containsPlayerArg && containsGamesArg && containsMaxTurnsArg;
+
+	if (!isValidCommand) {
+		std::cout << "Missing necessary arguments. Ending...";
+		return;
+	}
+
+	std::vector<Map> mapList;
+	std::vector<unique_ptr<PlayerStrategy>> playerStrategyList;
+	int numGames = -1;
+	int maxNumTurns = -1;
+
+	std::string currentArg = "N/A";	//This will be set, and when it is all currentValues will be added to that arguments variable
+	std::string currentValue = "";	//Current value being constructed by chars to be added to the respective variable
+
+	//Parse the argument data into variables mapList, playerStrategyList, numGames and maxNumTurns
+	std::vector<char> argChars(args.begin(), args.end());
+	for (int i = 0; i < argChars.size(); i++) {
+		char currentChar = argChars[i];
+
+		if (currentChar == '-' && i < argChars.size() - 1) {
+			char argType = argChars[i + 1];
+			currentArg.clear();
+			currentArg += currentChar;
+			currentArg += argType;
+			i += 1; //This moves the index over to the argType, so that when we continue the next iteration starts after the argType
+			continue;
+		}
+		if (currentArg == "N/A")
+			continue;
+		//Parse data into Maps
+		if (currentArg == "-M") {
+
+			if (currentChar == ' ' && currentValue.size() != 0) {
+				Map mapElement(currentValue);
+				mapList.push_back(mapElement);
+				currentValue.clear();
+			}
+
+			//If there is a space at the beginning
+			if (currentChar == ' ')
+				continue;
+
+			currentValue += currentChar;
+
+		}
+		//Parse data into PlayerStrategies
+		else if (currentArg == "-P") {
+
+			if (currentChar == ' ' && currentValue.size() != 0) {
+				if (currentValue == "Neutral") {
+					playerStrategyList.push_back(make_unique<NeutralPlayer>());
+				}
+				else if (currentValue == "Cheater") {
+					playerStrategyList.push_back(make_unique<CheaterPlayer>());
+				}
+				else if (currentValue == "Human") {
+					playerStrategyList.push_back(make_unique<HumanPlayer>());
+				}
+				else if (currentValue == "Aggressive") {
+					playerStrategyList.push_back(make_unique<AggressivePlayer>());
+				}
+				else if (currentValue == "Benevolent") {
+					playerStrategyList.push_back(make_unique<BenevolentPlayer>());
+				}
+				else {
+					std::cout << "Invalid Player Strategy. Exiting..." << std::endl;
+					return;
+				}
+				currentValue.clear();
+			}
+
+			//If there is a space at the beginning
+			if (currentChar == ' ')
+				continue;
+
+			currentValue += currentChar;
+		}
+		//Parse data into numGames
+		else if (currentArg == "-G") {
+
+			if (currentChar == ' ' && currentValue.size() != 0) {
+				numGames = std::stoi(currentValue);
+				currentValue = "";
+				continue;
+			}
+
+			//If there is a space at the beginning, or the number of games has already been set, continue.
+			else if (currentChar == ' ' || numGames != -1)
+				continue;
+
+			bool charIsDigit = isdigit(currentChar);
+			if (charIsDigit) {
+				currentValue += currentChar;
+			}
+			else {
+				std::cout << "Game arg is not a digit. Exiting..." << std::endl;
+				return;
+			}
+		}
+		//Parse data into maxNumTurns
+		else if (currentArg == "-D") {
+
+			//If we reach the end of the string
+			if (i == argChars.size() - 1 && currentChar != ' ') {
+				bool charIsDigit = isdigit(currentChar);
+
+				if (charIsDigit) {
+					currentValue += currentChar;
+					maxNumTurns = std::stoi(currentValue);
+					currentValue.clear();
+					continue;
+				}
+				else {
+					std::cout << "Max Turns arg is not a digit. Exiting..." << std::endl;
+					return;
+				}
+			}
+			//If you reach the end of a word
+			else if (currentChar == ' ' && currentValue.size() != 0) {
+				maxNumTurns = std::stoi(currentValue);
+				currentValue.clear();
+				continue;
+			}
+
+			//If there is a space at the beginning, or the number of turns has already been set, continue.
+			if (currentChar == ' ' || maxNumTurns != -1)
+				continue;
+
+			bool charIsDigit = isdigit(currentChar);
+			if (charIsDigit) {
+				currentValue += currentChar;
+			}
+			else {
+				std::cout << "Max Turns arg is not a digit. Exiting..." << std::endl;
+				return;
+			}
+		}
+		else {
+			std::cout << "Error, unknown argument. Exiting..." << std::endl;
+			return;
+		}
+
+	}
+
+	//Validate all map files
+	for (Map map : mapList) {
+		bool result = map.validate();
+
+		if (!result) {
+			std::cout << "Invalid map file(s). Exiting..." << std::endl;
+			return;
+		}
+	}
+
+	//Create players and assign the player strategies to them
+	std::vector<std::shared_ptr<Player>> players;
+	for (int i = 0; i < playerStrategyList.size(); i++) {
+		std::shared_ptr<Player> p = make_shared<Player>();
+		p->setStrategy(std::move(playerStrategyList.at(i)));
+		players.push_back(p);
+		this->playersMap->emplace(i, p);
+		this->orderOfPlay->push_back(i);
+	}
+
+	shuffleOrderOfPlay();
+
+	//Tournament Game Loop
+	for (int game = 0; game < numGames; game++) {
+		for (int mapNum = 0; mapNum < mapList.size(); mapNum++) {
+			this->currMap = make_shared<Map>(mapList.at(mapNum));
+			//Fairly assign territories to all players
+			assignTerritoriesFairly();
+
+			for (int round = 0; round < maxNumTurns; round++) {
+				//reinforcement phase
+				reinforcmentPhase();
+				//issueOrdersPhase
+				issueOrdersPhase();
+				//executeOrdersPhase
+				executeOrdersPhase();
+			}
+		}
+	}
+
 }
 
 
@@ -674,7 +888,8 @@ void GameEngine::printPlayersInGame() {
 }
 void GameEngine::loadMap() {
 	namespace fs = std::filesystem;
-	fs::path dir_path = "map/map_files/";
+	//fs::path dir_path = "map/map_files/";
+	fs::path dir_path = "./";
 
 	std::cout << "\nChoose from the following maps: \n\n";
 	for(auto& entry : fs::directory_iterator(dir_path)){

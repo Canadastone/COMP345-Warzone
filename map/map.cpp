@@ -303,7 +303,7 @@ Map::Territory& Map::Territory::operator=(const Territory& territory) {
 }
 
 bool Map::Territory::operator==(const Territory& other) const {
-    name == other.name && continent == other.continent;
+    return name == other.name && continent == other.continent;
 }
 
 std::ostream& operator<<(std::ostream& os, const Map::Territory& territory) {

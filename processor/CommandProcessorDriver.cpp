@@ -11,8 +11,10 @@ void testCommandProcessor() {
     std::getline(cin, choice);
     if(choice == "-console") {
         CommandProcessor commandProcessor;
+        auto pObserver = std::make_shared<LogObserver>("log.txt");
+        commandProcessor.attach(pObserver);
         while(true) {
-            commandProcessor.readCommand();          
+            commandProcessor.readCommand();   
             Command* cmd = commandProcessor.getCommand();
             if (cmd == nullptr) {
                 std::cout << "No command read.\n";
