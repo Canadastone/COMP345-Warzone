@@ -1089,3 +1089,6 @@ void GameEngine::setNumPlayersInGame(int currNumOfPlayers){
 	*this->numPlayersInGame = currNumOfPlayers;
 }
 
+unique_ptr<State> tournamentState::clone() const {
+    return std::unique_ptr<tournamentState>(new tournamentState(*this));
+}

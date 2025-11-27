@@ -21,6 +21,7 @@ player/playerDriver.cpp \
 cards/cardsDriver.cpp \
 logObserver/LoggingObserver.cpp \
 logObserver/loggingObserverDriver.cpp \
+gameEngine/tournamentDriver.cpp \
 main/mainDriver.cpp \
 -o mainDriver
 
