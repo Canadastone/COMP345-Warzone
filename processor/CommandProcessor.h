@@ -17,6 +17,7 @@ struct CommandRule {
 };
 
 const std::map<std::string, CommandRule> commandRules = {
+    { "tournament", { { StateID::Start }, StateID::Tournament } },
     { "loadmap", { { StateID::Start, StateID::MapLoaded }, StateID::MapLoaded } },
     { "validatemap", { { StateID::MapLoaded }, StateID::MapValidated } },
     { "addplayer", { { StateID::MapValidated, StateID::PlayersAdded }, StateID::PlayersAdded } },

@@ -45,5 +45,6 @@ public:
 	void addOrder(std::shared_ptr<orders::Order> order);
 	PlayerStrategy* getStrategy() const;							// returns a pointer to the player's strategy
     void convertNeutralIfAttacked();    							// converts NeutralPlayer to AggressivePlayer when attacked
+	std::string getStrategyName();
 };
 void testPlayers();													// function to test the Player class

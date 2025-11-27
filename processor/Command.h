@@ -11,6 +11,7 @@ Enum representing states, used as a parameter to the template classes below.
 */
 enum class StateID {
 	Start,
+    Tournament,
 	MapLoaded,
 	MapValidated,
 	PlayersAdded,

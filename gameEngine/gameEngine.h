@@ -103,6 +103,17 @@ public:
 };
 
 /*
+Tournament state
+*/
+class tournamentState : public StateTemplate<StateID::Tournament> {
+public:
+	using StateTemplate<StateID::Tournament>::StateTemplate;
+
+	string onCommand(Command* cmd, GameEngine& engine) override;
+	unique_ptr<State> clone() const override;
+};
+
+/*
 Map loaded state
 */
 class mapLoadedState : public StateTemplate<StateID::MapLoaded> {
@@ -236,6 +247,18 @@ private:
 	current "global game phase" (Startup, play) as per A2 instructions.
 	*/
 	Phase currPhase;
+
+	/*
+	Checks if the tournament is over (Only applicable to the tournament command).
+	*/
+	bool tournamentOver;
+
+	std::vector<std::string> tournamentMapNames;
+	std::vector<std::string> tournamentPlayerStrategies;
+	int tournamentNumGames;
+	int tournamentNumRounds;
+
+	std::vector<std::string> tournamentWinners;
 	
 public:
 	
@@ -306,7 +329,10 @@ public:
 	*/
 	void playerDrawsCard(int playerIdInMap);
 
-
+	/*
+	handles functionality of tournament mode
+	*/
+	void tournamentMode(std::string args, GameEngine& engine);
 
 	void mainGameLoop();
 	void reinforcmentPhase();
@@ -333,3 +359,4 @@ public:
 	void notify(ILoggable& loggable) const;
 };
 void testStartupPhase();
+void testTournament();

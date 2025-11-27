@@ -128,8 +128,13 @@ list<std::shared_ptr<Map::Territory>> Player::toAttack() {
 
 }
 
-bool Player::issueOrder(const map<int, shared_ptr<Player>>& players, const std::shared_ptr<Map>& map, Deck* deck) {
+std::string Player::getStrategyName() {
+    return this->strategy->getName();
+}
 
+bool Player::issueOrder(const map<int, shared_ptr<Player>>& players, const std::shared_ptr<Map>& map, Deck* deck) {
+    bool result = this->strategy->issueOrder(players, map, deck);
+    return result;
 }
 
 void Player::issueOrder(orders::Order* o) {

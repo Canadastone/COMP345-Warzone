@@ -15,6 +15,7 @@ public:
     void setPlayer(std::shared_ptr<Player> player);
     PlayerStrategy& operator=(const PlayerStrategy& ps);
     virtual bool isNeutral() const = 0;
+    virtual std::string getName() = 0;
 };
 
 class HumanPlayer : public PlayerStrategy {
@@ -25,6 +26,7 @@ public:
     list<std::shared_ptr<Map::Territory>> toAttack();
     list<std::shared_ptr<Map::Territory>> toDefend();
     bool isNeutral() const override;
+    std::string getName();
 };
 
 class AggressivePlayer : public PlayerStrategy {
@@ -35,6 +37,7 @@ public:
     list<std::shared_ptr<Map::Territory>> toAttack();
     list<std::shared_ptr<Map::Territory>> toDefend();
     bool isNeutral() const override;
+    std::string getName();
 };
 
 class BenevolentPlayer : public PlayerStrategy {
@@ -45,6 +48,7 @@ public:
     list<std::shared_ptr<Map::Territory>> toAttack();
     list<std::shared_ptr<Map::Territory>> toDefend();
     bool isNeutral() const override;
+    std::string getName();
 };
 
 class NeutralPlayer : public PlayerStrategy {
@@ -55,6 +59,7 @@ public:
     list<std::shared_ptr<Map::Territory>> toAttack();
     list<std::shared_ptr<Map::Territory>> toDefend();
     bool isNeutral() const override;
+    std::string getName();
 };
 
 class CheaterPlayer : public PlayerStrategy {
@@ -65,6 +70,7 @@ public:
     list<std::shared_ptr<Map::Territory>> toAttack();
     list<std::shared_ptr<Map::Territory>> toDefend();
     bool isNeutral() const override;
+    std::string getName();
 };
 
 void testPlayerStrategies();
