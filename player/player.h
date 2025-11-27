@@ -43,6 +43,7 @@ public:
 	void resetCommittedReinforcements();
 	void setStrategy(unique_ptr<PlayerStrategy> strategy);
 	void addOrder(std::shared_ptr<orders::Order> order);
-	
+	PlayerStrategy* getStrategy() const;							// returns a pointer to the player's strategy
+    void convertNeutralIfAttacked();    							// converts NeutralPlayer to AggressivePlayer when attacked
 };
 void testPlayers();													// function to test the Player class

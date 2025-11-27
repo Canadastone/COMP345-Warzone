@@ -4,61 +4,67 @@
 #include "../player/player.h"
 #include "../map/map.h"
 
-class PlayerStrategy{
-    protected:
-        std::shared_ptr<Player> player;
+class PlayerStrategy {
+protected:
+    std::shared_ptr<Player> player;
 
-    public:
-        virtual bool issueOrder() = 0;
-        virtual list<std::shared_ptr<Map::Territory>> toAttack() = 0;
-        virtual list<std::shared_ptr<Map::Territory>> toDefend() = 0;
-        void setPlayer(std::shared_ptr<Player> player);
-        PlayerStrategy& operator=(const PlayerStrategy& ps);
+public:
+    virtual bool issueOrder(const map<int, shared_ptr<Player>>& players, const std::shared_ptr<Map>& map, Deck* deck) = 0;
+    virtual list<std::shared_ptr<Map::Territory>> toAttack() = 0;
+    virtual list<std::shared_ptr<Map::Territory>> toDefend() = 0;
+    void setPlayer(std::shared_ptr<Player> player);
+    PlayerStrategy& operator=(const PlayerStrategy& ps);
+    virtual bool isNeutral() const = 0;
 };
 
-class HumanPlayer: public PlayerStrategy{
-    public:
+class HumanPlayer : public PlayerStrategy {
+public:
     HumanPlayer();
     HumanPlayer(std::shared_ptr<Player> player);
-    bool issueOrder();
+    bool issueOrder(const map<int, shared_ptr<Player>>& players, const std::shared_ptr<Map>& map, Deck* deck);
     list<std::shared_ptr<Map::Territory>> toAttack();
     list<std::shared_ptr<Map::Territory>> toDefend();
+    bool isNeutral() const override;
 };
 
-class AggressivePlayer: public PlayerStrategy{
-    public:
+class AggressivePlayer : public PlayerStrategy {
+public:
     AggressivePlayer();
     AggressivePlayer(std::shared_ptr<Player> player);
-    bool issueOrder();
+    bool issueOrder(const map<int, shared_ptr<Player>>& players, const std::shared_ptr<Map>& map, Deck* deck);
     list<std::shared_ptr<Map::Territory>> toAttack();
     list<std::shared_ptr<Map::Territory>> toDefend();
+    bool isNeutral() const override;
 };
 
-class BenevolentPlayer: public PlayerStrategy{
-    public:
+class BenevolentPlayer : public PlayerStrategy {
+public:
     BenevolentPlayer();
     BenevolentPlayer(std::shared_ptr<Player> player);
-    bool issueOrder();
+    bool issueOrder(const map<int, shared_ptr<Player>>& players, const std::shared_ptr<Map>& map, Deck* deck);
     list<std::shared_ptr<Map::Territory>> toAttack();
     list<std::shared_ptr<Map::Territory>> toDefend();
+    bool isNeutral() const override;
 };
 
-class NeutralPlayer: public PlayerStrategy{
-    public:
+class NeutralPlayer : public PlayerStrategy {
+public:
     NeutralPlayer();
     NeutralPlayer(std::shared_ptr<Player> player);
-    bool issueOrder();
+    bool issueOrder(const map<int, shared_ptr<Player>>& players, const std::shared_ptr<Map>& map, Deck* deck);
     list<std::shared_ptr<Map::Territory>> toAttack();
     list<std::shared_ptr<Map::Territory>> toDefend();
+    bool isNeutral() const override;
 };
 
-class CheaterPlayer: public PlayerStrategy{
-    public:
+class CheaterPlayer : public PlayerStrategy {
+public:
     CheaterPlayer();
     CheaterPlayer(std::shared_ptr<Player> player);
-    bool issueOrder();
+    bool issueOrder(const map<int, shared_ptr<Player>>& players, const std::shared_ptr<Map>& map, Deck* deck);
     list<std::shared_ptr<Map::Territory>> toAttack();
     list<std::shared_ptr<Map::Territory>> toDefend();
+    bool isNeutral() const override;
 };
 
 void testPlayerStrategies();
