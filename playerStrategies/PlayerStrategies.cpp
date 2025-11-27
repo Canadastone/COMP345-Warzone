@@ -54,42 +54,6 @@ static list<shared_ptr<Map::Territory>> getalladjacentTerritories(const shared_p
     return attackList;  
 }
 
-static list<shared_ptr<Map::Territory>> getalladjacentTerritories(const shared_ptr<Player> player){
-    list<std::shared_ptr<Map::Territory>> attackList;
-    // Find all neighboring territories that are NOT owned by this player
-    // These are potential attack targets
-    for (auto& ownedTerritory : player->getTerritories()) {
-        // Get all connected territories
-        auto connectedTerritories = ownedTerritory->getConnectedTerritories();
-
-        for (auto& neighbor : connectedTerritories) {
-            // Check if this neighbor is NOT owned by the player
-            bool isOwned = false;
-            for (auto& playerTerritory : player->getTerritories()) {
-                if (playerTerritory->getName() == neighbor->getName()) {
-                    isOwned = true;
-                    break;
-                }
-            }
-
-            // If not owned and not already in attack list, add it
-            if (!isOwned) {
-                bool alreadyInList = false;
-                for (auto& attackTarget : attackList) {
-                    if (attackTarget->getName() == neighbor->getName()) {
-                        alreadyInList = true;
-                        break;
-                    }
-                }
-                if (!alreadyInList) {
-                    attackList.push_back(neighbor);
-                }
-            }
-        }
-    }
-    return attackList;  
-}
-
 static void printTerritoryList(string title, const list<std::shared_ptr<Map::Territory>>& terrList) {
     cout << title << ":" << endl;
     bool first = true;
@@ -378,6 +342,9 @@ list<std::shared_ptr<Map::Territory>> HumanPlayer::toDefend() {
     }
     return defendList;
 }
+std::string HumanPlayer::getName() {
+    return "Human";
+}
 
 //AggressivePlayer
 AggressivePlayer::AggressivePlayer() {
@@ -393,7 +360,7 @@ bool AggressivePlayer::issueOrder(const map<int, shared_ptr<Player>>& players, c
     //if player has reinforcemnts deploy them on strongest defended terrritory
     if(player->getReinforcementPool() > 0){
         player->addOrder(std::make_shared<orders::Deploy>(player,player->getReinforcementPool(), strongestTerritory));
-        player->assignReinforcments(player->getReinforcementPool());
+        player->decrementReinforcementPool(player->getReinforcementPool());
         return true;
     }
     //strongest enemy territory
@@ -416,14 +383,17 @@ bool AggressivePlayer::issueOrder(const map<int, shared_ptr<Player>>& players, c
 
         int armiesToSend = strongestTerritory->getUnits();
 
-        auto advanceOrder = std::make_shared<orders::Advance>(player, armiesToSend,strongestTerritory,target);
+        if (armiesToSend > 0) {
+            auto advanceOrder = std::make_shared<orders::Advance>(player, armiesToSend,strongestTerritory,target);
+            player->addOrder(advanceOrder);
 
-        player->addOrder(advanceOrder);
-        return true;
+            return true;
+        }
+        return false;
     }
     return false;
 }
-//gets all adjacent territories and sorts them by number of units on them (attack the strongest armies)
+
 //gets all adjacent territories and sorts them by number of units on them (attack the strongest armies)
 list<std::shared_ptr<Map::Territory>> AggressivePlayer::toAttack() {
     list<std::shared_ptr<Map::Territory>> list =  getalladjacentTerritories(player);
@@ -432,16 +402,8 @@ list<std::shared_ptr<Map::Territory>> AggressivePlayer::toAttack() {
     list.sort([](const std::shared_ptr<Map::Territory>& a, const std::shared_ptr<Map::Territory>& b) {
         return a->getUnits() > b->getUnits();  
     });
-    list<std::shared_ptr<Map::Territory>> list =  getalladjacentTerritories(player);
-    
-    // Sort in Descending order of army count.
-    list.sort([](const std::shared_ptr<Map::Territory>& a, const std::shared_ptr<Map::Territory>& b) {
-        return a->getUnits() > b->getUnits();  
-    });
     return list;
 }
-
-//gets all of its own territories and sorts them by number of units on them (defend the strongest armies)
 
 //gets all of its own territories and sorts them by number of units on them (defend the strongest armies)
 list<std::shared_ptr<Map::Territory>> AggressivePlayer::toDefend() {
@@ -466,6 +428,9 @@ list<std::shared_ptr<Map::Territory>> AggressivePlayer::toDefend() {
     
     return list;
 }
+std::string AggressivePlayer::getName() {
+    return "Aggressive";
+}
 
 //BenevolentPlayer
 BenevolentPlayer::BenevolentPlayer() {
@@ -478,8 +443,6 @@ bool BenevolentPlayer::issueOrder(const map<int, shared_ptr<Player>>& players, c
 
     
     // deploys on territory that has least amount of army units
-    
-
     if (player->getReinforcementPool() > 0) {
         auto defendList = this->toDefend();
         if (!defendList.empty()) {
@@ -534,11 +497,7 @@ bool BenevolentPlayer::issueOrder(const map<int, shared_ptr<Player>>& players, c
     return false;
 } 
 //returns a list of its own territories (never attacks others)
-} 
-//returns a list of its own territories (never attacks others)
 list<std::shared_ptr<Map::Territory>> BenevolentPlayer::toAttack() {
-
-    //getting all territories owned by the player
 
     //getting all territories owned by the player
     list<std::shared_ptr<Map::Territory>> list;
@@ -558,11 +517,9 @@ list<std::shared_ptr<Map::Territory>> BenevolentPlayer::toAttack() {
     });
     return list;
 }
-//returns its own territories sorted by least amount of units
+
 //returns its own territories sorted by least amount of units
 list<std::shared_ptr<Map::Territory>> BenevolentPlayer::toDefend() {
-    
-    //getting all territories owned by the player
     
     //getting all territories owned by the player
     list<std::shared_ptr<Map::Territory>> list;
@@ -581,6 +538,9 @@ list<std::shared_ptr<Map::Territory>> BenevolentPlayer::toDefend() {
         return a->getUnits() < b->getUnits();   
     });
     return list;
+}
+std::string BenevolentPlayer::getName() {
+    return "Benevolent";
 }
 
 //NeutralPlayer
@@ -603,6 +563,9 @@ list<std::shared_ptr<Map::Territory>> NeutralPlayer::toDefend() {
     //neutral player doesnt defend (empty list)
     list<std::shared_ptr<Map::Territory>> list;
     return list;
+}
+std::string NeutralPlayer::getName() {
+    return "Neutral";
 }
 
 //CheaterPlayer
@@ -671,6 +634,9 @@ list<std::shared_ptr<Map::Territory>> CheaterPlayer::toDefend() {
     }
 
     return this->player->getTerritories();
+}
+std::string CheaterPlayer::getName() {
+    return "Cheater";
 }
 
 bool HumanPlayer::isNeutral() const { return false;}

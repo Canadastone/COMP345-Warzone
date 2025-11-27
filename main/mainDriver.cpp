@@ -13,7 +13,7 @@
 
 void testStartupPhase();
 int main() {
-
+    testPlayerStrategies();
     testTournament();
 
     return 0;

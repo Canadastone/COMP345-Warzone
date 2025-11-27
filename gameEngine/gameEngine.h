@@ -247,6 +247,18 @@ private:
 	current "global game phase" (Startup, play) as per A2 instructions.
 	*/
 	Phase currPhase;
+
+	/*
+	Checks if the tournament is over (Only applicable to the tournament command).
+	*/
+	bool tournamentOver;
+
+	std::vector<std::string> tournamentMapNames;
+	std::vector<std::string> tournamentPlayerStrategies;
+	int tournamentNumGames;
+	int tournamentNumRounds;
+
+	std::vector<std::string> tournamentWinners;
 	
 public:
 	
